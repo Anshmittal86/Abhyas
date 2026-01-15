@@ -141,6 +141,7 @@ export const CourseScalarFieldEnum = {
   id: 'id',
   title: 'title',
   description: 'description',
+  duration: 'duration',
   isActive: 'isActive',
   createdAt: 'createdAt',
   adminId: 'adminId'

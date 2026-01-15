@@ -126,6 +126,7 @@ model Course {
   id          String   @id @default(uuid())
   title       String
   description String?
+  duration    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 

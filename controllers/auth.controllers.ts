@@ -12,6 +12,8 @@ import { ApiResponse } from '@/utils/api-response.js';
 import { logEvent } from '@/utils/log-event.js';
 import { handleApiError as handleError } from '@/utils/handle-error';
 
+import buildRefreshResponse from '@/utils/auth-response';
+
 // Internal services
 import {
 	generateAccessAndRefreshTokens,
@@ -67,9 +69,12 @@ export async function loginAdmin(request: NextRequest) {
 		});
 
 		// ✅ Build JSON response
-		const response = NextResponse.json(new ApiResponse(200, null, 'Login successful'), {
-			status: 200
-		});
+		const response: NextResponse = NextResponse.json(
+			new ApiResponse(200, null, 'Login successful'),
+			{
+				status: 200
+			}
+		);
 
 		// 🍪 Set secure cookies for session management
 		// HttpOnly → prevents JS access
@@ -96,5 +101,130 @@ export async function loginAdmin(request: NextRequest) {
 		return response;
 	} catch (error) {
 		return handleError('LoginAdmin', error);
+	}
+}
+
+export async function logoutAdmin(request: NextRequest) {
+	try {
+		// Get refresh token from cookies
+		const refreshToken = request.cookies.get('refreshToken')?.value;
+		if (!refreshToken) {
+			throw new ApiError(401, 'Refresh token not found');
+		}
+
+		// Validate & find refresh token record
+		const tokenRecord = await validateRefreshToken(refreshToken);
+
+		// Extra safety: ensure it's admin token
+		if (tokenRecord.role !== 'admin') {
+			throw new ApiError(403, 'Invalid logout request');
+		}
+
+		// Revoke this refresh token
+		await prisma.refreshToken.update({
+			where: { id: tokenRecord.id },
+			data: { isRevoked: true }
+		});
+
+		// Clear cookies
+		const response: NextResponse = NextResponse.json(
+			new ApiResponse(200, null, 'Logout successful'),
+			{
+				status: 200
+			}
+		);
+
+		response.cookies.set('accessToken', '', {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			path: '/',
+			sameSite: 'strict',
+			maxAge: 0
+		});
+
+		response.cookies.set('refreshToken', '', {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			path: '/',
+			sameSite: 'strict',
+			maxAge: 0
+		});
+
+		// Audit log
+		logEvent('LogoutSuccess', {
+			adminId: tokenRecord.adminId
+		});
+
+		return response;
+	} catch (error) {
+		return handleError('LogoutAdmin', error);
+	}
+}
+
+export async function refreshToken(request: NextRequest) {
+	try {
+		// 🍪 Get refresh token from cookies
+		const refreshToken = request.cookies.get('refreshToken')?.value;
+		if (!refreshToken) {
+			throw new ApiError(401, 'Refresh token not found');
+		}
+
+		// 🔍 Validate refresh token (hash compare + expiry + revoke)
+		const tokenRecord = await validateRefreshToken(refreshToken);
+
+		const { role, adminId, studentId, id: refreshTokenId } = tokenRecord;
+
+		// 🔐 ROLE-BASED HANDLING
+		if (role === 'admin') {
+			if (!adminId) {
+				throw new ApiError(403, 'Invalid admin refresh token');
+			}
+
+			// 🔒 Admin = single session → revoke ALL active tokens
+			await prisma.refreshToken.updateMany({
+				where: {
+					adminId,
+					isRevoked: false
+				},
+				data: { isRevoked: true }
+			});
+
+			// ♻️ Generate new tokens
+			const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(
+				'admin',
+				adminId
+			);
+
+			return buildRefreshResponse(request, accessToken, newRefreshToken, 'AdminTokenRefreshed', {
+				adminId
+			});
+		}
+
+		// ---------------- STUDENT ----------------
+		if (role === 'student') {
+			if (!studentId) {
+				throw new ApiError(403, 'Invalid student refresh token');
+			}
+
+			// 🔓 Student = multi-device → revoke ONLY current token
+			await prisma.refreshToken.update({
+				where: { id: refreshTokenId },
+				data: { isRevoked: true }
+			});
+
+			// ♻️ Generate new tokens
+			const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(
+				'student',
+				studentId
+			);
+
+			return buildRefreshResponse(request, accessToken, newRefreshToken, 'StudentTokenRefreshed', {
+				studentId
+			});
+		}
+
+		throw new ApiError(403, 'Unsupported token role');
+	} catch (error) {
+		return handleError('RefreshToken', error);
 	}
 }
