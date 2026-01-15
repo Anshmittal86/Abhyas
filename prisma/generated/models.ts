@@ -8,4 +8,15 @@
  *
  * 🟢 You can import this file directly.
  */
+export type * from './models/Admin'
+export type * from './models/AdminLog'
+export type * from './models/Student'
+export type * from './models/RefreshToken'
+export type * from './models/Course'
+export type * from './models/Enrollment'
+export type * from './models/Chapter'
+export type * from './models/Test'
+export type * from './models/Question'
+export type * from './models/TestAttempt'
+export type * from './models/AttemptAnswer'
 export type * from './commonInputTypes'

@@ -17,4 +17,61 @@ import * as Prisma from './internal/prismaNamespaceBrowser'
 export { Prisma }
 export * as $Enums from './enums'
 export * from './enums';
-
+/**
+ * Model Admin
+ * Admin (owner of content)
+ */
+export type Admin = Prisma.AdminModel
+/**
+ * Model AdminLog
+ * Admin audit log
+ */
+export type AdminLog = Prisma.AdminLogModel
+/**
+ * Model Student
+ * Student (user accounts created by admin)
+ */
+export type Student = Prisma.StudentModel
+/**
+ * Model RefreshToken
+ * Refresh tokens should be stored hashed (store tokenHash) for security.
+ *   role field allows you to quickly filter tokens by user type.
+ */
+export type RefreshToken = Prisma.RefreshTokenModel
+/**
+ * Model Course
+ * 
+ */
+export type Course = Prisma.CourseModel
+/**
+ * Model Enrollment
+ * Enrollment / junction table student <-> course
+ */
+export type Enrollment = Prisma.EnrollmentModel
+/**
+ * Model Chapter
+ * Chapter belongs to a Course
+ */
+export type Chapter = Prisma.ChapterModel
+/**
+ * Model Test
+ * Test = static content (created by admin)
+ *   durationMinutes kept as Int; set default if you want (e.g. 60)
+ */
+export type Test = Prisma.TestModel
+/**
+ * Model Question
+ * Question with fixed 4 options, correctOption enforced by enum
+ * Question with fixed 4 options, correctOption enforced by enum
+ */
+export type Question = Prisma.QuestionModel
+/**
+ * Model TestAttempt
+ * TestAttempt = one attempt by a student on a test
+ */
+export type TestAttempt = Prisma.TestAttemptModel
+/**
+ * Model AttemptAnswer
+ * AttemptAnswer stores per-question activity inside a TestAttempt
+ */
+export type AttemptAnswer = Prisma.AttemptAnswerModel

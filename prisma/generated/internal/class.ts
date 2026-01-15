@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   "clientVersion": "7.2.0",
   "engineVersion": "0c8ef2ce45c83248ab3df073180d5eda9e8be7a3",
   "activeProvider": "postgresql",
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"./generated\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client\"\n  output   = \"./generated\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\n/**\n * Enums\n */\nenum Gender {\n  male\n  female\n  other\n}\n\nenum OptionChoice {\n  A\n  B\n  C\n  D\n}\n\nenum UserRole {\n  admin\n  student\n}\n\n/**\n * Admin (owner of content)\n */\nmodel Admin {\n  id        String    @id @default(uuid())\n  name      String\n  email     String    @unique\n  password  String\n  createdAt DateTime  @default(now())\n  lastLogin DateTime?\n\n  refreshTokens RefreshToken[]\n  courses       Course[]\n  chapters      Chapter[]\n  tests         Test[]\n  questions     Question[]\n  adminLogs     AdminLog[]\n}\n\n/**\n * Admin audit log\n */\nmodel AdminLog {\n  id          String   @id @default(uuid())\n  adminId     String\n  action      String // e.g. CREATE_TEST, DELETE_QUESTION\n  entityType  String? // e.g. \"test\", \"question\"\n  entityId    String? // id of affected entity\n  description String?\n  createdAt   DateTime @default(now())\n\n  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)\n\n  @@index([adminId])\n  @@index([entityType, entityId])\n}\n\n/**\n * Student (user accounts created by admin)\n */\nmodel Student {\n  id String @id @default(uuid())\n\n  provisionalNo String  @unique\n  name          String\n  email         String  @unique\n  mobileNo      String?\n\n  gender     Gender?\n  dob        DateTime?\n  fatherName String?\n  motherName String?\n\n  password     String\n  isActive     Boolean  @default(true)\n  registeredAt DateTime @default(now())\n\n  enrollments   Enrollment[]\n  testAttempts  TestAttempt[]\n  refreshTokens RefreshToken[]\n\n  @@index([email])\n  @@index([provisionalNo])\n}\n\n/**\n * Refresh tokens should be stored hashed (store tokenHash) for security.\n * role field allows you to quickly filter tokens by user type.\n */\nmodel RefreshToken {\n  id        String   @id @default(uuid())\n  tokenHash String   @unique\n  role      UserRole\n  expiresAt DateTime\n  createdAt DateTime @default(now())\n  isRevoked Boolean  @default(false)\n\n  adminId   String?\n  studentId String?\n\n  admin   Admin?   @relation(fields: [adminId], references: [id], onDelete: Cascade)\n  student Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)\n\n  @@index([adminId])\n  @@index([studentId])\n  @@index([expiresAt])\n}\n\n/**\n * Course -> conceptual content\n * One course can be assigned to many students via Enrollment\n */\n\nmodel Course {\n  id          String   @id @default(uuid())\n  title       String\n  description String?\n  isActive    Boolean  @default(true)\n  createdAt   DateTime @default(now())\n\n  adminId     String\n  admin       Admin        @relation(fields: [adminId], references: [id])\n  enrollments Enrollment[]\n  chapters    Chapter[]\n\n  @@index([adminId])\n  @@index([isActive])\n}\n\n/**\n * Enrollment / junction table student <-> course\n */\nmodel Enrollment {\n  id         String   @id @default(uuid())\n  studentId  String\n  courseId   String\n  enrolledAt DateTime @default(now())\n\n  student Student @relation(fields: [studentId], references: [id])\n  course  Course  @relation(fields: [courseId], references: [id])\n\n  @@unique([studentId, courseId])\n  @@index([studentId])\n  @@index([courseId])\n}\n\n/**\n * Chapter belongs to a Course\n */\nmodel Chapter {\n  id      String @id @default(uuid())\n  code    String\n  title   String\n  orderNo Int\n\n  courseId String\n  adminId  String\n\n  course Course @relation(fields: [courseId], references: [id])\n  admin  Admin  @relation(fields: [adminId], references: [id])\n\n  tests Test[]\n\n  @@index([courseId])\n  @@index([adminId])\n}\n\n/**\n * Test = static content (created by admin)\n * durationMinutes kept as Int; set default if you want (e.g. 60)\n */\nmodel Test {\n  id              String @id @default(uuid())\n  title           String\n  durationMinutes Int\n  totalQuestions  Int\n\n  chapterId String\n  adminId   String\n\n  chapter Chapter @relation(fields: [chapterId], references: [id])\n  admin   Admin   @relation(fields: [adminId], references: [id])\n\n  questions Question[]\n  attempts  TestAttempt[]\n\n  @@index([chapterId])\n  @@index([adminId])\n}\n\n/**\n * Question with fixed 4 options, correctOption enforced by enum\n */\n/**\n * Question with fixed 4 options, correctOption enforced by enum\n */\nmodel Question {\n  id            String       @id @default(uuid())\n  questionText  String\n  optionA       String\n  optionB       String\n  optionC       String\n  optionD       String\n  correctOption OptionChoice\n\n  testId  String\n  adminId String\n\n  test  Test  @relation(fields: [testId], references: [id])\n  admin Admin @relation(fields: [adminId], references: [id])\n\n  answers AttemptAnswer[]\n\n  @@index([testId])\n  @@index([adminId])\n}\n\n/**\n * TestAttempt = one attempt by a student on a test\n */\nmodel TestAttempt {\n  id        String @id @default(uuid())\n  studentId String\n  testId    String\n\n  startedAt   DateTime  @default(now())\n  submittedAt DateTime?\n  score       Int?\n\n  student Student @relation(fields: [studentId], references: [id])\n  test    Test    @relation(fields: [testId], references: [id])\n\n  answers AttemptAnswer[]\n\n  @@unique([studentId, testId, startedAt])\n  @@index([studentId])\n  @@index([testId])\n  @@index([startedAt])\n}\n\n/**\n * AttemptAnswer stores per-question activity inside a TestAttempt\n */\nmodel AttemptAnswer {\n  id         String @id @default(uuid())\n  attemptId  String\n  questionId String\n\n  selectedOption OptionChoice?\n  isCorrect      Boolean?\n  answeredAt     DateTime      @default(now())\n\n  attempt  TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)\n  question Question    @relation(fields: [questionId], references: [id])\n\n  @@unique([attemptId, questionId])\n  @@index([questionId])\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -28,7 +28,7 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Admin\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"lastLogin\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"refreshTokens\",\"kind\":\"object\",\"type\":\"RefreshToken\",\"relationName\":\"AdminToRefreshToken\"},{\"name\":\"courses\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"AdminToCourse\"},{\"name\":\"chapters\",\"kind\":\"object\",\"type\":\"Chapter\",\"relationName\":\"AdminToChapter\"},{\"name\":\"tests\",\"kind\":\"object\",\"type\":\"Test\",\"relationName\":\"AdminToTest\"},{\"name\":\"questions\",\"kind\":\"object\",\"type\":\"Question\",\"relationName\":\"AdminToQuestion\"},{\"name\":\"adminLogs\",\"kind\":\"object\",\"type\":\"AdminLog\",\"relationName\":\"AdminToAdminLog\"}],\"dbName\":null},\"AdminLog\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"adminId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"action\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"entityType\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"entityId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"admin\",\"kind\":\"object\",\"type\":\"Admin\",\"relationName\":\"AdminToAdminLog\"}],\"dbName\":null},\"Student\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"provisionalNo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"mobileNo\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"gender\",\"kind\":\"enum\",\"type\":\"Gender\"},{\"name\":\"dob\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"fatherName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"motherName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"registeredAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"enrollments\",\"kind\":\"object\",\"type\":\"Enrollment\",\"relationName\":\"EnrollmentToStudent\"},{\"name\":\"testAttempts\",\"kind\":\"object\",\"type\":\"TestAttempt\",\"relationName\":\"StudentToTestAttempt\"},{\"name\":\"refreshTokens\",\"kind\":\"object\",\"type\":\"RefreshToken\",\"relationName\":\"RefreshTokenToStudent\"}],\"dbName\":null},\"RefreshToken\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"tokenHash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role\",\"kind\":\"enum\",\"type\":\"UserRole\"},{\"name\":\"expiresAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"isRevoked\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"adminId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"studentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"admin\",\"kind\":\"object\",\"type\":\"Admin\",\"relationName\":\"AdminToRefreshToken\"},{\"name\":\"student\",\"kind\":\"object\",\"type\":\"Student\",\"relationName\":\"RefreshTokenToStudent\"}],\"dbName\":null},\"Course\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isActive\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"adminId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"admin\",\"kind\":\"object\",\"type\":\"Admin\",\"relationName\":\"AdminToCourse\"},{\"name\":\"enrollments\",\"kind\":\"object\",\"type\":\"Enrollment\",\"relationName\":\"CourseToEnrollment\"},{\"name\":\"chapters\",\"kind\":\"object\",\"type\":\"Chapter\",\"relationName\":\"ChapterToCourse\"}],\"dbName\":null},\"Enrollment\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"studentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"courseId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"enrolledAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"student\",\"kind\":\"object\",\"type\":\"Student\",\"relationName\":\"EnrollmentToStudent\"},{\"name\":\"course\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"CourseToEnrollment\"}],\"dbName\":null},\"Chapter\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"code\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"orderNo\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"courseId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"adminId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"course\",\"kind\":\"object\",\"type\":\"Course\",\"relationName\":\"ChapterToCourse\"},{\"name\":\"admin\",\"kind\":\"object\",\"type\":\"Admin\",\"relationName\":\"AdminToChapter\"},{\"name\":\"tests\",\"kind\":\"object\",\"type\":\"Test\",\"relationName\":\"ChapterToTest\"}],\"dbName\":null},\"Test\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"durationMinutes\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"totalQuestions\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"chapterId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"adminId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"chapter\",\"kind\":\"object\",\"type\":\"Chapter\",\"relationName\":\"ChapterToTest\"},{\"name\":\"admin\",\"kind\":\"object\",\"type\":\"Admin\",\"relationName\":\"AdminToTest\"},{\"name\":\"questions\",\"kind\":\"object\",\"type\":\"Question\",\"relationName\":\"QuestionToTest\"},{\"name\":\"attempts\",\"kind\":\"object\",\"type\":\"TestAttempt\",\"relationName\":\"TestToTestAttempt\"}],\"dbName\":null},\"Question\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"questionText\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"optionA\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"optionB\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"optionC\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"optionD\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"correctOption\",\"kind\":\"enum\",\"type\":\"OptionChoice\"},{\"name\":\"testId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"adminId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"test\",\"kind\":\"object\",\"type\":\"Test\",\"relationName\":\"QuestionToTest\"},{\"name\":\"admin\",\"kind\":\"object\",\"type\":\"Admin\",\"relationName\":\"AdminToQuestion\"},{\"name\":\"answers\",\"kind\":\"object\",\"type\":\"AttemptAnswer\",\"relationName\":\"AttemptAnswerToQuestion\"}],\"dbName\":null},\"TestAttempt\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"studentId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"testId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"startedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"submittedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"score\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"student\",\"kind\":\"object\",\"type\":\"Student\",\"relationName\":\"StudentToTestAttempt\"},{\"name\":\"test\",\"kind\":\"object\",\"type\":\"Test\",\"relationName\":\"TestToTestAttempt\"},{\"name\":\"answers\",\"kind\":\"object\",\"type\":\"AttemptAnswer\",\"relationName\":\"AttemptAnswerToTestAttempt\"}],\"dbName\":null},\"AttemptAnswer\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"attemptId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"questionId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"selectedOption\",\"kind\":\"enum\",\"type\":\"OptionChoice\"},{\"name\":\"isCorrect\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"answeredAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"attempt\",\"kind\":\"object\",\"type\":\"TestAttempt\",\"relationName\":\"AttemptAnswerToTestAttempt\"},{\"name\":\"question\",\"kind\":\"object\",\"type\":\"Question\",\"relationName\":\"AttemptAnswerToQuestion\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 
 async function decodeBase64AsWasm(wasmBase64: string): Promise<WebAssembly.Module> {
   const { Buffer } = await import('node:buffer')
@@ -58,8 +58,8 @@ export interface PrismaClientConstructor {
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more Users
-   * const users = await prisma.user.findMany()
+   * // Fetch zero or more Admins
+   * const admins = await prisma.admin.findMany()
    * ```
    * 
    * Read more in our [docs](https://pris.ly/d/client).
@@ -80,8 +80,8 @@ export interface PrismaClientConstructor {
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Users
- * const users = await prisma.user.findMany()
+ * // Fetch zero or more Admins
+ * const admins = await prisma.admin.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -174,7 +174,115 @@ export interface PrismaClient<
     extArgs: ExtArgs
   }>>
 
-    
+      /**
+   * `prisma.admin`: Exposes CRUD operations for the **Admin** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Admins
+    * const admins = await prisma.admin.findMany()
+    * ```
+    */
+  get admin(): Prisma.AdminDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.adminLog`: Exposes CRUD operations for the **AdminLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AdminLogs
+    * const adminLogs = await prisma.adminLog.findMany()
+    * ```
+    */
+  get adminLog(): Prisma.AdminLogDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.student`: Exposes CRUD operations for the **Student** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Students
+    * const students = await prisma.student.findMany()
+    * ```
+    */
+  get student(): Prisma.StudentDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.refreshToken`: Exposes CRUD operations for the **RefreshToken** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RefreshTokens
+    * const refreshTokens = await prisma.refreshToken.findMany()
+    * ```
+    */
+  get refreshToken(): Prisma.RefreshTokenDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.course`: Exposes CRUD operations for the **Course** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Courses
+    * const courses = await prisma.course.findMany()
+    * ```
+    */
+  get course(): Prisma.CourseDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.enrollment`: Exposes CRUD operations for the **Enrollment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Enrollments
+    * const enrollments = await prisma.enrollment.findMany()
+    * ```
+    */
+  get enrollment(): Prisma.EnrollmentDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.chapter`: Exposes CRUD operations for the **Chapter** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Chapters
+    * const chapters = await prisma.chapter.findMany()
+    * ```
+    */
+  get chapter(): Prisma.ChapterDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.test`: Exposes CRUD operations for the **Test** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Tests
+    * const tests = await prisma.test.findMany()
+    * ```
+    */
+  get test(): Prisma.TestDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.question`: Exposes CRUD operations for the **Question** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Questions
+    * const questions = await prisma.question.findMany()
+    * ```
+    */
+  get question(): Prisma.QuestionDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.testAttempt`: Exposes CRUD operations for the **TestAttempt** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TestAttempts
+    * const testAttempts = await prisma.testAttempt.findMany()
+    * ```
+    */
+  get testAttempt(): Prisma.TestAttemptDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.attemptAnswer`: Exposes CRUD operations for the **AttemptAnswer** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AttemptAnswers
+    * const attemptAnswers = await prisma.attemptAnswer.findMany()
+    * ```
+    */
+  get attemptAnswer(): Prisma.AttemptAnswerDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

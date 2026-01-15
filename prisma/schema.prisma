@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "./generated"
@@ -12,3 +6,266 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+/*
+  Enums
+*/
+enum Gender {
+  male
+  female
+  other
+}
+
+enum OptionChoice {
+  A
+  B
+  C
+  D
+}
+
+enum UserRole {
+  admin
+  student
+}
+
+
+/*
+  Admin (owner of content)
+*/
+model Admin {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  createdAt     DateTime @default(now())
+  lastLogin     DateTime?
+
+  refreshTokens RefreshToken[]
+  courses       Course[]
+  chapters      Chapter[]
+  tests         Test[]
+  questions     Question[]
+  adminLogs     AdminLog[]
+} 
+
+/*
+  Admin audit log
+*/
+model AdminLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  action      String   // e.g. CREATE_TEST, DELETE_QUESTION
+  entityType  String?  // e.g. "test", "question"
+  entityId    String?  // id of affected entity
+  description String?
+  createdAt   DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([entityType, entityId])
+}
+
+/*
+  Student (user accounts created by admin)
+*/
+model Student {
+   id            String   @id @default(uuid())
+
+   provisionalNo String   @unique
+   name          String
+   email         String   @unique
+   mobileNo      String?
+
+   gender        Gender?
+   dob           DateTime?
+   fatherName    String?
+   motherName    String?
+
+   password      String
+   isActive      Boolean  @default(true)
+   registeredAt  DateTime @default(now())
+   
+   enrollments   Enrollment[]
+   testAttempts  TestAttempt[]
+   refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@index([provisionalNo])
+}
+
+/*
+  Refresh tokens should be stored hashed (store tokenHash) for security.
+  role field allows you to quickly filter tokens by user type.
+*/
+model RefreshToken {
+  id          String   @id @default(uuid())
+  tokenHash   String   @unique
+  role        UserRole
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  isRevoked   Boolean  @default(false)
+
+  adminId     String?
+  studentId   String?
+
+  admin       Admin?   @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  student     Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([studentId])
+  @@index([expiresAt])
+}
+
+/*
+  Course -> conceptual content
+  One course can be assigned to many students via Enrollment
+*/
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  adminId     String
+  admin       Admin @relation(fields: [adminId], references: [id])
+  enrollments Enrollment[]
+  chapters    Chapter[]
+
+  @@index([adminId])
+  @@index([isActive])
+}
+
+/*
+  Enrollment / junction table student <-> course
+*/
+model Enrollment {
+  id          String   @id @default(uuid())
+  studentId   String
+  courseId    String
+  enrolledAt  DateTime @default(now())
+
+  student     Student @relation(fields: [studentId], references: [id])
+  course      Course  @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+}
+
+/*
+  Chapter belongs to a Course
+*/
+model Chapter {
+  id          String @id @default(uuid())
+  code        String
+  title       String
+  orderNo     Int
+
+  courseId    String
+  adminId     String
+
+  course      Course @relation(fields: [courseId], references: [id])
+  admin       Admin  @relation(fields: [adminId], references: [id])
+
+  tests       Test[]
+
+  @@index([courseId])
+  @@index([adminId])
+}
+
+/*
+  Test = static content (created by admin)
+  durationMinutes kept as Int; set default if you want (e.g. 60)
+*/
+model Test {
+  id              String @id @default(uuid())
+  title           String
+  durationMinutes Int
+  totalQuestions  Int
+
+  chapterId       String
+  adminId         String
+
+  chapter         Chapter @relation(fields: [chapterId], references: [id])
+  admin           Admin   @relation(fields: [adminId], references: [id])
+
+
+  questions       Question[]
+  attempts        TestAttempt[]
+
+  @@index([chapterId])
+  @@index([adminId])
+}
+
+/*
+  Question with fixed 4 options, correctOption enforced by enum
+*/
+/*
+  Question with fixed 4 options, correctOption enforced by enum
+*/
+model Question {
+  id            String @id @default(uuid())
+  questionText  String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption OptionChoice
+
+  testId        String
+  adminId       String
+
+  test          Test  @relation(fields: [testId], references: [id])
+  admin         Admin @relation(fields: [adminId], references: [id])
+
+  answers       AttemptAnswer[]
+
+  @@index([testId])
+  @@index([adminId])
+}
+
+/*
+  TestAttempt = one attempt by a student on a test
+*/
+model TestAttempt {
+  id            String   @id @default(uuid())
+  studentId     String
+  testId        String
+
+  startedAt     DateTime @default(now())
+  submittedAt   DateTime?
+  score         Int?
+
+  student       Student @relation(fields: [studentId], references: [id])
+  test          Test    @relation(fields: [testId], references: [id])
+
+  answers       AttemptAnswer[]
+
+  @@unique([studentId, testId, startedAt])
+  @@index([studentId])
+  @@index([testId])
+  @@index([startedAt])
+}
+
+/*
+  AttemptAnswer stores per-question activity inside a TestAttempt
+*/
+model AttemptAnswer {
+  id              String   @id @default(uuid())
+  attemptId       String
+  questionId      String
+
+  selectedOption  OptionChoice?
+  isCorrect       Boolean?
+  answeredAt      DateTime @default(now())
+
+  attempt         TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question        Question    @relation(fields: [questionId], references: [id])
+
+  @@unique([attemptId, questionId])
+  @@index([questionId])
+}
+

@@ -11,7 +11,7 @@ const inter = Inter({
 export const metadata: Metadata = {
 	title: 'Student Dashboard',
 	description:
-		'A student dashboard where students can prepare for exams, manage their account, and see all reports related to enrolled courses'
+		'A central dashboard where students can study for exams, handle their account, and access reports for all enrolled courses.'
 };
 
 export default function RootLayout({

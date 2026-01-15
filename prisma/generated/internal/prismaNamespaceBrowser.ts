@@ -51,7 +51,17 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-
+  Admin: 'Admin',
+  AdminLog: 'AdminLog',
+  Student: 'Student',
+  RefreshToken: 'RefreshToken',
+  Course: 'Course',
+  Enrollment: 'Enrollment',
+  Chapter: 'Chapter',
+  Test: 'Test',
+  Question: 'Question',
+  TestAttempt: 'TestAttempt',
+  AttemptAnswer: 'AttemptAnswer'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -68,4 +78,170 @@ export const TransactionIsolationLevel = {
 } as const
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const AdminScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  password: 'password',
+  createdAt: 'createdAt',
+  lastLogin: 'lastLogin'
+} as const
+
+export type AdminScalarFieldEnum = (typeof AdminScalarFieldEnum)[keyof typeof AdminScalarFieldEnum]
+
+
+export const AdminLogScalarFieldEnum = {
+  id: 'id',
+  adminId: 'adminId',
+  action: 'action',
+  entityType: 'entityType',
+  entityId: 'entityId',
+  description: 'description',
+  createdAt: 'createdAt'
+} as const
+
+export type AdminLogScalarFieldEnum = (typeof AdminLogScalarFieldEnum)[keyof typeof AdminLogScalarFieldEnum]
+
+
+export const StudentScalarFieldEnum = {
+  id: 'id',
+  provisionalNo: 'provisionalNo',
+  name: 'name',
+  email: 'email',
+  mobileNo: 'mobileNo',
+  gender: 'gender',
+  dob: 'dob',
+  fatherName: 'fatherName',
+  motherName: 'motherName',
+  password: 'password',
+  isActive: 'isActive',
+  registeredAt: 'registeredAt'
+} as const
+
+export type StudentScalarFieldEnum = (typeof StudentScalarFieldEnum)[keyof typeof StudentScalarFieldEnum]
+
+
+export const RefreshTokenScalarFieldEnum = {
+  id: 'id',
+  tokenHash: 'tokenHash',
+  role: 'role',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  isRevoked: 'isRevoked',
+  adminId: 'adminId',
+  studentId: 'studentId'
+} as const
+
+export type RefreshTokenScalarFieldEnum = (typeof RefreshTokenScalarFieldEnum)[keyof typeof RefreshTokenScalarFieldEnum]
+
+
+export const CourseScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  adminId: 'adminId'
+} as const
+
+export type CourseScalarFieldEnum = (typeof CourseScalarFieldEnum)[keyof typeof CourseScalarFieldEnum]
+
+
+export const EnrollmentScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  courseId: 'courseId',
+  enrolledAt: 'enrolledAt'
+} as const
+
+export type EnrollmentScalarFieldEnum = (typeof EnrollmentScalarFieldEnum)[keyof typeof EnrollmentScalarFieldEnum]
+
+
+export const ChapterScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  title: 'title',
+  orderNo: 'orderNo',
+  courseId: 'courseId',
+  adminId: 'adminId'
+} as const
+
+export type ChapterScalarFieldEnum = (typeof ChapterScalarFieldEnum)[keyof typeof ChapterScalarFieldEnum]
+
+
+export const TestScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  durationMinutes: 'durationMinutes',
+  totalQuestions: 'totalQuestions',
+  chapterId: 'chapterId',
+  adminId: 'adminId'
+} as const
+
+export type TestScalarFieldEnum = (typeof TestScalarFieldEnum)[keyof typeof TestScalarFieldEnum]
+
+
+export const QuestionScalarFieldEnum = {
+  id: 'id',
+  questionText: 'questionText',
+  optionA: 'optionA',
+  optionB: 'optionB',
+  optionC: 'optionC',
+  optionD: 'optionD',
+  correctOption: 'correctOption',
+  testId: 'testId',
+  adminId: 'adminId'
+} as const
+
+export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+export const TestAttemptScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  testId: 'testId',
+  startedAt: 'startedAt',
+  submittedAt: 'submittedAt',
+  score: 'score'
+} as const
+
+export type TestAttemptScalarFieldEnum = (typeof TestAttemptScalarFieldEnum)[keyof typeof TestAttemptScalarFieldEnum]
+
+
+export const AttemptAnswerScalarFieldEnum = {
+  id: 'id',
+  attemptId: 'attemptId',
+  questionId: 'questionId',
+  selectedOption: 'selectedOption',
+  isCorrect: 'isCorrect',
+  answeredAt: 'answeredAt'
+} as const
+
+export type AttemptAnswerScalarFieldEnum = (typeof AttemptAnswerScalarFieldEnum)[keyof typeof AttemptAnswerScalarFieldEnum]
+
+
+export const SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+} as const
+
+export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+} as const
+
+export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
