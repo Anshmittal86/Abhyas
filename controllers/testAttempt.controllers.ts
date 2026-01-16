@@ -8,7 +8,7 @@ import { logEvent } from '@/utils/log-event';
 
 export async function startTestAttempt(
 	request: NextRequest,
-	{ params }: { params: { testId: string } }
+	context: { params: Promise<{ testId: string }> }
 ) {
 	try {
 		// 🔐 Student id from middleware
@@ -19,7 +19,8 @@ export async function startTestAttempt(
 			throw new ApiError(401, 'Unauthorized');
 		}
 
-		const testId = params.testId;
+		const { testId } = await context.params;
+		console.log(`Test Id: ${testId}`);
 		if (!testId) {
 			throw new ApiError(400, 'Test id is required');
 		}
