@@ -1316,7 +1316,6 @@ export const RefreshTokenScalarFieldEnum = {
   role: 'role',
   expiresAt: 'expiresAt',
   createdAt: 'createdAt',
-  isRevoked: 'isRevoked',
   adminId: 'adminId',
   studentId: 'studentId'
 } as const

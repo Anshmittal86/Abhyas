@@ -104,7 +104,6 @@ model RefreshToken {
   role        UserRole
   expiresAt   DateTime
   createdAt   DateTime @default(now())
-  isRevoked   Boolean  @default(false)
 
   adminId     String?
   studentId   String?

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import ms from 'ms';
 import { prisma } from '@/src/db/client';
+import bcrypt from 'bcrypt';
 
 // Internal utils
 import { ApiError } from '@/utils/api-error.js';
@@ -22,15 +23,20 @@ import {
 } from '@/services/adminService';
 
 // Zod login schema
-const loginSchema = z.object({
+const AdminLogin = z.object({
 	email: z.email('Please enter a valid email address').trim(),
+	password: z.string().min(8, 'Password must be at least 8 characters long')
+});
+
+const StudentLogin = z.object({
+	provisionalNo: z.string().min(3, 'Provisional number must be at least 3 characters long'),
 	password: z.string().min(8, 'Password must be at least 8 characters long')
 });
 
 export async function loginAdmin(request: NextRequest) {
 	try {
 		const body = await request.json();
-		const { email, password } = loginSchema.parse(body);
+		const { email, password } = AdminLogin.parse(body);
 
 		const admin = await prisma.admin.findUnique({ where: { email } });
 		if (!admin) {
@@ -44,12 +50,6 @@ export async function loginAdmin(request: NextRequest) {
 			logEvent('LoginFailed', { email, reason: 'Invalid credentials' });
 			throw new ApiError(401, 'Invalid credentials');
 		}
-
-		// Optional but recommended: revoke old refresh tokens
-		await prisma.refreshToken.updateMany({
-			where: { adminId: admin.id, isRevoked: false },
-			data: { isRevoked: true }
-		});
 
 		// 🪙 Generate short-lived access token and long-lived refresh token
 		const { accessToken, refreshToken } = await generateAccessAndRefreshTokens('admin', admin.id);
@@ -104,10 +104,21 @@ export async function loginAdmin(request: NextRequest) {
 	}
 }
 
-export async function logoutAdmin(request: NextRequest) {
+export async function logoutUser(request: NextRequest) {
 	try {
 		// Get refresh token from cookies
 		const refreshToken = request.cookies.get('refreshToken')?.value;
+
+		// Get user info from headers (set by auth middleware)
+		const userId = request.headers.get('x-user-id');
+		const userRole = request.headers.get('x-user-role');
+
+		// Basic validation
+		if (!userId || !userRole) {
+			throw new ApiError(403, 'Unauthorized logout request');
+		}
+
+		// Ensure refresh token exists
 		if (!refreshToken) {
 			throw new ApiError(401, 'Refresh token not found');
 		}
@@ -115,18 +126,18 @@ export async function logoutAdmin(request: NextRequest) {
 		// Validate & find refresh token record
 		const tokenRecord = await validateRefreshToken(refreshToken);
 
-		// Extra safety: ensure it's admin token
-		if (tokenRecord.role !== 'admin') {
-			throw new ApiError(403, 'Invalid logout request');
+		// Extra safety check: ensure token belongs to requesting user
+		if (userRole === tokenRecord.role && userId === String(tokenRecord[`${userRole}Id`])) {
+			await prisma.refreshToken.delete({
+				where: {
+					id: tokenRecord.id
+				}
+			});
+		} else {
+			throw new ApiError(403, 'Unauthorized logout request');
 		}
 
-		// Revoke this refresh token
-		await prisma.refreshToken.update({
-			where: { id: tokenRecord.id },
-			data: { isRevoked: true }
-		});
-
-		// Clear cookies
+		// ✅ Build JSON response
 		const response: NextResponse = NextResponse.json(
 			new ApiResponse(200, null, 'Logout successful'),
 			{
@@ -134,6 +145,7 @@ export async function logoutAdmin(request: NextRequest) {
 			}
 		);
 
+		// Clear cookies
 		response.cookies.set('accessToken', '', {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
@@ -152,12 +164,13 @@ export async function logoutAdmin(request: NextRequest) {
 
 		// Audit log
 		logEvent('LogoutSuccess', {
-			adminId: tokenRecord.adminId
+			id: tokenRecord.id,
+			role: tokenRecord.role
 		});
 
 		return response;
 	} catch (error) {
-		return handleError('LogoutAdmin', error);
+		return handleError('LogoutUser', error);
 	}
 }
 
@@ -180,15 +193,6 @@ export async function refreshToken(request: NextRequest) {
 				throw new ApiError(403, 'Invalid admin refresh token');
 			}
 
-			// 🔒 Admin = single session → revoke ALL active tokens
-			await prisma.refreshToken.updateMany({
-				where: {
-					adminId,
-					isRevoked: false
-				},
-				data: { isRevoked: true }
-			});
-
 			// ♻️ Generate new tokens
 			const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(
 				'admin',
@@ -206,12 +210,6 @@ export async function refreshToken(request: NextRequest) {
 				throw new ApiError(403, 'Invalid student refresh token');
 			}
 
-			// 🔓 Student = multi-device → revoke ONLY current token
-			await prisma.refreshToken.update({
-				where: { id: refreshTokenId },
-				data: { isRevoked: true }
-			});
-
 			// ♻️ Generate new tokens
 			const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(
 				'student',
@@ -226,5 +224,67 @@ export async function refreshToken(request: NextRequest) {
 		throw new ApiError(403, 'Unsupported token role');
 	} catch (error) {
 		return handleError('RefreshToken', error);
+	}
+}
+
+export async function studentLogin(request: NextRequest) {
+	try {
+		const body = await request.json();
+		const { provisionalNo, password: generatedPassword } = StudentLogin.parse(body);
+
+		// 🔍 Find student by provisional number
+		const student = await prisma.student.findUnique({
+			where: { provisionalNo }
+		});
+
+		if (!student) {
+			throw new ApiError(404, 'Student not found');
+		}
+
+		// 🔐 Validate password
+		const isPasswordValid = await bcrypt.compare(generatedPassword, student.password);
+		if (!isPasswordValid) {
+			throw new ApiError(401, 'Invalid credentials');
+		}
+
+		// 🪙 Generate tokens
+		const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+			'student',
+			student.id
+		);
+
+		// ⏱️ Token expiry durations (default fallback for safety)
+		const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m';
+		const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d';
+		const accessTokenMaxAgeSeconds = Math.floor(ms(ACCESS_TOKEN_EXPIRY as ms.StringValue) / 1000);
+		const refreshTokenMaxAgeSeconds = Math.floor(ms(REFRESH_TOKEN_EXPIRY as ms.StringValue) / 1000);
+
+		// ✅ Build JSON response
+		const response: NextResponse = NextResponse.json(
+			new ApiResponse(200, null, 'Student login successful'),
+			{
+				status: 200
+			}
+		);
+
+		// 🍪 Set secure cookies
+		response.cookies.set('accessToken', accessToken, {
+			httpOnly: true,
+			path: '/',
+			sameSite: 'strict',
+			maxAge: accessTokenMaxAgeSeconds
+		});
+
+		response.cookies.set('refreshToken', refreshToken, {
+			httpOnly: true,
+			path: '/',
+			sameSite: 'strict',
+			maxAge: refreshTokenMaxAgeSeconds
+		});
+
+		logEvent('StudentLoginSuccess', { studentId: student.id });
+		return response;
+	} catch (error) {
+		return handleError('StudentLogin', error);
 	}
 }

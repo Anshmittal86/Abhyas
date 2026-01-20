@@ -31,7 +31,6 @@ export type RefreshTokenMinAggregateOutputType = {
   role: $Enums.UserRole | null
   expiresAt: Date | null
   createdAt: Date | null
-  isRevoked: boolean | null
   adminId: string | null
   studentId: string | null
 }
@@ -42,7 +41,6 @@ export type RefreshTokenMaxAggregateOutputType = {
   role: $Enums.UserRole | null
   expiresAt: Date | null
   createdAt: Date | null
-  isRevoked: boolean | null
   adminId: string | null
   studentId: string | null
 }
@@ -53,7 +51,6 @@ export type RefreshTokenCountAggregateOutputType = {
   role: number
   expiresAt: number
   createdAt: number
-  isRevoked: number
   adminId: number
   studentId: number
   _all: number
@@ -66,7 +63,6 @@ export type RefreshTokenMinAggregateInputType = {
   role?: true
   expiresAt?: true
   createdAt?: true
-  isRevoked?: true
   adminId?: true
   studentId?: true
 }
@@ -77,7 +73,6 @@ export type RefreshTokenMaxAggregateInputType = {
   role?: true
   expiresAt?: true
   createdAt?: true
-  isRevoked?: true
   adminId?: true
   studentId?: true
 }
@@ -88,7 +83,6 @@ export type RefreshTokenCountAggregateInputType = {
   role?: true
   expiresAt?: true
   createdAt?: true
-  isRevoked?: true
   adminId?: true
   studentId?: true
   _all?: true
@@ -172,7 +166,6 @@ export type RefreshTokenGroupByOutputType = {
   role: $Enums.UserRole
   expiresAt: Date
   createdAt: Date
-  isRevoked: boolean
   adminId: string | null
   studentId: string | null
   _count: RefreshTokenCountAggregateOutputType | null
@@ -204,7 +197,6 @@ export type RefreshTokenWhereInput = {
   role?: Prisma.EnumUserRoleFilter<"RefreshToken"> | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFilter<"RefreshToken"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"RefreshToken"> | Date | string
-  isRevoked?: Prisma.BoolFilter<"RefreshToken"> | boolean
   adminId?: Prisma.StringNullableFilter<"RefreshToken"> | string | null
   studentId?: Prisma.StringNullableFilter<"RefreshToken"> | string | null
   admin?: Prisma.XOR<Prisma.AdminNullableScalarRelationFilter, Prisma.AdminWhereInput> | null
@@ -217,7 +209,6 @@ export type RefreshTokenOrderByWithRelationInput = {
   role?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  isRevoked?: Prisma.SortOrder
   adminId?: Prisma.SortOrderInput | Prisma.SortOrder
   studentId?: Prisma.SortOrderInput | Prisma.SortOrder
   admin?: Prisma.AdminOrderByWithRelationInput
@@ -233,7 +224,6 @@ export type RefreshTokenWhereUniqueInput = Prisma.AtLeast<{
   role?: Prisma.EnumUserRoleFilter<"RefreshToken"> | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFilter<"RefreshToken"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"RefreshToken"> | Date | string
-  isRevoked?: Prisma.BoolFilter<"RefreshToken"> | boolean
   adminId?: Prisma.StringNullableFilter<"RefreshToken"> | string | null
   studentId?: Prisma.StringNullableFilter<"RefreshToken"> | string | null
   admin?: Prisma.XOR<Prisma.AdminNullableScalarRelationFilter, Prisma.AdminWhereInput> | null
@@ -246,7 +236,6 @@ export type RefreshTokenOrderByWithAggregationInput = {
   role?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  isRevoked?: Prisma.SortOrder
   adminId?: Prisma.SortOrderInput | Prisma.SortOrder
   studentId?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.RefreshTokenCountOrderByAggregateInput
@@ -263,7 +252,6 @@ export type RefreshTokenScalarWhereWithAggregatesInput = {
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"RefreshToken"> | $Enums.UserRole
   expiresAt?: Prisma.DateTimeWithAggregatesFilter<"RefreshToken"> | Date | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"RefreshToken"> | Date | string
-  isRevoked?: Prisma.BoolWithAggregatesFilter<"RefreshToken"> | boolean
   adminId?: Prisma.StringNullableWithAggregatesFilter<"RefreshToken"> | string | null
   studentId?: Prisma.StringNullableWithAggregatesFilter<"RefreshToken"> | string | null
 }
@@ -274,7 +262,6 @@ export type RefreshTokenCreateInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   admin?: Prisma.AdminCreateNestedOneWithoutRefreshTokensInput
   student?: Prisma.StudentCreateNestedOneWithoutRefreshTokensInput
 }
@@ -285,7 +272,6 @@ export type RefreshTokenUncheckedCreateInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   adminId?: string | null
   studentId?: string | null
 }
@@ -296,7 +282,6 @@ export type RefreshTokenUpdateInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   admin?: Prisma.AdminUpdateOneWithoutRefreshTokensNestedInput
   student?: Prisma.StudentUpdateOneWithoutRefreshTokensNestedInput
 }
@@ -307,7 +292,6 @@ export type RefreshTokenUncheckedUpdateInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -318,7 +302,6 @@ export type RefreshTokenCreateManyInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   adminId?: string | null
   studentId?: string | null
 }
@@ -329,7 +312,6 @@ export type RefreshTokenUpdateManyMutationInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type RefreshTokenUncheckedUpdateManyInput = {
@@ -338,7 +320,6 @@ export type RefreshTokenUncheckedUpdateManyInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -359,7 +340,6 @@ export type RefreshTokenCountOrderByAggregateInput = {
   role?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  isRevoked?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   studentId?: Prisma.SortOrder
 }
@@ -370,7 +350,6 @@ export type RefreshTokenMaxOrderByAggregateInput = {
   role?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  isRevoked?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   studentId?: Prisma.SortOrder
 }
@@ -381,7 +360,6 @@ export type RefreshTokenMinOrderByAggregateInput = {
   role?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
-  isRevoked?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   studentId?: Prisma.SortOrder
 }
@@ -480,7 +458,6 @@ export type RefreshTokenCreateWithoutAdminInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   student?: Prisma.StudentCreateNestedOneWithoutRefreshTokensInput
 }
 
@@ -490,7 +467,6 @@ export type RefreshTokenUncheckedCreateWithoutAdminInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   studentId?: string | null
 }
 
@@ -529,7 +505,6 @@ export type RefreshTokenScalarWhereInput = {
   role?: Prisma.EnumUserRoleFilter<"RefreshToken"> | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFilter<"RefreshToken"> | Date | string
   createdAt?: Prisma.DateTimeFilter<"RefreshToken"> | Date | string
-  isRevoked?: Prisma.BoolFilter<"RefreshToken"> | boolean
   adminId?: Prisma.StringNullableFilter<"RefreshToken"> | string | null
   studentId?: Prisma.StringNullableFilter<"RefreshToken"> | string | null
 }
@@ -540,7 +515,6 @@ export type RefreshTokenCreateWithoutStudentInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   admin?: Prisma.AdminCreateNestedOneWithoutRefreshTokensInput
 }
 
@@ -550,7 +524,6 @@ export type RefreshTokenUncheckedCreateWithoutStudentInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   adminId?: string | null
 }
 
@@ -586,7 +559,6 @@ export type RefreshTokenCreateManyAdminInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   studentId?: string | null
 }
 
@@ -596,7 +568,6 @@ export type RefreshTokenUpdateWithoutAdminInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   student?: Prisma.StudentUpdateOneWithoutRefreshTokensNestedInput
 }
 
@@ -606,7 +577,6 @@ export type RefreshTokenUncheckedUpdateWithoutAdminInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -616,7 +586,6 @@ export type RefreshTokenUncheckedUpdateManyWithoutAdminInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   studentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -626,7 +595,6 @@ export type RefreshTokenCreateManyStudentInput = {
   role: $Enums.UserRole
   expiresAt: Date | string
   createdAt?: Date | string
-  isRevoked?: boolean
   adminId?: string | null
 }
 
@@ -636,7 +604,6 @@ export type RefreshTokenUpdateWithoutStudentInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   admin?: Prisma.AdminUpdateOneWithoutRefreshTokensNestedInput
 }
 
@@ -646,7 +613,6 @@ export type RefreshTokenUncheckedUpdateWithoutStudentInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -656,7 +622,6 @@ export type RefreshTokenUncheckedUpdateManyWithoutStudentInput = {
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  isRevoked?: Prisma.BoolFieldUpdateOperationsInput | boolean
   adminId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
@@ -668,7 +633,6 @@ export type RefreshTokenSelect<ExtArgs extends runtime.Types.Extensions.Internal
   role?: boolean
   expiresAt?: boolean
   createdAt?: boolean
-  isRevoked?: boolean
   adminId?: boolean
   studentId?: boolean
   admin?: boolean | Prisma.RefreshToken$adminArgs<ExtArgs>
@@ -681,7 +645,6 @@ export type RefreshTokenSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   role?: boolean
   expiresAt?: boolean
   createdAt?: boolean
-  isRevoked?: boolean
   adminId?: boolean
   studentId?: boolean
   admin?: boolean | Prisma.RefreshToken$adminArgs<ExtArgs>
@@ -694,7 +657,6 @@ export type RefreshTokenSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   role?: boolean
   expiresAt?: boolean
   createdAt?: boolean
-  isRevoked?: boolean
   adminId?: boolean
   studentId?: boolean
   admin?: boolean | Prisma.RefreshToken$adminArgs<ExtArgs>
@@ -707,12 +669,11 @@ export type RefreshTokenSelectScalar = {
   role?: boolean
   expiresAt?: boolean
   createdAt?: boolean
-  isRevoked?: boolean
   adminId?: boolean
   studentId?: boolean
 }
 
-export type RefreshTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tokenHash" | "role" | "expiresAt" | "createdAt" | "isRevoked" | "adminId" | "studentId", ExtArgs["result"]["refreshToken"]>
+export type RefreshTokenOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tokenHash" | "role" | "expiresAt" | "createdAt" | "adminId" | "studentId", ExtArgs["result"]["refreshToken"]>
 export type RefreshTokenInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   admin?: boolean | Prisma.RefreshToken$adminArgs<ExtArgs>
   student?: boolean | Prisma.RefreshToken$studentArgs<ExtArgs>
@@ -738,7 +699,6 @@ export type $RefreshTokenPayload<ExtArgs extends runtime.Types.Extensions.Intern
     role: $Enums.UserRole
     expiresAt: Date
     createdAt: Date
-    isRevoked: boolean
     adminId: string | null
     studentId: string | null
   }, ExtArgs["result"]["refreshToken"]>
@@ -1171,7 +1131,6 @@ export interface RefreshTokenFieldRefs {
   readonly role: Prisma.FieldRef<"RefreshToken", 'UserRole'>
   readonly expiresAt: Prisma.FieldRef<"RefreshToken", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"RefreshToken", 'DateTime'>
-  readonly isRevoked: Prisma.FieldRef<"RefreshToken", 'Boolean'>
   readonly adminId: Prisma.FieldRef<"RefreshToken", 'String'>
   readonly studentId: Prisma.FieldRef<"RefreshToken", 'String'>
 }
