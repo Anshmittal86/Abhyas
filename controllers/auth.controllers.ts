@@ -185,7 +185,11 @@ export async function refreshToken(request: NextRequest) {
 		// 🔍 Validate refresh token (hash compare + expiry + revoke)
 		const tokenRecord = await validateRefreshToken(refreshToken);
 
-		const { role, adminId, studentId, id: refreshTokenId } = tokenRecord;
+		if (!tokenRecord) {
+			throw new ApiError(401, 'Invalid or expired refresh token');
+		}
+
+		const { role, adminId, studentId } = tokenRecord;
 
 		// 🔐 ROLE-BASED HANDLING
 		if (role === 'admin') {
