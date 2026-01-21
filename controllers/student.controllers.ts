@@ -94,3 +94,69 @@ export async function createStudent(request: NextRequest) {
 		return handleError('CreateStudent', error);
 	}
 }
+
+export async function getStudentDashboard(request: NextRequest) {
+	try {
+		// Get student ID from headers or auth context
+		const studentId = request.headers.get('x-user-id');
+
+		console.log('Student ID:', studentId);
+
+		if (!studentId) {
+			throw new ApiError(401, 'Unauthorized access');
+		}
+
+		// Fetch student data
+		const student = await prisma.student.findUnique({
+			where: { id: studentId },
+			select: {
+				id: true,
+				name: true,
+				email: true,
+				provisionalNo: true
+			}
+		});
+
+		if (!student) {
+			throw new ApiError(404, 'Student not found');
+		}
+
+		// Fetch enrollments count
+		const enrolledCourses = await prisma.enrollment.count({
+			where: { studentId }
+		});
+
+		// Fetch test attempts
+		const testAttempts = await prisma.testAttempt.findMany({
+			where: { studentId },
+			include: { test: true }
+		});
+
+		// Calculate statistics
+		const completedTests = testAttempts.filter((attempt) => attempt.submittedAt).length;
+		const pendingTests = testAttempts.filter((attempt) => !attempt.submittedAt).length;
+
+		// Calculate average score
+		const scores = testAttempts
+			.filter((attempt) => attempt.score !== null)
+			.map((attempt) => attempt.score as number);
+		const averageScore =
+			scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+
+		const response = new ApiResponse(
+			200,
+			{
+				student,
+				enrolledCourses,
+				completedTests,
+				averageScore,
+				pendingTests
+			},
+			'Dashboard data fetched successfully'
+		);
+
+		return NextResponse.json(response);
+	} catch (error) {
+		return handleError('StudentDashboard', error);
+	}
+}

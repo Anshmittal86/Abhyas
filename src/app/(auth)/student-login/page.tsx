@@ -90,7 +90,7 @@ function StudentLogin() {
 							name="provisionalNo"
 							label="Provisional No*"
 							placeholder="Enter your provisional number"
-							type="email"
+							type="text"
 						/>
 
 						{/* Password Field */}
