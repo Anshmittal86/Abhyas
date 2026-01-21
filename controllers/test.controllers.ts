@@ -7,13 +7,15 @@ import { handleApiError as handleError } from '@/utils/handle-error';
 import { logEvent } from '@/utils/log-event';
 
 import { createTestSchema } from '@/validators/test.validator';
+import { requireRole } from '@/utils/auth-guard';
 
 export async function createTest(request: NextRequest) {
 	try {
 		// 🔐 Admin id from middleware
-		const adminId = request.headers.get('x-user-id');
-		if (!adminId) {
-			throw new ApiError(401, 'Unauthorized');
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+
+		if (!adminId || role !== 'admin') {
+			throw new ApiError(401, 'Unauthorized access');
 		}
 
 		// 📦 Validate request body

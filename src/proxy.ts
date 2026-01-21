@@ -10,6 +10,7 @@ const protectedRoutes = [
 	'/api/student/dashboard',
 	'/api/student/attempts',
 	'/api/student/tests',
+	'/api/student/courses',
 	'/api/admin/courses',
 	'/api/admin/chapter',
 	'/api/admin/questions',

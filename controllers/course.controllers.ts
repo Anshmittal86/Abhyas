@@ -8,6 +8,7 @@ import { handleApiError as handleError } from '@/utils/handle-error';
 import { logEvent } from '@/utils/log-event';
 
 import { createCourseSchema } from '@/validators/course.validator';
+import { requireRole } from '@/utils/auth-guard';
 
 export async function createCourse(request: NextRequest) {
 	try {
@@ -44,5 +45,59 @@ export async function createCourse(request: NextRequest) {
 		});
 	} catch (error) {
 		return handleError('CreateCourse', error);
+	}
+}
+
+export async function getCourses(request: NextRequest) {
+	try {
+		// 🔐 Admin ID Should Come from Middleware
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+
+		if (!adminId || role !== 'admin') {
+			throw new ApiError(401, 'Unauthorized access');
+		}
+
+		// 📋 Fetch all courses with enrollment count
+		const courses = await prisma.course.findMany({
+			where: {
+				adminId
+			},
+			select: {
+				id: true,
+				title: true,
+				description: true,
+				duration: true,
+				isActive: true,
+				createdAt: true,
+				_count: {
+					select: {
+						enrollments: true
+					}
+				}
+			},
+			orderBy: {
+				createdAt: 'desc'
+			}
+		});
+
+		// 📊 Format response with enrollment count
+		const formattedCourses = courses.map((course) => ({
+			id: course.id,
+			title: course.title,
+			description: course.description,
+			duration: course.duration,
+			isActive: course.isActive,
+			enrollmentCount: course._count.enrollments,
+			createdAt: course.createdAt
+		}));
+
+		return NextResponse.json(
+			new ApiResponse(200, formattedCourses, 'Courses fetched successfully'),
+			{
+				status: 200
+			}
+		);
+	} catch (error) {
+		return handleError('GetCourses', error);
 	}
 }

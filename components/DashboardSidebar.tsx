@@ -1,11 +1,96 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 
 interface DashboardSidebarProps {
 	sidebarOpen: boolean;
 	onToggle: (open: boolean) => void;
 }
 
+interface Course {
+	id: string;
+	title: string;
+	chapters?: Chapter[];
+}
+
+interface Chapter {
+	id: string;
+	title: string;
+}
+
 export default function DashboardSidebar({ sidebarOpen, onToggle }: DashboardSidebarProps) {
+	const [coursesExpanded, setCoursesExpanded] = useState(false);
+	const [courses, setCourses] = useState<Course[]>([]);
+	const [loadingCourses, setLoadingCourses] = useState(false);
+	const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
+	const [courseChapters, setCourseChapters] = useState<Record<string, Chapter[]>>({});
+	const [loadingChapters, setLoadingChapters] = useState<Record<string, boolean>>({});
+
+	// Fetch courses when "My Courses" is clicked
+	const handleCoursesClick = async () => {
+		if (coursesExpanded) {
+			setCoursesExpanded(false);
+			return;
+		}
+
+		setCoursesExpanded(true);
+		if (courses.length > 0) return; // Already loaded
+
+		setLoadingCourses(true);
+		try {
+			const response = await fetch('/api/student/courses', {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include'
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				setCourses(result.data || []);
+			}
+		} catch (error) {
+			console.error('❌ Failed to fetch courses:', error);
+		} finally {
+			setLoadingCourses(false);
+		}
+	};
+
+	// Fetch chapters for a specific course
+	const handleCourseClick = async (courseId: string, courseName: string) => {
+		if (expandedCourse === courseId) {
+			setExpandedCourse(null);
+			return;
+		}
+
+		setExpandedCourse(courseId);
+
+		// If already loaded, don't fetch again
+		if (courseChapters[courseId]) return;
+
+		setLoadingChapters((prev) => ({ ...prev, [courseId]: true }));
+		try {
+			const response = await fetch(`/api/student/courses/${courseId}/chapters`, {
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include'
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				setCourseChapters((prev) => ({
+					...prev,
+					[courseId]: result.data || []
+				}));
+			}
+		} catch (error) {
+			console.error(`❌ Failed to fetch chapters for course ${courseId}:`, error);
+		} finally {
+			setLoadingChapters((prev) => ({ ...prev, [courseId]: false }));
+		}
+	};
+
 	return (
 		<aside
 			className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform ${
@@ -48,9 +133,9 @@ export default function DashboardSidebar({ sidebarOpen, onToggle }: DashboardSid
 					</li>
 
 					<li>
-						<a
-							href="/courses"
-							className="flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-accent-primary transition"
+						<button
+							onClick={handleCoursesClick}
+							className="w-full flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-accent-primary transition"
 						>
 							<svg
 								className="w-5 h-5"
@@ -68,7 +153,87 @@ export default function DashboardSidebar({ sidebarOpen, onToggle }: DashboardSid
 								/>
 							</svg>
 							<span className="ms-3">My Courses</span>
-						</a>
+							<svg
+								className={`w-4 h-4 ml-auto transition-transform ${coursesExpanded ? 'rotate-180' : ''}`}
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M19 14l-7 7m0 0l-7-7m7 7V3"
+								/>
+							</svg>
+						</button>
+
+						{/* Courses Dropdown */}
+						{coursesExpanded && (
+							<ul className="mt-2 ml-4 space-y-2 border-l border-default pl-2">
+								{loadingCourses ?
+									<li className="text-xs text-muted py-2">Loading courses...</li>
+								: courses.length > 0 ?
+									courses.map((course) => (
+										<li key={course.id}>
+											<button
+												onClick={() => handleCourseClick(course.id, course.title)}
+												className="w-full flex items-center px-2 py-1.5 text-xs text-secondary rounded hover:bg-surface hover:text-accent-primary transition text-left"
+											>
+												<svg
+													className="w-4 h-4"
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747 0-6.002-4.5-10.747-10-10.747z"
+													/>
+												</svg>
+												<span className="ms-2 truncate">{course.title}</span>
+												<svg
+													className={`w-3 h-3 ml-auto transition-transform ${expandedCourse === course.id ? 'rotate-180' : ''}`}
+													fill="none"
+													stroke="currentColor"
+													viewBox="0 0 24 24"
+												>
+													<path
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														strokeWidth={2}
+														d="M19 14l-7 7m0 0l-7-7m7 7V3"
+													/>
+												</svg>
+											</button>
+
+											{/* Chapters Dropdown */}
+											{expandedCourse === course.id && (
+												<ul className="mt-1 ml-4 space-y-1 border-l border-default pl-2">
+													{loadingChapters[course.id] ?
+														<li className="text-xs text-muted py-1">Loading chapters...</li>
+													: courseChapters[course.id]?.length > 0 ?
+														courseChapters[course.id].map((chapter) => (
+															<li
+																key={chapter.id}
+																className="flex items-center px-2 py-1 text-xs text-secondary rounded hover:bg-surface hover:text-accent-primary transition cursor-pointer"
+															>
+																<svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+																	<circle cx="12" cy="12" r="2" />
+																</svg>
+																<span className="ms-2 truncate">{chapter.title}</span>
+															</li>
+														))
+													:	<li className="text-xs text-muted py-1">No chapters found</li>}
+												</ul>
+											)}
+										</li>
+									))
+								:	<li className="text-xs text-muted py-2">No courses enrolled</li>}
+							</ul>
+						)}
 					</li>
 
 					<li>

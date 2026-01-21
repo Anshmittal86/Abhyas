@@ -7,6 +7,7 @@ import { handleApiError as handleError } from '@/utils/handle-error';
 import { logEvent } from '@/utils/log-event';
 
 import { saveAttemptAnswerSchema } from '@/validators/attemptAnswer.validator';
+import { requireRole } from '@/utils/auth-guard';
 
 export async function saveAttemptAnswer(
 	request: NextRequest,
@@ -14,8 +15,7 @@ export async function saveAttemptAnswer(
 ) {
 	try {
 		// 🔐 Student identity from middleware
-		const studentId = request.headers.get('x-user-id');
-		const role = request.headers.get('x-user-role');
+		const { userId: studentId, userRole: role } = requireRole(request, ['student']);
 
 		if (!studentId || role !== 'student') {
 			throw new ApiError(401, 'Unauthorized');

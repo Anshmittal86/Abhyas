@@ -9,11 +9,11 @@ import { logEvent } from '@/utils/log-event';
 
 import { createStudentSchema } from '@/validators/student.validator';
 import { generateStudentPassword } from '@/utils/generate-password';
+import { requireRole } from '@/utils/auth-guard';
 
 export async function createStudent(request: NextRequest) {
 	try {
-		const adminId = request.headers.get('x-user-id');
-		const role = request.headers.get('x-user-role');
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
 		if (!adminId || role !== 'admin') {
 			throw new ApiError(401, 'Unauthorized');
@@ -98,17 +98,17 @@ export async function createStudent(request: NextRequest) {
 export async function getStudentDashboard(request: NextRequest) {
 	try {
 		// Get student ID from headers or auth context
-		const studentId = request.headers.get('x-user-id');
+		const { userId } = requireRole(request, ['student']);
 
-		console.log('Student ID:', studentId);
+		console.log('Student ID:', userId);
 
-		if (!studentId) {
+		if (!userId) {
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
 		// Fetch student data
 		const student = await prisma.student.findUnique({
-			where: { id: studentId },
+			where: { id: userId },
 			select: {
 				id: true,
 				name: true,
@@ -123,12 +123,12 @@ export async function getStudentDashboard(request: NextRequest) {
 
 		// Fetch enrollments count
 		const enrolledCourses = await prisma.enrollment.count({
-			where: { studentId }
+			where: { studentId: userId }
 		});
 
 		// Fetch test attempts
 		const testAttempts = await prisma.testAttempt.findMany({
-			where: { studentId },
+			where: { studentId: userId },
 			include: { test: true }
 		});
 
@@ -158,5 +158,81 @@ export async function getStudentDashboard(request: NextRequest) {
 		return NextResponse.json(response);
 	} catch (error) {
 		return handleError('StudentDashboard', error);
+	}
+}
+
+export async function getStudentCourses(request: NextRequest) {
+	try {
+		const { userId: studentId } = requireRole(request, ['student']);
+		console.log('Fetching courses for student ID:', studentId);
+		if (!studentId) {
+			throw new ApiError(401, 'Unauthorized access');
+		}
+
+		// Fetch all courses enrolled by the student
+		const enrollments = await prisma.enrollment.findMany({
+			where: { studentId },
+			include: {
+				course: {
+					select: {
+						id: true,
+						title: true
+					}
+				}
+			}
+		});
+
+		const courses = enrollments.map((enrollment) => ({
+			id: enrollment.course.id,
+			title: enrollment.course.title
+		}));
+
+		const response = new ApiResponse(200, courses, 'Courses fetched successfully');
+		return NextResponse.json(response);
+	} catch (error) {
+		return handleError('GetStudentCourses', error);
+	}
+}
+
+export async function getCourseChapters(
+	request: NextRequest,
+	{ params }: { params: Promise<{ courseId: string }> }
+) {
+	try {
+		const { userId: studentId } = requireRole(request, ['student']);
+		const { courseId } = await params;
+
+		if (!studentId) {
+			throw new ApiError(401, 'Unauthorized access');
+		}
+
+		// Verify student is enrolled in this course
+		const enrollment = await prisma.enrollment.findUnique({
+			where: {
+				studentId_courseId: {
+					studentId,
+					courseId
+				}
+			}
+		});
+
+		if (!enrollment) {
+			throw new ApiError(403, 'Not enrolled in this course');
+		}
+
+		// Fetch all chapters for this course
+		const chapters = await prisma.chapter.findMany({
+			where: { courseId },
+			select: {
+				id: true,
+				title: true
+			},
+			orderBy: { orderNo: 'asc' }
+		});
+
+		const response = new ApiResponse(200, chapters, 'Chapters fetched successfully');
+		return NextResponse.json(response);
+	} catch (error) {
+		return handleError('GetCourseChapters', error);
 	}
 }
