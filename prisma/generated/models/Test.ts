@@ -42,6 +42,8 @@ export type TestMinAggregateOutputType = {
   title: string | null
   durationMinutes: number | null
   totalQuestions: number | null
+  createdAt: Date | null
+  updatedAt: Date | null
   chapterId: string | null
   adminId: string | null
 }
@@ -51,6 +53,8 @@ export type TestMaxAggregateOutputType = {
   title: string | null
   durationMinutes: number | null
   totalQuestions: number | null
+  createdAt: Date | null
+  updatedAt: Date | null
   chapterId: string | null
   adminId: string | null
 }
@@ -60,6 +64,8 @@ export type TestCountAggregateOutputType = {
   title: number
   durationMinutes: number
   totalQuestions: number
+  createdAt: number
+  updatedAt: number
   chapterId: number
   adminId: number
   _all: number
@@ -81,6 +87,8 @@ export type TestMinAggregateInputType = {
   title?: true
   durationMinutes?: true
   totalQuestions?: true
+  createdAt?: true
+  updatedAt?: true
   chapterId?: true
   adminId?: true
 }
@@ -90,6 +98,8 @@ export type TestMaxAggregateInputType = {
   title?: true
   durationMinutes?: true
   totalQuestions?: true
+  createdAt?: true
+  updatedAt?: true
   chapterId?: true
   adminId?: true
 }
@@ -99,6 +109,8 @@ export type TestCountAggregateInputType = {
   title?: true
   durationMinutes?: true
   totalQuestions?: true
+  createdAt?: true
+  updatedAt?: true
   chapterId?: true
   adminId?: true
   _all?: true
@@ -195,6 +207,8 @@ export type TestGroupByOutputType = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt: Date
+  updatedAt: Date
   chapterId: string
   adminId: string
   _count: TestCountAggregateOutputType | null
@@ -227,6 +241,8 @@ export type TestWhereInput = {
   title?: Prisma.StringFilter<"Test"> | string
   durationMinutes?: Prisma.IntFilter<"Test"> | number
   totalQuestions?: Prisma.IntFilter<"Test"> | number
+  createdAt?: Prisma.DateTimeFilter<"Test"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Test"> | Date | string
   chapterId?: Prisma.StringFilter<"Test"> | string
   adminId?: Prisma.StringFilter<"Test"> | string
   chapter?: Prisma.XOR<Prisma.ChapterScalarRelationFilter, Prisma.ChapterWhereInput>
@@ -240,6 +256,8 @@ export type TestOrderByWithRelationInput = {
   title?: Prisma.SortOrder
   durationMinutes?: Prisma.SortOrder
   totalQuestions?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   chapterId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   chapter?: Prisma.ChapterOrderByWithRelationInput
@@ -256,6 +274,8 @@ export type TestWhereUniqueInput = Prisma.AtLeast<{
   title?: Prisma.StringFilter<"Test"> | string
   durationMinutes?: Prisma.IntFilter<"Test"> | number
   totalQuestions?: Prisma.IntFilter<"Test"> | number
+  createdAt?: Prisma.DateTimeFilter<"Test"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Test"> | Date | string
   chapterId?: Prisma.StringFilter<"Test"> | string
   adminId?: Prisma.StringFilter<"Test"> | string
   chapter?: Prisma.XOR<Prisma.ChapterScalarRelationFilter, Prisma.ChapterWhereInput>
@@ -269,6 +289,8 @@ export type TestOrderByWithAggregationInput = {
   title?: Prisma.SortOrder
   durationMinutes?: Prisma.SortOrder
   totalQuestions?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   chapterId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   _count?: Prisma.TestCountOrderByAggregateInput
@@ -286,6 +308,8 @@ export type TestScalarWhereWithAggregatesInput = {
   title?: Prisma.StringWithAggregatesFilter<"Test"> | string
   durationMinutes?: Prisma.IntWithAggregatesFilter<"Test"> | number
   totalQuestions?: Prisma.IntWithAggregatesFilter<"Test"> | number
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<"Test"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Test"> | Date | string
   chapterId?: Prisma.StringWithAggregatesFilter<"Test"> | string
   adminId?: Prisma.StringWithAggregatesFilter<"Test"> | string
 }
@@ -295,6 +319,8 @@ export type TestCreateInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapter: Prisma.ChapterCreateNestedOneWithoutTestsInput
   admin: Prisma.AdminCreateNestedOneWithoutTestsInput
   questions?: Prisma.QuestionCreateNestedManyWithoutTestInput
@@ -306,6 +332,8 @@ export type TestUncheckedCreateInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapterId: string
   adminId: string
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutTestInput
@@ -317,6 +345,8 @@ export type TestUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapter?: Prisma.ChapterUpdateOneRequiredWithoutTestsNestedInput
   admin?: Prisma.AdminUpdateOneRequiredWithoutTestsNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutTestNestedInput
@@ -328,6 +358,8 @@ export type TestUncheckedUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapterId?: Prisma.StringFieldUpdateOperationsInput | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutTestNestedInput
@@ -339,6 +371,8 @@ export type TestCreateManyInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapterId: string
   adminId: string
 }
@@ -348,6 +382,8 @@ export type TestUpdateManyMutationInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type TestUncheckedUpdateManyInput = {
@@ -355,6 +391,8 @@ export type TestUncheckedUpdateManyInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapterId?: Prisma.StringFieldUpdateOperationsInput | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -374,6 +412,8 @@ export type TestCountOrderByAggregateInput = {
   title?: Prisma.SortOrder
   durationMinutes?: Prisma.SortOrder
   totalQuestions?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   chapterId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
 }
@@ -388,6 +428,8 @@ export type TestMaxOrderByAggregateInput = {
   title?: Prisma.SortOrder
   durationMinutes?: Prisma.SortOrder
   totalQuestions?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   chapterId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
 }
@@ -397,6 +439,8 @@ export type TestMinOrderByAggregateInput = {
   title?: Prisma.SortOrder
   durationMinutes?: Prisma.SortOrder
   totalQuestions?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   chapterId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
 }
@@ -528,6 +572,8 @@ export type TestCreateWithoutAdminInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapter: Prisma.ChapterCreateNestedOneWithoutTestsInput
   questions?: Prisma.QuestionCreateNestedManyWithoutTestInput
   attempts?: Prisma.TestAttemptCreateNestedManyWithoutTestInput
@@ -538,6 +584,8 @@ export type TestUncheckedCreateWithoutAdminInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapterId: string
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutTestInput
   attempts?: Prisma.TestAttemptUncheckedCreateNestedManyWithoutTestInput
@@ -577,6 +625,8 @@ export type TestScalarWhereInput = {
   title?: Prisma.StringFilter<"Test"> | string
   durationMinutes?: Prisma.IntFilter<"Test"> | number
   totalQuestions?: Prisma.IntFilter<"Test"> | number
+  createdAt?: Prisma.DateTimeFilter<"Test"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Test"> | Date | string
   chapterId?: Prisma.StringFilter<"Test"> | string
   adminId?: Prisma.StringFilter<"Test"> | string
 }
@@ -586,6 +636,8 @@ export type TestCreateWithoutChapterInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   admin: Prisma.AdminCreateNestedOneWithoutTestsInput
   questions?: Prisma.QuestionCreateNestedManyWithoutTestInput
   attempts?: Prisma.TestAttemptCreateNestedManyWithoutTestInput
@@ -596,6 +648,8 @@ export type TestUncheckedCreateWithoutChapterInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   adminId: string
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutTestInput
   attempts?: Prisma.TestAttemptUncheckedCreateNestedManyWithoutTestInput
@@ -632,6 +686,8 @@ export type TestCreateWithoutQuestionsInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapter: Prisma.ChapterCreateNestedOneWithoutTestsInput
   admin: Prisma.AdminCreateNestedOneWithoutTestsInput
   attempts?: Prisma.TestAttemptCreateNestedManyWithoutTestInput
@@ -642,6 +698,8 @@ export type TestUncheckedCreateWithoutQuestionsInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapterId: string
   adminId: string
   attempts?: Prisma.TestAttemptUncheckedCreateNestedManyWithoutTestInput
@@ -668,6 +726,8 @@ export type TestUpdateWithoutQuestionsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapter?: Prisma.ChapterUpdateOneRequiredWithoutTestsNestedInput
   admin?: Prisma.AdminUpdateOneRequiredWithoutTestsNestedInput
   attempts?: Prisma.TestAttemptUpdateManyWithoutTestNestedInput
@@ -678,6 +738,8 @@ export type TestUncheckedUpdateWithoutQuestionsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapterId?: Prisma.StringFieldUpdateOperationsInput | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   attempts?: Prisma.TestAttemptUncheckedUpdateManyWithoutTestNestedInput
@@ -688,6 +750,8 @@ export type TestCreateWithoutAttemptsInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapter: Prisma.ChapterCreateNestedOneWithoutTestsInput
   admin: Prisma.AdminCreateNestedOneWithoutTestsInput
   questions?: Prisma.QuestionCreateNestedManyWithoutTestInput
@@ -698,6 +762,8 @@ export type TestUncheckedCreateWithoutAttemptsInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapterId: string
   adminId: string
   questions?: Prisma.QuestionUncheckedCreateNestedManyWithoutTestInput
@@ -724,6 +790,8 @@ export type TestUpdateWithoutAttemptsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapter?: Prisma.ChapterUpdateOneRequiredWithoutTestsNestedInput
   admin?: Prisma.AdminUpdateOneRequiredWithoutTestsNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutTestNestedInput
@@ -734,6 +802,8 @@ export type TestUncheckedUpdateWithoutAttemptsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapterId?: Prisma.StringFieldUpdateOperationsInput | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutTestNestedInput
@@ -744,6 +814,8 @@ export type TestCreateManyAdminInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   chapterId: string
 }
 
@@ -752,6 +824,8 @@ export type TestUpdateWithoutAdminInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapter?: Prisma.ChapterUpdateOneRequiredWithoutTestsNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutTestNestedInput
   attempts?: Prisma.TestAttemptUpdateManyWithoutTestNestedInput
@@ -762,6 +836,8 @@ export type TestUncheckedUpdateWithoutAdminInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapterId?: Prisma.StringFieldUpdateOperationsInput | string
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutTestNestedInput
   attempts?: Prisma.TestAttemptUncheckedUpdateManyWithoutTestNestedInput
@@ -772,6 +848,8 @@ export type TestUncheckedUpdateManyWithoutAdminInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chapterId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -780,6 +858,8 @@ export type TestCreateManyChapterInput = {
   title: string
   durationMinutes: number
   totalQuestions: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   adminId: string
 }
 
@@ -788,6 +868,8 @@ export type TestUpdateWithoutChapterInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.AdminUpdateOneRequiredWithoutTestsNestedInput
   questions?: Prisma.QuestionUpdateManyWithoutTestNestedInput
   attempts?: Prisma.TestAttemptUpdateManyWithoutTestNestedInput
@@ -798,6 +880,8 @@ export type TestUncheckedUpdateWithoutChapterInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   questions?: Prisma.QuestionUncheckedUpdateManyWithoutTestNestedInput
   attempts?: Prisma.TestAttemptUncheckedUpdateManyWithoutTestNestedInput
@@ -808,6 +892,8 @@ export type TestUncheckedUpdateManyWithoutChapterInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   durationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   totalQuestions?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -856,6 +942,8 @@ export type TestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   title?: boolean
   durationMinutes?: boolean
   totalQuestions?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   chapterId?: boolean
   adminId?: boolean
   chapter?: boolean | Prisma.ChapterDefaultArgs<ExtArgs>
@@ -870,6 +958,8 @@ export type TestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   title?: boolean
   durationMinutes?: boolean
   totalQuestions?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   chapterId?: boolean
   adminId?: boolean
   chapter?: boolean | Prisma.ChapterDefaultArgs<ExtArgs>
@@ -881,6 +971,8 @@ export type TestSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   title?: boolean
   durationMinutes?: boolean
   totalQuestions?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   chapterId?: boolean
   adminId?: boolean
   chapter?: boolean | Prisma.ChapterDefaultArgs<ExtArgs>
@@ -892,11 +984,13 @@ export type TestSelectScalar = {
   title?: boolean
   durationMinutes?: boolean
   totalQuestions?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   chapterId?: boolean
   adminId?: boolean
 }
 
-export type TestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "durationMinutes" | "totalQuestions" | "chapterId" | "adminId", ExtArgs["result"]["test"]>
+export type TestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "durationMinutes" | "totalQuestions" | "createdAt" | "updatedAt" | "chapterId" | "adminId", ExtArgs["result"]["test"]>
 export type TestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   chapter?: boolean | Prisma.ChapterDefaultArgs<ExtArgs>
   admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
@@ -926,6 +1020,8 @@ export type $TestPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     title: string
     durationMinutes: number
     totalQuestions: number
+    createdAt: Date
+    updatedAt: Date
     chapterId: string
     adminId: string
   }, ExtArgs["result"]["test"]>
@@ -1359,6 +1455,8 @@ export interface TestFieldRefs {
   readonly title: Prisma.FieldRef<"Test", 'String'>
   readonly durationMinutes: Prisma.FieldRef<"Test", 'Int'>
   readonly totalQuestions: Prisma.FieldRef<"Test", 'Int'>
+  readonly createdAt: Prisma.FieldRef<"Test", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Test", 'DateTime'>
   readonly chapterId: Prisma.FieldRef<"Test", 'String'>
   readonly adminId: Prisma.FieldRef<"Test", 'String'>
 }

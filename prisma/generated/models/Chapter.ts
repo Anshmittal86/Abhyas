@@ -39,6 +39,8 @@ export type ChapterMinAggregateOutputType = {
   code: string | null
   title: string | null
   orderNo: number | null
+  createdAt: Date | null
+  updatedAt: Date | null
   courseId: string | null
   adminId: string | null
 }
@@ -48,6 +50,8 @@ export type ChapterMaxAggregateOutputType = {
   code: string | null
   title: string | null
   orderNo: number | null
+  createdAt: Date | null
+  updatedAt: Date | null
   courseId: string | null
   adminId: string | null
 }
@@ -57,6 +61,8 @@ export type ChapterCountAggregateOutputType = {
   code: number
   title: number
   orderNo: number
+  createdAt: number
+  updatedAt: number
   courseId: number
   adminId: number
   _all: number
@@ -76,6 +82,8 @@ export type ChapterMinAggregateInputType = {
   code?: true
   title?: true
   orderNo?: true
+  createdAt?: true
+  updatedAt?: true
   courseId?: true
   adminId?: true
 }
@@ -85,6 +93,8 @@ export type ChapterMaxAggregateInputType = {
   code?: true
   title?: true
   orderNo?: true
+  createdAt?: true
+  updatedAt?: true
   courseId?: true
   adminId?: true
 }
@@ -94,6 +104,8 @@ export type ChapterCountAggregateInputType = {
   code?: true
   title?: true
   orderNo?: true
+  createdAt?: true
+  updatedAt?: true
   courseId?: true
   adminId?: true
   _all?: true
@@ -190,6 +202,8 @@ export type ChapterGroupByOutputType = {
   code: string
   title: string
   orderNo: number
+  createdAt: Date
+  updatedAt: Date
   courseId: string
   adminId: string
   _count: ChapterCountAggregateOutputType | null
@@ -222,6 +236,8 @@ export type ChapterWhereInput = {
   code?: Prisma.StringFilter<"Chapter"> | string
   title?: Prisma.StringFilter<"Chapter"> | string
   orderNo?: Prisma.IntFilter<"Chapter"> | number
+  createdAt?: Prisma.DateTimeFilter<"Chapter"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Chapter"> | Date | string
   courseId?: Prisma.StringFilter<"Chapter"> | string
   adminId?: Prisma.StringFilter<"Chapter"> | string
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
@@ -234,6 +250,8 @@ export type ChapterOrderByWithRelationInput = {
   code?: Prisma.SortOrder
   title?: Prisma.SortOrder
   orderNo?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   course?: Prisma.CourseOrderByWithRelationInput
@@ -249,6 +267,8 @@ export type ChapterWhereUniqueInput = Prisma.AtLeast<{
   code?: Prisma.StringFilter<"Chapter"> | string
   title?: Prisma.StringFilter<"Chapter"> | string
   orderNo?: Prisma.IntFilter<"Chapter"> | number
+  createdAt?: Prisma.DateTimeFilter<"Chapter"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Chapter"> | Date | string
   courseId?: Prisma.StringFilter<"Chapter"> | string
   adminId?: Prisma.StringFilter<"Chapter"> | string
   course?: Prisma.XOR<Prisma.CourseScalarRelationFilter, Prisma.CourseWhereInput>
@@ -261,6 +281,8 @@ export type ChapterOrderByWithAggregationInput = {
   code?: Prisma.SortOrder
   title?: Prisma.SortOrder
   orderNo?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
   _count?: Prisma.ChapterCountOrderByAggregateInput
@@ -278,6 +300,8 @@ export type ChapterScalarWhereWithAggregatesInput = {
   code?: Prisma.StringWithAggregatesFilter<"Chapter"> | string
   title?: Prisma.StringWithAggregatesFilter<"Chapter"> | string
   orderNo?: Prisma.IntWithAggregatesFilter<"Chapter"> | number
+  createdAt?: Prisma.DateTimeWithAggregatesFilter<"Chapter"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Chapter"> | Date | string
   courseId?: Prisma.StringWithAggregatesFilter<"Chapter"> | string
   adminId?: Prisma.StringWithAggregatesFilter<"Chapter"> | string
 }
@@ -287,6 +311,8 @@ export type ChapterCreateInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   course: Prisma.CourseCreateNestedOneWithoutChaptersInput
   admin: Prisma.AdminCreateNestedOneWithoutChaptersInput
   tests?: Prisma.TestCreateNestedManyWithoutChapterInput
@@ -297,6 +323,8 @@ export type ChapterUncheckedCreateInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   courseId: string
   adminId: string
   tests?: Prisma.TestUncheckedCreateNestedManyWithoutChapterInput
@@ -307,6 +335,8 @@ export type ChapterUpdateInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   course?: Prisma.CourseUpdateOneRequiredWithoutChaptersNestedInput
   admin?: Prisma.AdminUpdateOneRequiredWithoutChaptersNestedInput
   tests?: Prisma.TestUpdateManyWithoutChapterNestedInput
@@ -317,6 +347,8 @@ export type ChapterUncheckedUpdateInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   courseId?: Prisma.StringFieldUpdateOperationsInput | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   tests?: Prisma.TestUncheckedUpdateManyWithoutChapterNestedInput
@@ -327,6 +359,8 @@ export type ChapterCreateManyInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   courseId: string
   adminId: string
 }
@@ -336,6 +370,8 @@ export type ChapterUpdateManyMutationInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type ChapterUncheckedUpdateManyInput = {
@@ -343,6 +379,8 @@ export type ChapterUncheckedUpdateManyInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   courseId?: Prisma.StringFieldUpdateOperationsInput | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -362,6 +400,8 @@ export type ChapterCountOrderByAggregateInput = {
   code?: Prisma.SortOrder
   title?: Prisma.SortOrder
   orderNo?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
 }
@@ -375,6 +415,8 @@ export type ChapterMaxOrderByAggregateInput = {
   code?: Prisma.SortOrder
   title?: Prisma.SortOrder
   orderNo?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
 }
@@ -384,6 +426,8 @@ export type ChapterMinOrderByAggregateInput = {
   code?: Prisma.SortOrder
   title?: Prisma.SortOrder
   orderNo?: Prisma.SortOrder
+  createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   courseId?: Prisma.SortOrder
   adminId?: Prisma.SortOrder
 }
@@ -508,6 +552,8 @@ export type ChapterCreateWithoutAdminInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   course: Prisma.CourseCreateNestedOneWithoutChaptersInput
   tests?: Prisma.TestCreateNestedManyWithoutChapterInput
 }
@@ -517,6 +563,8 @@ export type ChapterUncheckedCreateWithoutAdminInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   courseId: string
   tests?: Prisma.TestUncheckedCreateNestedManyWithoutChapterInput
 }
@@ -555,6 +603,8 @@ export type ChapterScalarWhereInput = {
   code?: Prisma.StringFilter<"Chapter"> | string
   title?: Prisma.StringFilter<"Chapter"> | string
   orderNo?: Prisma.IntFilter<"Chapter"> | number
+  createdAt?: Prisma.DateTimeFilter<"Chapter"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Chapter"> | Date | string
   courseId?: Prisma.StringFilter<"Chapter"> | string
   adminId?: Prisma.StringFilter<"Chapter"> | string
 }
@@ -564,6 +614,8 @@ export type ChapterCreateWithoutCourseInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   admin: Prisma.AdminCreateNestedOneWithoutChaptersInput
   tests?: Prisma.TestCreateNestedManyWithoutChapterInput
 }
@@ -573,6 +625,8 @@ export type ChapterUncheckedCreateWithoutCourseInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   adminId: string
   tests?: Prisma.TestUncheckedCreateNestedManyWithoutChapterInput
 }
@@ -608,6 +662,8 @@ export type ChapterCreateWithoutTestsInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   course: Prisma.CourseCreateNestedOneWithoutChaptersInput
   admin: Prisma.AdminCreateNestedOneWithoutChaptersInput
 }
@@ -617,6 +673,8 @@ export type ChapterUncheckedCreateWithoutTestsInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   courseId: string
   adminId: string
 }
@@ -642,6 +700,8 @@ export type ChapterUpdateWithoutTestsInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   course?: Prisma.CourseUpdateOneRequiredWithoutChaptersNestedInput
   admin?: Prisma.AdminUpdateOneRequiredWithoutChaptersNestedInput
 }
@@ -651,6 +711,8 @@ export type ChapterUncheckedUpdateWithoutTestsInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   courseId?: Prisma.StringFieldUpdateOperationsInput | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
 }
@@ -660,6 +722,8 @@ export type ChapterCreateManyAdminInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   courseId: string
 }
 
@@ -668,6 +732,8 @@ export type ChapterUpdateWithoutAdminInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   course?: Prisma.CourseUpdateOneRequiredWithoutChaptersNestedInput
   tests?: Prisma.TestUpdateManyWithoutChapterNestedInput
 }
@@ -677,6 +743,8 @@ export type ChapterUncheckedUpdateWithoutAdminInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   courseId?: Prisma.StringFieldUpdateOperationsInput | string
   tests?: Prisma.TestUncheckedUpdateManyWithoutChapterNestedInput
 }
@@ -686,6 +754,8 @@ export type ChapterUncheckedUpdateManyWithoutAdminInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   courseId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -694,6 +764,8 @@ export type ChapterCreateManyCourseInput = {
   code: string
   title: string
   orderNo: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
   adminId: string
 }
 
@@ -702,6 +774,8 @@ export type ChapterUpdateWithoutCourseInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.AdminUpdateOneRequiredWithoutChaptersNestedInput
   tests?: Prisma.TestUpdateManyWithoutChapterNestedInput
 }
@@ -711,6 +785,8 @@ export type ChapterUncheckedUpdateWithoutCourseInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
   tests?: Prisma.TestUncheckedUpdateManyWithoutChapterNestedInput
 }
@@ -720,6 +796,8 @@ export type ChapterUncheckedUpdateManyWithoutCourseInput = {
   code?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
   orderNo?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
 }
 
@@ -759,6 +837,8 @@ export type ChapterSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   code?: boolean
   title?: boolean
   orderNo?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   courseId?: boolean
   adminId?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
@@ -772,6 +852,8 @@ export type ChapterSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   code?: boolean
   title?: boolean
   orderNo?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   courseId?: boolean
   adminId?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
@@ -783,6 +865,8 @@ export type ChapterSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   code?: boolean
   title?: boolean
   orderNo?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   courseId?: boolean
   adminId?: boolean
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
@@ -794,11 +878,13 @@ export type ChapterSelectScalar = {
   code?: boolean
   title?: boolean
   orderNo?: boolean
+  createdAt?: boolean
+  updatedAt?: boolean
   courseId?: boolean
   adminId?: boolean
 }
 
-export type ChapterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "title" | "orderNo" | "courseId" | "adminId", ExtArgs["result"]["chapter"]>
+export type ChapterOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "code" | "title" | "orderNo" | "createdAt" | "updatedAt" | "courseId" | "adminId", ExtArgs["result"]["chapter"]>
 export type ChapterInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   course?: boolean | Prisma.CourseDefaultArgs<ExtArgs>
   admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
@@ -826,6 +912,8 @@ export type $ChapterPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     code: string
     title: string
     orderNo: number
+    createdAt: Date
+    updatedAt: Date
     courseId: string
     adminId: string
   }, ExtArgs["result"]["chapter"]>
@@ -1258,6 +1346,8 @@ export interface ChapterFieldRefs {
   readonly code: Prisma.FieldRef<"Chapter", 'String'>
   readonly title: Prisma.FieldRef<"Chapter", 'String'>
   readonly orderNo: Prisma.FieldRef<"Chapter", 'Int'>
+  readonly createdAt: Prisma.FieldRef<"Chapter", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Chapter", 'DateTime'>
   readonly courseId: Prisma.FieldRef<"Chapter", 'String'>
   readonly adminId: Prisma.FieldRef<"Chapter", 'String'>
 }

@@ -27,28 +27,28 @@
 ## Admin APIs - Test Management
 
 - ✅ `POST /api/admin/test` - Create test
-- ⬜ `GET /api/admin/test` - List all tests
-- ⬜ `GET /api/admin/test/:id` - Get test details
-- ⬜ `PUT /api/admin/test/:id` - Update test
-- ⬜ `DELETE /api/admin/test/:id` - Delete test
+- ✅ `GET /api/admin/test` - List all tests
+- ✅ `GET /api/admin/test/:id` - Get test details
+- ✅ `PUT /api/admin/test/:id` - Update test
+- ✅ `DELETE /api/admin/test/:id` - Delete test
 
 ## Admin APIs - Question Management
 
 - ✅ `POST /api/admin/question` - Create question
-- ⬜ `GET /api/admin/question` - List all questions
-- ⬜ `GET /api/admin/question/:id` - Get question details
-- ⬜ `PUT /api/admin/question/:id` - Update question
-- ⬜ `DELETE /api/admin/question/:id` - Delete question
+- ✅ `GET /api/admin/question` - List all questions
+- ✅ `GET /api/admin/question/:id` - Get question details
+- ✅ `PUT /api/admin/question/:id` - Update question
+- ✅ `DELETE /api/admin/question/:id` - Delete question
 
 ## Admin APIs - Student Management
 
 - ✅ `POST /api/admin/student` - Create student
-- ⬜ `GET /api/admin/student` - List all students
-- ⬜ `GET /api/admin/student/:id` - Get student details
-- ⬜ `PUT /api/admin/student/:id` - Update student
-- ⬜ `DELETE /api/admin/student/:id` - Delete student
-- ⬜ `POST /api/admin/student/:id/enroll` - Enroll student in course
-- ⬜ `DELETE /api/admin/student/:id/unenroll/:courseId` - Remove student from course
+- ✅ `GET /api/admin/student` - List all students
+- ✅ `GET /api/admin/student/:id` - Get student details
+- ✅ `PUT /api/admin/student/:id` - Update student
+- ✅ `DELETE /api/admin/student/:id` - Delete student
+- ✅ `POST /api/admin/student/:id/enroll` - Enroll student in course
+- ✅ `DELETE /api/admin/student/:id/unenroll/:courseId` - Remove student from course
 
 ## Admin APIs - Test Attempts & Results
 

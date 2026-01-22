@@ -62,7 +62,6 @@ export type Test = Prisma.TestModel
 /**
  * Model Question
  * Question with fixed 4 options, correctOption enforced by enum
- * Question with fixed 4 options, correctOption enforced by enum
  */
 export type Question = Prisma.QuestionModel
 /**

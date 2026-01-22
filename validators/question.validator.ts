@@ -13,3 +13,5 @@ export const createQuestionSchema = z.object({
 		message: 'Correct option must be one of A, B, C, D'
 	})
 });
+
+export const updateQuestionSchema = createQuestionSchema.omit({ testId: true });

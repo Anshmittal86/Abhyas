@@ -146,6 +146,8 @@ model Enrollment {
   studentId   String
   courseId    String
   enrolledAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -159,10 +161,12 @@ model Enrollment {
   Chapter belongs to a Course
 */
 model Chapter {
-  id          String @id @default(uuid())
+  id          String   @id @default(uuid())
   code        String
   title       String
   orderNo     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   courseId    String
   adminId     String
@@ -181,10 +185,12 @@ model Chapter {
   durationMinutes kept as Int; set default if you want (e.g. 60)
 */
 model Test {
-  id              String @id @default(uuid())
+  id              String   @id @default(uuid())
   title           String
   durationMinutes Int
   totalQuestions  Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   chapterId       String
   adminId         String
@@ -203,17 +209,16 @@ model Test {
 /*
   Question with fixed 4 options, correctOption enforced by enum
 */
-/*
-  Question with fixed 4 options, correctOption enforced by enum
-*/
 model Question {
-  id            String @id @default(uuid())
+  id            String   @id @default(uuid())
   questionText  String
   optionA       String
   optionB       String
   optionC       String
   optionD       String
   correctOption OptionChoice
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   testId        String
   adminId       String

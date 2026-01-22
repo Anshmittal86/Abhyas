@@ -1340,7 +1340,9 @@ export const EnrollmentScalarFieldEnum = {
   id: 'id',
   studentId: 'studentId',
   courseId: 'courseId',
-  enrolledAt: 'enrolledAt'
+  enrolledAt: 'enrolledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type EnrollmentScalarFieldEnum = (typeof EnrollmentScalarFieldEnum)[keyof typeof EnrollmentScalarFieldEnum]
@@ -1351,6 +1353,8 @@ export const ChapterScalarFieldEnum = {
   code: 'code',
   title: 'title',
   orderNo: 'orderNo',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
   courseId: 'courseId',
   adminId: 'adminId'
 } as const
@@ -1363,6 +1367,8 @@ export const TestScalarFieldEnum = {
   title: 'title',
   durationMinutes: 'durationMinutes',
   totalQuestions: 'totalQuestions',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
   chapterId: 'chapterId',
   adminId: 'adminId'
 } as const
@@ -1378,6 +1384,8 @@ export const QuestionScalarFieldEnum = {
   optionC: 'optionC',
   optionD: 'optionD',
   correctOption: 'correctOption',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
   testId: 'testId',
   adminId: 'adminId'
 } as const
