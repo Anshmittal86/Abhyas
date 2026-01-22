@@ -147,8 +147,8 @@ model Enrollment {
   courseId    String
   enrolledAt  DateTime @default(now())
 
-  student     Student @relation(fields: [studentId], references: [id])
-  course      Course  @relation(fields: [courseId], references: [id])
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course      Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([studentId, courseId])
   @@index([studentId])
@@ -167,7 +167,7 @@ model Chapter {
   courseId    String
   adminId     String
 
-  course      Course @relation(fields: [courseId], references: [id])
+  course      Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   admin       Admin  @relation(fields: [adminId], references: [id])
 
   tests       Test[]
@@ -189,7 +189,7 @@ model Test {
   chapterId       String
   adminId         String
 
-  chapter         Chapter @relation(fields: [chapterId], references: [id])
+  chapter         Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   admin           Admin   @relation(fields: [adminId], references: [id])
 
 
@@ -218,7 +218,7 @@ model Question {
   testId        String
   adminId       String
 
-  test          Test  @relation(fields: [testId], references: [id])
+  test          Test  @relation(fields: [testId], references: [id], onDelete: Cascade)
   admin         Admin @relation(fields: [adminId], references: [id])
 
   answers       AttemptAnswer[]
@@ -239,8 +239,8 @@ model TestAttempt {
   submittedAt   DateTime?
   score         Int?
 
-  student       Student @relation(fields: [studentId], references: [id])
-  test          Test    @relation(fields: [testId], references: [id])
+  student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  test          Test    @relation(fields: [testId], references: [id], onDelete: Cascade)
 
   answers       AttemptAnswer[]
 

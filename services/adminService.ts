@@ -53,7 +53,6 @@ export const generateAccessAndRefreshTokens = async (type: 'admin' | 'student', 
 export const validateRefreshToken = async (rawRefreshToken: string) => {
 	const tokenRecords = await prisma.refreshToken.findMany({
 		where: {
-			isRevoked: false,
 			expiresAt: { gt: new Date() }
 		}
 	});

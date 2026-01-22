@@ -10,45 +10,45 @@
 
 ## Admin APIs - Course Management
 
-- ✅ `POST /api/admin/courses` - Create course
-- ✅ `GET /api/admin/courses` - List all courses
-- ⬜ `GET /api/admin/courses/:id` - Get course details
-- ⬜ `PUT /api/admin/courses/:id` - Update course
-- ⬜ `DELETE /api/admin/courses/:id` - Delete course
+- ✅ `POST /api/admin/course` - Create course
+- ✅ `GET /api/admin/course` - List all courses -
+- ✅ `GET /api/admin/course/:id` - Get course details -
+- ✅ `PUT /api/admin/course/:id` - Update course -
+- ✅ `DELETE /api/admin/course/:id` - Delete course -
 
 ## Admin APIs - Chapter Management
 
-- ✅ `POST /api/admin/chapters` - Create chapter
-- ⬜ `GET /api/admin/chapters` - List all chapters
-- ⬜ `GET /api/admin/chapters/:id` - Get chapter details
-- ⬜ `PUT /api/admin/chapters/:id` - Update chapter
-- ⬜ `DELETE /api/admin/chapters/:id` - Delete chapter
+- ✅ `POST /api/admin/chapter` - Create chapter
+- ✅ `GET /api/admin/chapter` - List all chapters -
+- ✅ `GET /api/admin/chapter/:id` - Get chapter details
+- ✅ `PUT /api/admin/chapter/:id` - Update chapter
+- ✅ `DELETE /api/admin/chapter/:id` - Delete chapter
 
 ## Admin APIs - Test Management
 
-- ✅ `POST /api/admin/tests` - Create test
-- ⬜ `GET /api/admin/tests` - List all tests
-- ⬜ `GET /api/admin/tests/:id` - Get test details
-- ⬜ `PUT /api/admin/tests/:id` - Update test
-- ⬜ `DELETE /api/admin/tests/:id` - Delete test
+- ✅ `POST /api/admin/test` - Create test
+- ⬜ `GET /api/admin/test` - List all tests
+- ⬜ `GET /api/admin/test/:id` - Get test details
+- ⬜ `PUT /api/admin/test/:id` - Update test
+- ⬜ `DELETE /api/admin/test/:id` - Delete test
 
 ## Admin APIs - Question Management
 
-- ✅ `POST /api/admin/questions` - Create question
-- ⬜ `GET /api/admin/questions` - List all questions
-- ⬜ `GET /api/admin/questions/:id` - Get question details
-- ⬜ `PUT /api/admin/questions/:id` - Update question
-- ⬜ `DELETE /api/admin/questions/:id` - Delete question
+- ✅ `POST /api/admin/question` - Create question
+- ⬜ `GET /api/admin/question` - List all questions
+- ⬜ `GET /api/admin/question/:id` - Get question details
+- ⬜ `PUT /api/admin/question/:id` - Update question
+- ⬜ `DELETE /api/admin/question/:id` - Delete question
 
 ## Admin APIs - Student Management
 
-- ✅ `POST /api/admin/students` - Create student
-- ⬜ `GET /api/admin/students` - List all students
-- ⬜ `GET /api/admin/students/:id` - Get student details
-- ⬜ `PUT /api/admin/students/:id` - Update student
-- ⬜ `DELETE /api/admin/students/:id` - Delete student
-- ⬜ `POST /api/admin/students/:id/enroll` - Enroll student in course
-- ⬜ `DELETE /api/admin/students/:id/unenroll/:courseId` - Remove student from course
+- ✅ `POST /api/admin/student` - Create student
+- ⬜ `GET /api/admin/student` - List all students
+- ⬜ `GET /api/admin/student/:id` - Get student details
+- ⬜ `PUT /api/admin/student/:id` - Update student
+- ⬜ `DELETE /api/admin/student/:id` - Delete student
+- ⬜ `POST /api/admin/student/:id/enroll` - Enroll student in course
+- ⬜ `DELETE /api/admin/student/:id/unenroll/:courseId` - Remove student from course
 
 ## Admin APIs - Test Attempts & Results
 
