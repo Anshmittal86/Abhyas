@@ -52,21 +52,21 @@
 
 ## Admin APIs - Test Attempts & Results
 
-- ⬜ `GET /api/admin/test-attempts` - List all test attempts
-- ⬜ `GET /api/admin/test-attempts/:id` - Get test attempt details
-- ⬜ `GET /api/admin/students/:studentId/results` - Get student results
-- ⬜ `DELETE /api/admin/test-attempts/:id` - Delete test attempt
+- ✅ `GET /api/admin/test-attempts` - List all test attempts
+- ✅ `GET /api/admin/test-attempts/:id` - Get test attempt details
+- ✅ `GET /api/admin/students/:studentId/results` - Get student results
+- ✅ `DELETE /api/admin/test-attempts/:id` - Delete test attempt
 
 ## Admin APIs - Analytics & Reports
 
-- ⬜ `GET /api/admin/dashboard` - Admin dashboard statistics
-- ⬜ `GET /api/admin/reports/course-performance` - Course performance report
-- ⬜ `GET /api/admin/reports/student-performance` - Student performance report
-- ⬜ `GET /api/admin/reports/test-analytics` - Test analytics
+- ✅ `GET /api/admin/analytics` - Admin dashboard statistics OK
+- ✅ `GET /api/admin/reports/course-performance` - Course performance report OK
+- ✅ `GET /api/admin/reports/student-performance` - Student performance report
+- ✅ `GET /api/admin/reports/test-analytics` - Test analytics
 
 ## Admin APIs - Admin Logs & Audit
 
-- ⬜ `GET /api/admin/logs` - View admin activity logs
+- ✅ `GET /api/admin/logs` - View admin activity logs
 - ⬜ `GET /api/admin/audit-trail` - View system audit trail
 
 ## Admin APIs - Bulk Operations
@@ -85,16 +85,24 @@
 - ✅ `GET /api/student/dashboard` - Get student dashboard
 - ✅ `GET /api/student/courses` - List enrolled courses
 - ✅ `GET /api/student/courses/:courseId/chapters` - List course chapters
+- ✅ `GET /api/student/chapters/:chapterId/tests` - Student test history per chapter
 
 ## Student APIs - Tests & Attempts
 
-- ✅ `POST /api/student/tests/:testId/start` - Start test attempt
+- ✅ `POST /api/student/test/:testId/start` - Start test attempt
 - ✅ `POST /api/student/attempt/:attemptId/answer` - Submit test answer
+- ✅ `POST /api/student/attempt/:attemptId/submit` - Test submit API explicit
+- ✅ `GET /api/student/attempt/:attemptId` - Test submit API explicit
 
 ## Student APIs - Results
 
-- ⬜ `GET /api/student/results` - Get all test results
-- ⬜ `GET /api/student/results/:testId` - Get specific test result
+- ✅ `GET /api/student/results` - Get all test results
+- ✅ `GET /api/student/results/:testId` - Get specific test result
+
+## Extra APIs
+
+- ⬜ `PUT /api/admin/test/:id/reorder-questions` - Question Reorder
+- ⬜ `PUT /api/admin/course/:id/reorder-chapters` - test Chapters
 
 ## Legend
 
