@@ -11,7 +11,6 @@ import FormField from '@/components/FormField';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { apiFetch } from '@/lib/apiFetch';
-import { se } from 'date-fns/locale';
 
 const studentCreateFormSchema = z.object({
 	provisionalNo: z.string().min(3, 'Provisional no is required'),
