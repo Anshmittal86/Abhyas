@@ -1,16 +1,19 @@
 import React from 'react';
 
+type Role = 'student' | 'admin';
+
 interface TopNavigationProps {
 	onMenuToggle: () => void;
+	role: Role;
 }
 
-export default function TopNavigation({ onMenuToggle }: TopNavigationProps) {
+export default function TopNavigation({ onMenuToggle, role }: TopNavigationProps) {
 	return (
-		<nav className="bg-surface border-b border-default">
-			<div className="px-4 py-3 flex items-center justify-between">
+		<nav className="bg-surface border-b border-default px-6 h-14 flex items-center justify-between">
+			<div className="flex items-center gap-4">
 				<button
 					onClick={onMenuToggle}
-					className="inline-flex sm:hidden p-2 text-secondary hover:bg-main rounded-lg transition"
+					className="sm:hidden text-secondary"
 					aria-label="Toggle sidebar"
 				>
 					<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,9 +25,14 @@ export default function TopNavigation({ onMenuToggle }: TopNavigationProps) {
 						/>
 					</svg>
 				</button>
-				<h2 className="text-lg font-semibold text-primary">Welcome to Your Dashboard</h2>
-				<div className="w-8 h-8" />
+
+				<h2 className="text-lg font-semibold text-primary">
+					{role === 'admin' ? 'Admin Dashboard' : 'Student Dashboard'}
+				</h2>
 			</div>
+
+			{/* Right side placeholder (future use) */}
+			<div className="w-8 h-8" />
 		</nav>
 	);
 }

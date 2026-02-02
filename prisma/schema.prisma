@@ -28,6 +28,12 @@ enum UserRole {
   student
 }
 
+enum TestStatus {
+  IN_PROGRESS
+  COMPLETED
+  SUBMITTED
+}
+
 
 /*
   Admin (owner of content)
@@ -243,13 +249,15 @@ model TestAttempt {
   startedAt     DateTime @default(now())
   submittedAt   DateTime?
   score         Int?
+  expiresAt     DateTime
+  status        TestStatus @default(IN_PROGRESS)
 
   student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   test          Test    @relation(fields: [testId], references: [id], onDelete: Cascade)
 
   answers       AttemptAnswer[]
 
-  @@unique([studentId, testId, startedAt])
+  @@index([studentId, testId])
   @@index([studentId])
   @@index([testId])
   @@index([startedAt])

@@ -65,7 +65,7 @@ function AdminLogin() {
 
 			if (response.ok && result.success) {
 				toast.success(result.message || 'Login successful!');
-				router.push('/dashboard');
+				router.push('/admin/dashboard');
 			} else {
 				toast.error(result.message || 'Invalid credentials, please try again.');
 			}

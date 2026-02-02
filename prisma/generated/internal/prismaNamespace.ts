@@ -1399,7 +1399,9 @@ export const TestAttemptScalarFieldEnum = {
   testId: 'testId',
   startedAt: 'startedAt',
   submittedAt: 'submittedAt',
-  score: 'score'
+  score: 'score',
+  expiresAt: 'expiresAt',
+  status: 'status'
 } as const
 
 export type TestAttemptScalarFieldEnum = (typeof TestAttemptScalarFieldEnum)[keyof typeof TestAttemptScalarFieldEnum]
@@ -1535,6 +1537,20 @@ export type EnumOptionChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
  * Reference to a field of type 'OptionChoice[]'
  */
 export type ListEnumOptionChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OptionChoice[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TestStatus'
+ */
+export type EnumTestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'TestStatus[]'
+ */
+export type ListEnumTestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestStatus[]'>
     
 
 

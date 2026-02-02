@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { ApiError } from './api-error';
-
+import jwt, { JwtPayload } from 'jsonwebtoken';
 /**
  * Extract and validate user data from request headers set by middleware
  * Returns user id and role
@@ -34,14 +34,25 @@ export function verifyRole(
  * Guard for protected routes - throws error if user is not authenticated
  */
 export function requireAuth(request: NextRequest) {
-	const userId = request.headers.get('x-user-id');
-	const userRole = request.headers.get('x-user-role');
+	const token = request.cookies.get('accessToken')?.value;
 
-	if (!userId || !userRole) {
+	if (!token) {
 		throw new ApiError(401, 'Authentication required');
 	}
 
-	return { userId, userRole };
+	try {
+		const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as {
+			id: string;
+			role: 'admin' | 'student';
+		};
+
+		return {
+			userId: payload.id,
+			userRole: payload.role
+		};
+	} catch {
+		throw new ApiError(401, 'Invalid or expired token');
+	}
 }
 
 /**

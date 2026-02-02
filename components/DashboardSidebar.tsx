@@ -1,338 +1,272 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
+// ---------
+import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from './ui/button';
+import { apiFetch } from '@/lib/apiFetch';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { ApiError } from '@/utils/api-error';
+import { handleFormBtnLoading } from '@/utils/form-helper';
 
 interface DashboardSidebarProps {
-	sidebarOpen: boolean;
-	onToggle: (open: boolean) => void;
+  sidebarOpen: boolean;
+  onToggle: (open: boolean) => void;
+  role: 'student' | 'admin';
 }
 
 interface Course {
-	id: string;
-	title: string;
-	chapters?: Chapter[];
+  id: string;
+  title: string;
 }
 
 interface Chapter {
-	id: string;
-	title: string;
+  id: string;
+  title: string;
 }
 
-export default function DashboardSidebar({ sidebarOpen, onToggle }: DashboardSidebarProps) {
-	const [coursesExpanded, setCoursesExpanded] = useState(false);
-	const [courses, setCourses] = useState<Course[]>([]);
-	const [loadingCourses, setLoadingCourses] = useState(false);
-	const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
-	const [courseChapters, setCourseChapters] = useState<Record<string, Chapter[]>>({});
-	const [loadingChapters, setLoadingChapters] = useState<Record<string, boolean>>({});
+export default function DashboardSidebar({ sidebarOpen, onToggle, role }: DashboardSidebarProps) {
+  const isStudent = role === 'student';
+  const isAdmin = role === 'admin';
+  const pathname = usePathname();
+  const isActive = (path: string) => pathname === path;
+  const router = useRouter();
+  const [loadingLogout, setLoadingLogout] = useState(false);
+  // ===== Student-only states =====
+  const [coursesExpanded, setCoursesExpanded] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+  const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
+  const [courseChapters, setCourseChapters] = useState<Record<string, Chapter[]>>({});
+  const [loadingChapters, setLoadingChapters] = useState<Record<string, boolean>>({});
 
-	// Fetch courses when "My Courses" is clicked
-	const handleCoursesClick = async () => {
-		if (coursesExpanded) {
-			setCoursesExpanded(false);
-			return;
-		}
+  const navItemClass = (active: boolean) =>
+    `flex items-center px-3 py-4 rounded border transition ${
+      active ? 'border-amber-600 text-amber-600 bg-surface' : 'border-transparent hover:bg-surface'
+    }`;
 
-		setCoursesExpanded(true);
-		if (courses.length > 0) return; // Already loaded
+  const adminMenuItems = [
+    {
+      key: 'students',
+      label: 'Students',
+      href: '/admin/students'
+    },
+    {
+      key: 'courses',
+      label: 'Courses',
+      href: '/admin/courses'
+    },
+    {
+      key: 'tests',
+      label: 'Tests',
+      href: '/admin/tests'
+    },
+    {
+      key: 'questions',
+      label: 'Questions',
+      href: '/admin/questions'
+    },
+    {
+      key: 'activity-logs',
+      label: 'Activity Logs',
+      href: '/admin/activity-logs'
+    }
+  ];
 
-		setLoadingCourses(true);
-		try {
-			const response = await fetch('/api/student/courses', {
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include'
-			});
+  // ===== STUDENT: Fetch courses =====
+  const handleCoursesClick = async () => {
+    if (!isStudent) return;
 
-			if (response.ok) {
-				const result = await response.json();
-				setCourses(result.data || []);
-			}
-		} catch (error) {
-			console.error('❌ Failed to fetch courses:', error);
-		} finally {
-			setLoadingCourses(false);
-		}
-	};
+    if (coursesExpanded) {
+      setCoursesExpanded(false);
+      return;
+    }
 
-	// Fetch chapters for a specific course
-	const handleCourseClick = async (courseId: string, courseName: string) => {
-		if (expandedCourse === courseId) {
-			setExpandedCourse(null);
-			return;
-		}
+    setCoursesExpanded(true);
+    if (courses.length > 0) return;
 
-		setExpandedCourse(courseId);
+    setLoadingCourses(true);
+    try {
+      const response = await fetch('/api/student/courses', {
+        credentials: 'include'
+      });
 
-		// If already loaded, don't fetch again
-		if (courseChapters[courseId]) return;
+      if (response.ok) {
+        const result = await response.json();
+        setCourses(result.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch courses', error);
+    } finally {
+      setLoadingCourses(false);
+    }
+  };
 
-		setLoadingChapters((prev) => ({ ...prev, [courseId]: true }));
-		try {
-			const response = await fetch(`/api/student/courses/${courseId}/chapters`, {
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				credentials: 'include'
-			});
+  // ===== STUDENT: Fetch chapters =====
+  const handleCourseClick = async (courseId: string) => {
+    if (!isStudent) return;
 
-			if (response.ok) {
-				const result = await response.json();
-				setCourseChapters((prev) => ({
-					...prev,
-					[courseId]: result.data || []
-				}));
-			}
-		} catch (error) {
-			console.error(`❌ Failed to fetch chapters for course ${courseId}:`, error);
-		} finally {
-			setLoadingChapters((prev) => ({ ...prev, [courseId]: false }));
-		}
-	};
+    if (expandedCourse === courseId) {
+      setExpandedCourse(null);
+      return;
+    }
 
-	return (
-		<aside
-			className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform ${
-				sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-			} sm:translate-x-0 bg-sidebar border-r border-default`}
-		>
-			<div className="h-full px-4 py-6 overflow-y-auto">
-				<h1 className="text-lg font-bold text-primary mb-8">Student Dashboard</h1>
+    setExpandedCourse(courseId);
+    if (courseChapters[courseId]) return;
 
-				<ul className="space-y-3 font-medium">
-					<li>
-						<a
-							href="/dashboard"
-							className="flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-accent-primary transition"
-						>
-							<svg
-								className="w-5 h-5"
-								aria-hidden="true"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke="currentColor"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth="2"
-									d="M10 6.025A7.5 7.5 0 1 0 17.975 14H10V6.025Z"
-								/>
-								<path
-									stroke="currentColor"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth="2"
-									d="M13.5 3c-.169 0-.334.014-.5.025V11h7.975c.011-.166.025-.331.025-.5A7.5 7.5 0 0 0 13.5 3Z"
-								/>
-							</svg>
-							<span className="ms-3">Dashboard</span>
-						</a>
-					</li>
+    setLoadingChapters((prev) => ({ ...prev, [courseId]: true }));
+    try {
+      const response = await fetch(`/api/student/courses/${courseId}/chapters`, {
+        credentials: 'include'
+      });
 
-					<li>
-						<button
-							onClick={handleCoursesClick}
-							className="w-full flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-accent-primary transition"
-						>
-							<svg
-								className="w-5 h-5"
-								aria-hidden="true"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke="currentColor"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth="2"
-									d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20m-.464 9.338A9 9 0 0 0 6.5 21c-2.745 0-5.163-1.205-6.78-3.13M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-								/>
-							</svg>
-							<span className="ms-3">My Courses</span>
-							<svg
-								className={`w-4 h-4 ml-auto transition-transform ${coursesExpanded ? 'rotate-180' : ''}`}
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M19 14l-7 7m0 0l-7-7m7 7V3"
-								/>
-							</svg>
-						</button>
+      if (response.ok) {
+        const result = await response.json();
+        setCourseChapters((prev) => ({
+          ...prev,
+          [courseId]: result.data || []
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch chapters', error);
+    } finally {
+      setLoadingChapters((prev) => ({ ...prev, [courseId]: false }));
+    }
+  };
 
-						{/* Courses Dropdown */}
-						{coursesExpanded && (
-							<ul className="mt-2 ml-4 space-y-2 border-l border-default pl-2">
-								{loadingCourses ?
-									<li className="text-xs text-muted py-2">Loading courses...</li>
-								: courses.length > 0 ?
-									courses.map((course) => (
-										<li key={course.id}>
-											<button
-												onClick={() => handleCourseClick(course.id, course.title)}
-												className="w-full flex items-center px-2 py-1.5 text-xs text-secondary rounded hover:bg-surface hover:text-accent-primary transition text-left"
-											>
-												<svg
-													className="w-4 h-4"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={2}
-														d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747 0-6.002-4.5-10.747-10-10.747z"
-													/>
-												</svg>
-												<span className="ms-2 truncate">{course.title}</span>
-												<svg
-													className={`w-3 h-3 ml-auto transition-transform ${expandedCourse === course.id ? 'rotate-180' : ''}`}
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														strokeWidth={2}
-														d="M19 14l-7 7m0 0l-7-7m7 7V3"
-													/>
-												</svg>
-											</button>
+  const handleLogout = async () => {
+    setLoadingLogout(true);
+    try {
+      const response = await apiFetch('/api/auth/logout', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new ApiError(response.status, 'Failed to logout');
+      }
+      toast.success('Logged out successfully');
+      router.push(isAdmin ? '/admin-login' : '/student-login');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'An unexpected error occurred');
+      router.push(isAdmin ? '/admin-login' : '/student-login');
+    } finally {
+      setLoadingLogout(false);
+    }
+  };
 
-											{/* Chapters Dropdown */}
-											{expandedCourse === course.id && (
-												<ul className="mt-1 ml-4 space-y-1 border-l border-default pl-2">
-													{loadingChapters[course.id] ?
-														<li className="text-xs text-muted py-1">Loading chapters...</li>
-													: courseChapters[course.id]?.length > 0 ?
-														courseChapters[course.id].map((chapter) => (
-															<li
-																key={chapter.id}
-																className="flex items-center px-2 py-1 text-xs text-secondary rounded hover:bg-surface hover:text-accent-primary transition cursor-pointer"
-															>
-																<svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-																	<circle cx="12" cy="12" r="2" />
-																</svg>
-																<span className="ms-2 truncate">{chapter.title}</span>
-															</li>
-														))
-													:	<li className="text-xs text-muted py-1">No chapters found</li>}
-												</ul>
-											)}
-										</li>
-									))
-								:	<li className="text-xs text-muted py-2">No courses enrolled</li>}
-							</ul>
-						)}
-					</li>
+  return (
+    <aside
+      className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } sm:translate-x-0 bg-sidebar border-r border-default`}
+    >
+      <div className="h-full px-4 py-6 overflow-y-auto">
+        <h1 className="text-lg font-bold text-primary mb-8">{isAdmin ? 'Admin Panel' : 'Student Dashboard'}</h1>
 
-					<li>
-						<a
-							href="/tests"
-							className="flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-accent-primary transition"
-						>
-							<svg
-								className="w-5 h-5"
-								aria-hidden="true"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke="currentColor"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth="2"
-									d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9l2 2 4-4"
-								/>
-							</svg>
-							<span className="ms-3">Available Tests</span>
-						</a>
-					</li>
+        <ul className="space-y-3 text-sm font-medium">
+          {/* ===== DASHBOARD ===== */}
+          <li>
+            <Link
+              href={isAdmin ? '/admin/dashboard' : '/student/dashboard'}
+              className={navItemClass(isActive(isAdmin ? '/admin/dashboard' : '/student/dashboard'))}
+            >
+              Dashboard
+            </Link>
+          </li>
 
-					<li>
-						<a
-							href="/results"
-							className="flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-accent-primary transition"
-						>
-							<svg
-								className="w-5 h-5"
-								aria-hidden="true"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke="currentColor"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth="2"
-									d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0Zm3.02-3.01h11.96M9 9h6m-6 4h6"
-								/>
-							</svg>
-							<span className="ms-3">Test Results</span>
-						</a>
-					</li>
+          {/* ===== STUDENT MENU ===== */}
+          {isStudent && (
+            <>
+              <li>
+                <button
+                  onClick={handleCoursesClick}
+                  className={`w-full flex items-center px-3 py-2 rounded transition cursor-pointer ${
+                    coursesExpanded ? 'bg-surface text-amber-600' : 'hover:bg-surface'
+                  }`}
+                >
+                  My Courses
+                  <span className="ml-auto">{coursesExpanded ? '−' : '+'}</span>
+                </button>
 
-					<li>
-						<a
-							href="/profile"
-							className="flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-accent-primary transition"
-						>
-							<svg
-								className="w-5 h-5"
-								aria-hidden="true"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke="currentColor"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth="2"
-									d="M16 19h4a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-2m-2.236-4a3 3 0 1 0 0-4M3 18v-1a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Zm8-10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-								/>
-							</svg>
-							<span className="ms-3">My Profile</span>
-						</a>
-					</li>
+                {coursesExpanded && (
+                  <ul className="ml-4 mt-2 space-y-2 border-l border-default pl-3">
+                    {loadingCourses ? (
+                      <li className="text-xs text-muted">Loading courses…</li>
+                    ) : courses.length ? (
+                      courses.map((course) => (
+                        <li key={course.id}>
+                          <button
+                            onClick={() => handleCourseClick(course.id)}
+                            className="w-full text-left text-md hover:text-accent-primary cursor-pointer"
+                          >
+                            {course.title}
+                          </button>
 
-					<li className="pt-4 mt-4 border-t border-default">
-						<a
-							href="/logout"
-							className="flex items-center px-3 py-2 text-secondary rounded-lg hover:bg-surface hover:text-error transition"
-						>
-							<svg
-								className="w-5 h-5"
-								aria-hidden="true"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke="currentColor"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth="2"
-									d="M20 12H4m16 0-4 4m4-4-4-4"
-								/>
-							</svg>
-							<span className="ms-3">Logout</span>
-						</a>
-					</li>
-				</ul>
-			</div>
-		</aside>
-	);
+                          {expandedCourse === course.id && (
+                            <ul className="ml-3 mt-1 space-y-1">
+                              {loadingChapters[course.id] ? (
+                                <li className="text-xs text-muted">Loading…</li>
+                              ) : courseChapters[course.id]?.length ? (
+                                courseChapters[course.id].map((ch) => (
+                                  <li key={ch.id} className="text-xs text-muted text-shadow-amber-200">
+                                    {ch.title}
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="text-xs text-muted">No chapters</li>
+                              )}
+                            </ul>
+                          )}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-xs text-muted">No courses enrolled</li>
+                    )}
+                  </ul>
+                )}
+              </li>
+
+              <li>
+                <Link href="/student/tests" className={navItemClass(isActive('/student/tests'))}>
+                  Available Tests
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/student/results" className={navItemClass(isActive('/student/results'))}>
+                  Test Results
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/student/profile" className={navItemClass(isActive('/student/profile'))}>
+                  My Profile
+                </Link>
+              </li>
+            </>
+          )}
+
+          {/* ===== ADMIN MENU ===== */}
+          {isAdmin && (
+            <>
+              <li>
+                {adminMenuItems.map((item) => (
+                  <Link key={item.key} href={item.href} className={navItemClass(isActive(item.href))}>
+                    {item.label}
+                  </Link>
+                ))}
+              </li>
+            </>
+          )}
+
+          {/* ===== LOGOUT ===== */}
+          <li className="pt-4 mt-4 border-t border-default">
+            <Button variant="outline" className={navItemClass(isActive(isAdmin ? '/admin/logout' : '/logout'))} onClick={handleLogout}>
+              {handleFormBtnLoading(loadingLogout, 'Logout', 'Logging out...')}
+            </Button>
+          </li>
+        </ul>
+      </div>
+    </aside>
+  );
 }

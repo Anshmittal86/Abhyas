@@ -121,7 +121,7 @@ export async function getChapters(request: NextRequest) {
 }
 export async function getChapterById(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ chapterId: string }> }
 ) {
 	try {
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
@@ -130,15 +130,16 @@ export async function getChapterById(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: chapterId } = await params;
+		const { chapterId } = await params;
 
 		if (!chapterId) {
 			throw new ApiError(400, 'Chapter ID is required');
 		}
 
-		const chapter = await prisma.chapter.findUnique({
+		const chapter = await prisma.chapter.findFirst({
 			where: {
-				id: chapterId
+				id: chapterId,
+				adminId
 			},
 			select: {
 				id: true,
@@ -184,7 +185,7 @@ export async function getChapterById(
 
 export async function updateChapter(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ chapterId: string }> }
 ) {
 	try {
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
@@ -193,7 +194,7 @@ export async function updateChapter(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: chapterId } = await params;
+		const { chapterId } = await params;
 
 		if (!chapterId) {
 			throw new ApiError(400, 'Chapter ID is required');
@@ -245,7 +246,7 @@ export async function updateChapter(
 
 export async function deleteChapter(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ chapterId: string }> }
 ) {
 	try {
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
@@ -254,7 +255,7 @@ export async function deleteChapter(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: chapterId } = await params;
+		const { chapterId } = await params;
 
 		if (!chapterId) {
 			throw new ApiError(400, 'Chapter ID is required');

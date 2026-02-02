@@ -1,75 +1,129 @@
-// proxy.ts - Authentication and Route Protection Configuration
 import { NextRequest, NextResponse } from 'next/server';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import ms from 'ms';
+import { generateAccessToken, generateRefreshToken, verifyJwt } from '@/utils/tokens';
 
-/**
- * PROTECTED ROUTES - Authentication required
- * These routes require a valid JWT token
- */
-const protectedRoutes = [
-	'/api/student/dashboard',
-	'/api/student/attempts',
-	'/api/student/tests',
-	'/api/student/courses',
-	'/api/admin/courses',
-	'/api/admin/chapter',
-	'/api/admin/questions',
-	'/api/admin/tests'
-];
-
-/**
- * Checks if a route is protected
- * @param pathname - The request path
- * @returns true if route is protected
- */
-function isProtectedRoute(pathname: string): boolean {
-	return protectedRoutes.some((route) => pathname.startsWith(route));
+function isPublic(pathname: string) {
+  return (
+    pathname === '/admin-login' ||
+    pathname === '/student-login' ||
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/assets')
+  );
 }
 
-export function proxy(request: NextRequest) {
-	const pathname = request.nextUrl.pathname;
-	const accessToken = request.cookies.get('accessToken')?.value; // ✅ Match cookie name from login
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-	// If route is protected and no token provided, redirect to login
-	if (isProtectedRoute(pathname) && !accessToken) {
-		const loginUrl = pathname.startsWith('/api/admin') ? '/admin-login' : '/student-login';
-		return NextResponse.redirect(new URL(loginUrl, request.url));
-	}
+  const accessToken = request.cookies.get('accessToken')?.value;
+  const refreshToken = request.cookies.get('refreshToken')?.value;
 
-	// If token exists, decode and set headers
-	if (accessToken) {
-		let payloadInfo: JwtPayload;
-		try {
-			payloadInfo = jwt.decode(accessToken) as JwtPayload;
+  console.log(`Middleware called \n\nPathname: ${pathname}, \n\nAccessToken: ${accessToken}, \n\nRefreshToken: ${refreshToken}`);
 
-			// ✅ Set headers as STRING values (not JSON stringified)
-			// Controller expects: request.headers.get('x-user-id') to return a string
-			if (payloadInfo.id) {
-				request.headers.set('x-user-id', String(payloadInfo.id));
-			}
-			if (payloadInfo.role) {
-				request.headers.set('x-user-role', String(payloadInfo.role));
-			}
-			request.headers.set('Authorization', `Bearer ${accessToken}`);
+  // Public routes: allow without checks
+  if (isPublic(pathname)) {
+    return NextResponse.next();
+  }
 
-			console.log('✅ Auth Headers Set:', {
-				'x-user-id': String(payloadInfo.id),
-				'x-user-role': String(payloadInfo.role)
-			});
-		} catch (error) {
-			console.error('❌ Error decoding JWT:', error);
-			// Continue without headers if decode fails
-		}
-	}
+  // Try to verify/refresh tokens
+  const { user, responseWithCookies } = await ensureUser(accessToken, refreshToken);
 
-	// Allow all requests (public ones pass through, protected ones checked above)
-	return NextResponse.next({
-		request: {
-			headers: request.headers
-		}
-	});
+  if (!user) {
+    // redirect to correct login
+    const loginPath = pathname.startsWith('/admin') ? '/admin-login' : '/student-login';
+    return NextResponse.redirect(new URL(loginPath, request.url));
+  }
+
+  // Role-based route guard for UI
+  if (pathname.startsWith('/admin') && user.role !== 'admin') {
+    return NextResponse.redirect(new URL('/student/dashboard', request.url));
+  }
+  if (pathname.startsWith('/student') && user.role !== 'student') {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+  }
+
+  // For APIs you CAN add an early role check, but controllers already enforce it.
+  // Return NextResponse.next(), attaching any rotated cookies if needed:
+  return responseWithCookies ?? NextResponse.next();
+}
+
+type AuthUser = {
+  id: string;
+  role: 'admin' | 'student';
+};
+
+type EnsureUserResult = {
+  user: AuthUser | null;
+  responseWithCookies: NextResponse | null;
+};
+
+async function ensureUser(accessToken: string | undefined, refreshToken: string | undefined): Promise<EnsureUserResult> {
+  // 1) Try access token first
+  if (accessToken) {
+    try {
+      const decoded = verifyJwt('access', accessToken) as AuthUser;
+      return {
+        user: { id: decoded.id, role: decoded.role },
+        responseWithCookies: null
+      };
+    } catch {
+      // fall through and try refresh token
+    }
+  }
+
+  // 2) Fallback to refresh token
+  if (refreshToken) {
+    try {
+      const decoded = verifyJwt('refresh', refreshToken) as AuthUser;
+      const user: AuthUser = { id: decoded.id, role: decoded.role };
+
+      const newAccessToken = generateAccessToken(user.id, user.role);
+      const newRefreshToken = generateRefreshToken(user.id, user.role);
+
+      const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m';
+      const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d';
+
+      const accessTokenMaxAgeSeconds = Math.floor(ms(ACCESS_TOKEN_EXPIRY as ms.StringValue) / 1000);
+      const refreshTokenMaxAgeSeconds = Math.floor(ms(REFRESH_TOKEN_EXPIRY as ms.StringValue) / 1000);
+
+      // Use NextResponse.next() so the original request continues, but attach new cookies
+      const response = NextResponse.next();
+
+      response.cookies.set('accessToken', newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: accessTokenMaxAgeSeconds
+      });
+
+      response.cookies.set('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: refreshTokenMaxAgeSeconds
+      });
+
+      return {
+        user,
+        responseWithCookies: response
+      };
+    } catch {
+      // refresh token invalid/expired → treat as unauthenticated
+      return { user: null, responseWithCookies: null };
+    }
+  }
+
+  // 3) No valid tokens
+  return { user: null, responseWithCookies: null };
 }
 
 export const config = {
-	matcher: ['/api/:path*']
+  matcher: [
+    '/student/:path*', // all student UI
+    '/admin/:path*', // all admin UI
+    '/api/admin/:path*',
+    '/api/student/:path*'
+  ]
 };

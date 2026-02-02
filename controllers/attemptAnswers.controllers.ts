@@ -68,9 +68,6 @@ export async function saveAttemptAnswer(
 			throw new ApiError(404, 'Question not found for this test');
 		}
 
-		// ✅ Determine correctness (optional)
-		const isCorrect = selectedOption ? selectedOption === question.correctOption : null;
-
 		// ✅ UPSERT answer (create or update)
 		const answer = await prisma.attemptAnswer.upsert({
 			where: {
@@ -81,14 +78,12 @@ export async function saveAttemptAnswer(
 			},
 			update: {
 				selectedOption: selectedOption ?? null,
-				isCorrect,
 				answeredAt: new Date()
 			},
 			create: {
 				attemptId,
 				questionId,
 				selectedOption: selectedOption ?? null,
-				isCorrect,
 				answeredAt: new Date()
 			}
 		});

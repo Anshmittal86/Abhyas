@@ -8,8 +8,8 @@ interface AccountInfoProps {
 
 export default function AccountInfo({ name, email, rollNumber }: AccountInfoProps) {
 	return (
-		<div className="bg-surface rounded-lg p-6">
-			<h3 className="text-lg font-semibold text-primary mb-4">Account Info</h3>
+		<div className="bg-surface rounded-xl p-6 space-y-4">
+			<h3 className="text-lg font-medium text-primary">Account</h3>
 			<div className="space-y-4">
 				<div>
 					<p className="text-sm text-muted mb-1">Name</p>

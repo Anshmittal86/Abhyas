@@ -20,8 +20,6 @@ export async function getStudentDashboard(request: NextRequest) {
 		// Get student ID from headers or auth context
 		const { userId } = requireRole(request, ['student']);
 
-		console.log('Student ID:', userId);
-
 		if (!userId) {
 			throw new ApiError(401, 'Unauthorized access');
 		}
@@ -380,7 +378,7 @@ export async function getStudentById(
 
 export async function updateStudent(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ studentId: string }> }
 ) {
 	try {
 		// 🔐 Admin authorization
@@ -390,7 +388,7 @@ export async function updateStudent(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: studentId } = await params;
+		const { studentId } = await params;
 
 		if (!studentId) {
 			throw new ApiError(400, 'Student ID is required');

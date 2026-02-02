@@ -34,3 +34,12 @@ export const UserRole = {
 } as const
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
+export const TestStatus = {
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  SUBMITTED: 'SUBMITTED'
+} as const
+
+export type TestStatus = (typeof TestStatus)[keyof typeof TestStatus]

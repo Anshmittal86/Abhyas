@@ -212,7 +212,9 @@ export const TestAttemptScalarFieldEnum = {
   testId: 'testId',
   startedAt: 'startedAt',
   submittedAt: 'submittedAt',
-  score: 'score'
+  score: 'score',
+  expiresAt: 'expiresAt',
+  status: 'status'
 } as const
 
 export type TestAttemptScalarFieldEnum = (typeof TestAttemptScalarFieldEnum)[keyof typeof TestAttemptScalarFieldEnum]

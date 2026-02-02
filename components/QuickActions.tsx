@@ -3,28 +3,23 @@ import Link from 'next/link';
 
 export default function QuickActions() {
 	return (
-		<div className="bg-surface rounded-lg p-6">
-			<h3 className="text-lg font-semibold text-primary mb-4">Quick Actions</h3>
-			<div className="space-y-3">
-				<Link
-					href="/tests"
-					className="block w-full bg-accent-primary text-primary font-medium py-2 px-4 rounded-lg hover:opacity-90 text-center transition"
-				>
+		<div className="bg-surface rounded-xl p-6">
+			<h3 className="text-lg font-medium text-primary mb-5">Quick Actions</h3>
+			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+				<Link href="/tests" className="action-card bg-accent-primary">
 					Take a Test
 				</Link>
-				<Link
-					href="/courses"
-					className="block w-full bg-surface border border-default text-primary font-medium py-2 px-4 rounded-lg hover:bg-main transition"
-				>
+				<Link href="/courses" className="action-card">
 					View Courses
 				</Link>
-				<Link
-					href="/results"
-					className="block w-full bg-surface border border-default text-primary font-medium py-2 px-4 rounded-lg hover:bg-main transition"
-				>
+				<Link href="/results" className="action-card">
 					Check Results
 				</Link>
 			</div>
 		</div>
 	);
 }
+
+// .action-card {
+// 	@apply rounded-lg py-3 text-center font-medium border border-default bg-main text-primary hover:bg-surface transition;
+// }

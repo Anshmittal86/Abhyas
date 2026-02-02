@@ -25,7 +25,7 @@ function buildRefreshResponse(
 	response.cookies.set('accessToken', accessToken, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === 'production',
-		sameSite: 'strict',
+		sameSite: 'lax',
 		path: '/',
 		maxAge: accessTokenMaxAgeSeconds
 	});
@@ -33,7 +33,7 @@ function buildRefreshResponse(
 	response.cookies.set('refreshToken', refreshToken, {
 		httpOnly: true,
 		secure: process.env.NODE_ENV === 'production',
-		sameSite: 'strict',
+		sameSite: 'lax',
 		path: '/',
 		maxAge: refreshTokenMaxAgeSeconds
 	});

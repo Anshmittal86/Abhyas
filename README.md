@@ -89,10 +89,10 @@
 
 ## Student APIs - Tests & Attempts
 
-- ✅ `POST /api/student/test/:testId/start` - Start test attempt
-- ✅ `POST /api/student/attempt/:attemptId/answer` - Submit test answer
-- ✅ `POST /api/student/attempt/:attemptId/submit` - Test submit API explicit
-- ✅ `GET /api/student/attempt/:attemptId` - Test submit API explicit
+- ✅ `POST /api/student/tests/:testId/start` - Start or resume test attempt
+- ✅ `POST /api/student/attempt/:attemptId/answer` - Submit or update answer for a question
+- ✅ `PUT /api/student/attempt/:attemptId/submit` - Explicitly submit test attempt
+- ✅ `GET /api/student/attempt/:attemptId` - Get current attempt state (question, progress, remaining time)
 
 ## Student APIs - Results
 

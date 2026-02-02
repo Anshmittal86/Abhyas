@@ -1,3 +1,3 @@
 import { refreshToken } from '@/controllers/auth.controllers';
 
-export { refreshToken as GET };
+export { refreshToken as POST };
