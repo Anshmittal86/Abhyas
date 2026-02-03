@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-	title: 'Abhyas',
+	title: 'Abyash',
 	description:
 		'A central dashboard where students can practice for exams, handle their account, and access reports for all given tests.'
 };
