@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-	title: 'Student Dashboard',
+	title: 'Abhyas',
 	description:
-		'A central dashboard where students can study for exams, handle their account, and access reports for all enrolled courses.'
+		'A central dashboard where students can practice for exams, handle their account, and access reports for all given tests.'
 };
 
 export default function RootLayout({
