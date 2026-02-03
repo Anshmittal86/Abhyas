@@ -6,6 +6,7 @@ import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
 import { handleApiError as handleError } from '@/utils/handle-error';
 import { logEvent } from '@/utils/log-event';
+import { sendEmail, renderStudentEmail } from '@/utils/mail.js';
 
 import {
 	createStudentSchema,
@@ -186,8 +187,8 @@ export async function createStudent(request: NextRequest) {
 		const hashedPassword = await bcrypt.hash(plainPassword, SALT_ROUND);
 
 		// ✅ Create student + enrollments (transaction)
-		const student = await prisma.$transaction(async (tx) => {
-			const createdStudent = await tx.student.create({
+		const newStudent = await prisma.$transaction(async (tx) => {
+			const student = await tx.student.create({
 				data: {
 					provisionalNo,
 					name,
@@ -204,19 +205,36 @@ export async function createStudent(request: NextRequest) {
 			if (courseIds?.length) {
 				await tx.enrollment.createMany({
 					data: courseIds.map((courseId) => ({
-						studentId: createdStudent.id,
+						studentId: student.id,
 						courseId
 					})),
 					skipDuplicates: true
 				});
 			}
 
-			return createdStudent;
+			return student;
+		});
+
+		// Sending Email
+		const loginLink = `${process.env.FRONTEND_URL}/student-login?provisionalNo=${encodeURIComponent(newStudent.provisionalNo)}`;
+
+		const html = renderStudentEmail({
+			name: newStudent.name,
+			provisionalNo: newStudent.provisionalNo,
+			password: plainPassword,
+			loginLink
+		});
+
+		await sendEmail({
+			email: newStudent.email,
+			subject: 'Student Account Created Successfully',
+			html,
+			text: `Provisional No: ${newStudent.provisionalNo}`
 		});
 
 		logEvent('StudentCreated', {
 			adminId,
-			studentId: student.id,
+			studentId: newStudent.id,
 			provisionalNo,
 			email
 		});
@@ -226,10 +244,10 @@ export async function createStudent(request: NextRequest) {
 			new ApiResponse(
 				201,
 				{
-					studentId: student.id,
-					provisionalNo: student.provisionalNo,
-					name: student.name,
-					email: student.email,
+					studentId: newStudent.id,
+					provisionalNo: newStudent.provisionalNo,
+					name: newStudent.name,
+					email: newStudent.email,
 					generatedPassword: plainPassword
 				},
 				'Student created successfully'

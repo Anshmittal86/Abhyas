@@ -3,6 +3,7 @@
 // External (React/Next.js)
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 // Third-party packages
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,11 @@ type StudentLogin = z.infer<typeof StudentLoginSchema>;
 function StudentLogin() {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
+
+	// Get provisionalNo from params if user coming from email link
+	const searchParams = useSearchParams();
+	const provisionalFromUrl = searchParams.get('provisionalNo');
+
 	const form = useForm<StudentLogin>({
 		resolver: zodResolver(StudentLoginSchema),
 		defaultValues: {
@@ -35,6 +41,13 @@ function StudentLogin() {
 			password: ''
 		}
 	});
+
+	// Autofill the Provisional No if user coming from email link
+	useEffect(() => {
+		if (provisionalFromUrl) {
+			form.setValue('provisionalNo', provisionalFromUrl);
+		}
+	}, [provisionalFromUrl, form]);
 
 	// Show toast for validation errors
 	useEffect(() => {

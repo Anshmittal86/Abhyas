@@ -1,0 +1,42 @@
+<mjml>
+	<mj-body background-color="#f4f4f5">
+		<mj-section background-color="#ffffff" padding="20px">
+			<mj-column>
+				<mj-text font-size="22px" font-weight="bold" color="#111827">
+					Welcome to Abyash 🎓
+				</mj-text>
+
+				<mj-text font-size="16px" color="#374151"> Hi {{ name }}, </mj-text>
+
+				<mj-text font-size="15px" color="#374151">
+					Your student account has been created successfully.
+				</mj-text>
+
+				<mj-divider border-color="#e5e7eb" />
+
+				<mj-text font-size="14px">
+					<b>Provisional No:</b> {{ provisionalNo }} <br />
+					<b>Temporary Password:</b> {{ password }}
+				</mj-text>
+
+				<mj-button
+					background-color="#f59e0b"
+					color="#ffffff"
+					font-size="15px"
+					href="{{loginLink}}"
+					padding-top="15px"
+				>
+					Login to Abyash
+				</mj-button>
+
+				<mj-text font-size="13px" color="#6b7280">
+					Please login and change your password immediately.
+				</mj-text>
+
+				<mj-divider border-color="#e5e7eb" />
+
+				<mj-text font-size="12px" color="#9ca3af"> © Abyash • Tech Masters Education </mj-text>
+			</mj-column>
+		</mj-section>
+	</mj-body>
+</mjml>
