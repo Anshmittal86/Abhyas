@@ -316,7 +316,7 @@ export async function getStudents(request: NextRequest) {
 
 export async function getStudentById(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ studentId: string }> }
 ) {
 	try {
 		// 🔐 Admin authorization
@@ -326,7 +326,7 @@ export async function getStudentById(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: studentId } = await params;
+		const { studentId } = await params;
 
 		if (!studentId) {
 			throw new ApiError(400, 'Student ID is required');
@@ -471,7 +471,7 @@ export async function updateStudent(
 
 export async function deleteStudent(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ studentId: string }> }
 ) {
 	try {
 		// 🔐 Admin authorization
@@ -481,7 +481,7 @@ export async function deleteStudent(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: studentId } = await params;
+		const { studentId } = await params;
 
 		if (!studentId) {
 			throw new ApiError(400, 'Student ID is required');
@@ -528,7 +528,7 @@ export async function deleteStudent(
 
 export async function enrollStudent(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ studentId: string }> }
 ) {
 	try {
 		// 🔐 Admin authorization
@@ -538,7 +538,7 @@ export async function enrollStudent(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: studentId } = await params;
+		const { studentId } = await params;
 
 		if (!studentId) {
 			throw new ApiError(400, 'Student ID is required');
@@ -629,7 +629,7 @@ export async function enrollStudent(
 
 export async function unenrollStudent(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string; courseId: string }> }
+	{ params }: { params: Promise<{ studentId: string; courseId: string }> }
 ) {
 	try {
 		// 🔐 Admin authorization
@@ -639,7 +639,7 @@ export async function unenrollStudent(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: studentId, courseId } = await params;
+		const { studentId, courseId } = await params;
 
 		if (!studentId || !courseId) {
 			throw new ApiError(400, 'Student ID and Course ID are required');

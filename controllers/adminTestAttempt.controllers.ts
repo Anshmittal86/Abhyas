@@ -99,7 +99,7 @@ export async function getTestAttempts(request: NextRequest) {
 
 export async function getTestAttemptById(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ attemptId: string }> }
 ) {
 	try {
 		// 🔐 Admin authorization
@@ -109,7 +109,7 @@ export async function getTestAttemptById(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: attemptId } = await params;
+		const { attemptId } = await params;
 
 		if (!attemptId) {
 			throw new ApiError(400, 'Attempt ID is required');
@@ -228,7 +228,7 @@ export async function getTestAttemptById(
 
 export async function deleteTestAttempt(
 	request: NextRequest,
-	{ params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ attemptId: string }> }
 ) {
 	try {
 		// 🔐 Admin authorization
@@ -238,7 +238,7 @@ export async function deleteTestAttempt(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { id: attemptId } = await params;
+		const { attemptId } = await params;
 
 		if (!attemptId) {
 			throw new ApiError(400, 'Attempt ID is required');
