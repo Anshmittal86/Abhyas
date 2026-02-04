@@ -40,38 +40,112 @@ export async function getStudentDashboard(request: NextRequest) {
 			throw new ApiError(404, 'Student not found');
 		}
 
-		// Fetch enrollments count
-		const enrolledCourses = await prisma.enrollment.count({
-			where: { studentId: userId }
-		});
-
-		// Fetch test attempts
-		const testAttempts = await prisma.testAttempt.findMany({
+		// enrolled courses
+		const enrollments = await prisma.enrollment.findMany({
 			where: { studentId: userId },
-			include: { test: true }
+			select: {
+				course: {
+					select: {
+						id: true,
+						title: true,
+						duration: true,
+						chapters: {
+							select: {
+								id: true,
+								code: true,
+								title: true,
+								tests: {
+									select: {
+										id: true,
+										title: true,
+										durationMinutes: true,
+										createdAt: true
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		});
 
-		// Calculate statistics
-		const completedTests = testAttempts.filter((attempt) => attempt.submittedAt).length;
-		const pendingTests = testAttempts.filter((attempt) => !attempt.submittedAt).length;
+		// Student All Tests
+		const allTests = enrollments.flatMap((enrollment) =>
+			enrollment.course.chapters.flatMap((chapter) =>
+				chapter.tests.map((test) => ({
+					...test,
+					courseTitle: enrollment.course.title,
+					chapterTitle: chapter.title,
+					chapterCode: chapter.code
+				}))
+			)
+		);
 
-		// Calculate average score
-		const scores = testAttempts
-			.filter((attempt) => attempt.score !== null)
-			.map((attempt) => attempt.score as number);
+		// attempts
+		const attempts = await prisma.testAttempt.findMany({
+			where: { studentId: userId },
+			orderBy: { startedAt: 'desc' }
+		});
+
+		const completedAttempts = attempts.filter((attempt) => attempt.status === 'COMPLETED');
+
+		const completedTestIds = new Set(completedAttempts.map((attempt) => attempt.testId));
+
+		const pendingTests = allTests.filter((test) => !completedTestIds.has(test.id));
+
+		const completedAttemptsTotalScore = completedAttempts.reduce((total, attempt) => {
+			return total + (attempt.score ?? 0);
+		}, 0);
+
+		const totalCompletedAttempts = completedAttempts.length;
+
 		const averageScore =
-			scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+			totalCompletedAttempts > 0 ?
+				Math.round(completedAttemptsTotalScore / totalCompletedAttempts)
+			:	0;
+
+		// next action = first pending test
+		const nextPendingTest =
+			pendingTests.sort(
+				(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+			)[0] ?? null;
+
+		// recent activity
+		const lastAttempt =
+			completedAttempts.sort(
+				(a, b) => new Date(b.submittedAt!).getTime() - new Date(a.submittedAt!).getTime()
+			)[0] ?? null;
 
 		const response = new ApiResponse(
 			200,
 			{
 				student,
-				enrolledCourses,
-				completedTests,
-				averageScore,
-				pendingTests
+				stats: {
+					enrolledCourses: enrollments.length,
+					totalTests: allTests.length,
+					completedTests: totalCompletedAttempts,
+					pendingTests: pendingTests.length,
+					averageScore
+				},
+				nextAction:
+					nextPendingTest ?
+						{
+							type: 'TEST',
+							testId: nextPendingTest.id,
+							title: nextPendingTest.title,
+							durationMinutes: nextPendingTest.durationMinutes
+						}
+					:	null,
+				recentActivity:
+					lastAttempt ?
+						{
+							testId: lastAttempt.testId,
+							score: lastAttempt.score,
+							submittedAt: lastAttempt.submittedAt
+						}
+					:	null
 			},
-			'Dashboard data fetched successfully'
+			'Dashboard data fetched'
 		);
 
 		return NextResponse.json(response);
