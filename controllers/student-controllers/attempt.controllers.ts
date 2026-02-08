@@ -19,8 +19,6 @@ export async function getAttempt(
 	{ params }: { params: Promise<{ attemptId: string }> }
 ) {
 	try {
-		const indexParam = request.nextUrl.searchParams.get('index');
-
 		// 🔐 Auth
 		const { userId: studentId } = requireRole(request, ['student']);
 		const { attemptId } = await params;
@@ -30,8 +28,15 @@ export async function getAttempt(
 			where: {
 				id: attemptId,
 				studentId,
-				submittedAt: null,
 				status: 'IN_PROGRESS'
+			},
+			include: {
+				test: {
+					select: {
+						title: true,
+						durationMinutes: true
+					}
+				}
 			}
 		});
 
@@ -39,83 +44,69 @@ export async function getAttempt(
 			throw new ApiError(404, 'Active test attempt not found');
 		}
 
-		// ⏱️ Remaining time (client timer will handle auto-submit UX)
+		// ⏱️ Calculate Remaining Time
 		const remainingSeconds = getRemainingSeconds(attempt.expiresAt);
 
-		// 📚 Fetch all questions (stable order)
-		const questions = await prisma.question.findMany({
-			where: {
-				testId: attempt.testId
-			},
-			orderBy: {
-				createdAt: 'asc'
-			},
-			select: {
-				id: true,
-				questionText: true,
-				optionA: true,
-				optionB: true,
-				optionC: true,
-				optionD: true
-			}
-		});
+		// 📚 Fetch ALL Questions & ALL saved Answers in Parallel
+		const [allQuestions, allAnswers] = await Promise.all([
+			prisma.question.findMany({
+				where: { testId: attempt.testId },
+				orderBy: { createdAt: 'asc' }, // Stable order
+				select: {
+					id: true,
+					questionText: true,
+					optionA: true,
+					optionB: true,
+					optionC: true,
+					optionD: true
+					// ⚠️ correctOption explicitly excluded for security
+				}
+			}),
+			prisma.attemptAnswer.findMany({
+				where: { attemptId },
+				select: {
+					questionId: true,
+					selectedOption: true
+				}
+			})
+		]);
 
-		const totalQuestions = questions.length;
-
-		// 🧮 How many answered so far
-		const answeredCount = await prisma.attemptAnswer.count({
-			where: {
-				attemptId
-			}
-		});
-
-		// Base current question index:
-		// - If some questions pending → next unanswered question
-		// - If all answered           → keep student on last question, let them decide when to submit
-		let safeIndex =
-			totalQuestions > 0 ?
-				Math.min(answeredCount, totalQuestions - 1)
-			:	0;
-
-		// If client requested a specific index and it's within bounds, honor it
-		if (indexParam !== null && totalQuestions > 0) {
-			const requested = Number.parseInt(indexParam, 10);
-			if (!Number.isNaN(requested) && requested >= 0 && requested < totalQuestions) {
-				safeIndex = requested;
-			}
+		if (allQuestions.length === 0) {
+			throw new ApiError(404, 'No questions found for this test');
 		}
 
-		const currentQuestion = questions[safeIndex];
-
-		// 🔁 Check already selected option (safety)
-		const savedAnswer = await prisma.attemptAnswer.findFirst({
-			where: {
-				attemptId,
-				questionId: currentQuestion.id
-			}
+		// 4. 🧩 Merge Questions with Student's Previous Answers
+		const questionsWithState = allQuestions.map((q) => {
+			const savedAnswer = allAnswers.find((a) => a.questionId === q.id);
+			return {
+				id: q.id,
+				text: q.questionText,
+				options: [
+					{ key: 'A', text: q.optionA },
+					{ key: 'B', text: q.optionB },
+					{ key: 'C', text: q.optionC },
+					{ key: 'D', text: q.optionD }
+				],
+				selectedOption: savedAnswer?.selectedOption ?? null,
+				isAnswered: !!savedAnswer?.selectedOption
+			};
 		});
 
-		// 🎯 Final response
+		// 5. 🎯 Send Response
 		return NextResponse.json(
-			new ApiResponse(200, {
-				attemptId,
-				testId: attempt.testId,
-				currentIndex: safeIndex,
-				answeredCount,
-				totalQuestions,
-				remainingSeconds,
-				question: {
-					id: currentQuestion.id,
-					text: currentQuestion.questionText,
-					options: [
-						{ key: 'A', text: currentQuestion.optionA },
-						{ key: 'B', text: currentQuestion.optionB },
-						{ key: 'C', text: currentQuestion.optionC },
-						{ key: 'D', text: currentQuestion.optionD }
-					]
+			new ApiResponse(
+				200,
+				{
+					attemptId: attempt.id,
+					testId: attempt.testId,
+					testTitle: attempt.test.title,
+					remainingSeconds,
+					totalQuestions: questionsWithState.length,
+					questions: questionsWithState
 				},
-				selectedOption: savedAnswer?.selectedOption ?? null
-			})
+				'Test attempt details fetched successfully'
+			),
+			{ status: 200 }
 		);
 	} catch (error) {
 		return handleError('GetAttempt', error);
