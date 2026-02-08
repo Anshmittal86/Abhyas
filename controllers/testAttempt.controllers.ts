@@ -121,25 +121,20 @@ export async function startTestAttempt(
 		}
 
 		// ✅ Check student exists and active
-		const student = await prisma.student.findFirst({
-			where: {
-				id: studentId,
-				isActive: true
-			}
-		});
-
-		if (!student) {
-			throw new ApiError(404, 'Student not found or blocked');
-		}
-
-		// ✅ Check test exists (with totalQuestions for progress decisions)
 		const test = await prisma.test.findUnique({
 			where: { id: testId },
-			select: {
-				id: true,
-				title: true,
-				durationMinutes: true,
-				totalQuestions: true
+			include: {
+				chapter: {
+					include: {
+						course: {
+							include: {
+								enrollments: {
+									where: { studentId }
+								}
+							}
+						}
+					}
+				}
 			}
 		});
 
@@ -147,24 +142,20 @@ export async function startTestAttempt(
 			throw new ApiError(404, 'Test not found');
 		}
 
-		// 🔁 Find any in-progress attempts for this test
+		// 🔐 Security: Check if student is actually enrolled in this test's course
+		if (test.chapter.course.enrollments.length === 0) {
+			throw new ApiError(403, 'You are not enrolled in the course for this test');
+		}
+
+		// 🔁 Cleanup & Resume Logic
 		const pendingAttempts = await prisma.testAttempt.findMany({
 			where: {
 				studentId,
 				testId,
-				submittedAt: null,
 				status: 'IN_PROGRESS'
 			},
-			select: {
-				id: true,
-				testId: true,
-				startedAt: true,
-				expiresAt: true,
-				_count: {
-					select: {
-						answers: true
-					}
-				}
+			include: {
+				_count: { select: { answers: true } }
 			},
 			orderBy: {
 				startedAt: 'desc'
@@ -172,52 +163,30 @@ export async function startTestAttempt(
 		});
 
 		const now = new Date();
-		let resumeAttempt:
-			| {
-					id: string;
-					testId: string;
-					startedAt: Date;
-					expiresAt: Date;
-			  }
-			| null = null;
 
 		for (const attempt of pendingAttempts) {
-			// ⏱️ If time is up, auto-submit old attempt (for reporting) and don't resume it
+			// ⏱️ Auto-submit if expired
 			if (attempt.expiresAt <= now) {
 				await finalizeAttempt({ studentId, attemptId: attempt.id });
 				continue;
 			}
 
-			const answeredCount = attempt._count.answers;
-			const totalQuestions = test.totalQuestions;
-
-			// ✅ All questions answered but not submitted → auto-submit, then don't resume
-			if (totalQuestions > 0 && answeredCount >= totalQuestions) {
+			// ✅ Auto-submit if all questions answered (Security: stops infinite retries)
+			if (test.totalQuestions > 0 && attempt._count.answers >= test.totalQuestions) {
 				await finalizeAttempt({ studentId, attemptId: attempt.id });
 				continue;
 			}
 
-			// 🧠 Some questions remaining → this is a valid attempt to resume
-			if (!resumeAttempt) {
-				resumeAttempt = {
-					id: attempt.id,
-					testId: attempt.testId,
-					startedAt: attempt.startedAt,
-					expiresAt: attempt.expiresAt
-				};
-			}
-		}
-
-		// If we found a partially-answered, non-expired attempt → resume it
-		if (resumeAttempt) {
+			// 🧠 Valid resume found
 			return NextResponse.json(
 				new ApiResponse(
 					200,
 					{
-						attemptId: resumeAttempt.id,
-						testId: resumeAttempt.testId,
-						startedAt: resumeAttempt.startedAt,
-						expiresAt: resumeAttempt.expiresAt
+						attemptId: attempt.id,
+						testId: test.id,
+						title: test.title,
+						expiresAt: attempt.expiresAt,
+						totalQuestions: test.totalQuestions
 					},
 					'Resuming existing attempt'
 				),
@@ -225,17 +194,17 @@ export async function startTestAttempt(
 			);
 		}
 
-		// 🧠 Create attempt
+		// 3. ✨ Create New Attempt
 		const attempt = await prisma.testAttempt.create({
 			data: {
 				studentId,
 				testId,
-				startedAt: new Date(),
 				status: 'IN_PROGRESS',
 				expiresAt: new Date(Date.now() + test.durationMinutes * 60000) // duration in ms
 			}
 		});
 
+		// Audit Log for Admin
 		logEvent('TestAttemptStarted', {
 			studentId,
 			testId,
@@ -248,8 +217,8 @@ export async function startTestAttempt(
 				{
 					attemptId: attempt.id,
 					testId: test.id,
-					startedAt: attempt.startedAt,
-					durationMinutes: test.durationMinutes,
+					title: test.title,
+					expiresAt: attempt.expiresAt,
 					totalQuestions: test.totalQuestions
 				},
 				'Test attempt started'
