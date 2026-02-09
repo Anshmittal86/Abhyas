@@ -1,15 +1,12 @@
 'use client';
-
-// External (Next.js)
+// ✅
 import { useRouter } from 'next/navigation';
-
-// External Components
 import { AlertTriangle } from 'lucide-react';
 
 type NotFoundProps = {
 	message: string;
 	subtitle?: string;
-	height?: 'full' | 'normal'; // restrict allowed values
+	height?: 'full' | 'normal';
 	showIcon?: boolean;
 	action?: 'retry' | 'back' | 'dashboard' | 'none';
 };
@@ -32,12 +29,10 @@ export default function NotFound({
 			actionBtnLabel = 'Retry';
 			actionBtnHandler = () => window.location.reload();
 			break;
-
 		case 'back':
 			actionBtnLabel = 'Go Back';
 			actionBtnHandler = () => router.back();
 			break;
-
 		case 'dashboard':
 			actionBtnLabel = 'Go to Dashboard';
 			actionBtnHandler = () => router.push('/admin/certificates');
@@ -46,29 +41,26 @@ export default function NotFound({
 
 	return (
 		<div
-			className={`w-full flex flex-col justify-center items-center ${containerClass} text-white bg-gray-900 gap-3`}
+			className={`flex w-full flex-col items-center justify-center gap-3 ${containerClass} bg-ab-bg text-ab-text-primary`}
 		>
 			{/* Icon + Message */}
-			<div className="flex flex-col justify-center items-center gap-2">
-				{/* Icon */}
-				{showIcon && <AlertTriangle className="w-10 h-10 text-yellow-400" />}
+			<div className="flex flex-col items-center justify-center gap-2">
+				{showIcon && <AlertTriangle className="h-10 w-10 text-ab-primary" />}
 
-				{/* Message */}
 				<div className="text-center text-lg font-semibold">{message}</div>
 
-				{/* Subtitle (optional) */}
 				{subtitle && (
-					<div className="text-center text-sm text-gray-400 max-w-md leading-relaxed">
+					<div className="max-w-md text-center text-sm leading-relaxed text-ab-text-secondary">
 						{subtitle}
 					</div>
 				)}
 			</div>
 
-			{/* Optional Action Button */}
+			{/* Optional Action */}
 			{action !== 'none' && (
 				<button
 					onClick={actionBtnHandler}
-					className="px-6 py-2 text-sm bg-transparent border border-amber-50 rounded-md transition shadow cursor-pointer hover:bg-blue-50 hover:text-gray-800 font-semibold"
+					className="cursor-pointer rounded-md border border-ab-border/80 bg-ab-surface px-6 py-2 text-sm font-semibold text-ab-text-primary shadow-sm transition hover:border-ab-primary/40 hover:bg-ab-primary/5"
 				>
 					{actionBtnLabel}
 				</button>

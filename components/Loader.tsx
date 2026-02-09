@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-
+// ✅
 type LoaderProps = {
 	size?: number;
 	height?: 'full' | 'normal' | 'auto';
@@ -15,24 +15,26 @@ export default function Loader({
 	message,
 	subtitle
 }: LoaderProps) {
-	// height prop: "normal" OR "full"
-
 	const containerClass =
 		height === 'full' ? 'min-h-screen'
 		: height === 'normal' ? 'h-[120px]'
-		: ''; // auto height
+		: '';
 
 	return (
-		<div className={`flex flex-col justify-center items-center ${containerClass} gap-3 p-4`}>
+		<div className={`flex flex-col items-center justify-center gap-3 p-4 ${containerClass}`}>
 			{/* Loader Icon */}
-			{showIcon && <Loader2 size={size} className="animate-spin text-white" />}
+			{showIcon && <Loader2 size={size} className="animate-spin text-ab-primary" />}
 
 			{/* Optional Message */}
-			{message && <div className="text-white text-base font-medium text-center">{message}</div>}
+			{message && (
+				<div className="text-center text-base font-medium text-ab-text-primary">{message}</div>
+			)}
 
 			{/* Optional Subtitle */}
 			{subtitle && (
-				<div className="text-gray-400 text-sm text-center max-w-md leading-relaxed">{subtitle}</div>
+				<div className="max-w-md text-center text-sm leading-relaxed text-ab-text-secondary">
+					{subtitle}
+				</div>
 			)}
 		</div>
 	);
