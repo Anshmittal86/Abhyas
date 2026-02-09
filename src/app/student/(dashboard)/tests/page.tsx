@@ -10,8 +10,9 @@ interface Test {
 	id: string;
 	title: string;
 	chapterName: string;
-	totalQuestions: number;
+	courseName: string;
 	durationMinutes: number;
+	totalQuestions: number;
 }
 
 export default function AvailableTestsPage() {
