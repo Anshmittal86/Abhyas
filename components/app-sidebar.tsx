@@ -42,8 +42,8 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 	const navItems = MENU_DATA[userRole] || [];
 
 	return (
-		<Sidebar collapsible="icon">
-			<SidebarHeader className="overflow-hidden px-2 py-4">
+		<Sidebar collapsible="icon" className="bg-ab-bg">
+			<SidebarHeader className="overflow-hidden px-2 py-4 bg-ab-bg">
 				<SidebarMenuButton size="lg" className="w-full cursor-default gap-3 hover:bg-transparent">
 					<Circle className="ml-2 size-6 shrink-0 fill-current text-ab-text-primary" />
 					<div className="flex flex-col">
@@ -59,7 +59,7 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 				</SidebarMenuButton>
 			</SidebarHeader>
 
-			<SidebarContent>
+			<SidebarContent className="bg-ab-bg">
 				<SidebarGroup>
 					<SidebarGroupContent>
 						<SidebarMenu>
@@ -108,7 +108,7 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 				</SidebarGroup>
 			</SidebarContent>
 
-			<SidebarFooter className="overflow-hidden border-t border-dashed border-ab-border/80 px-2 py-4">
+			<SidebarFooter className="overflow-hidden border-t border-dashed border-ab-border/80 px-2 py-4 bg-ab-bg">
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<DropdownMenu>
@@ -136,7 +136,7 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 							</DropdownMenuTrigger>
 
 							<DropdownMenuContent
-								className="w-64 rounded-2xl border-2 border-ab-border/80 p-2 shadow-xl"
+								className="w-64 rounded-2xl border-2 border-ab-border/80 p-2 shadow-xl bg-ab-bg"
 								side={isMobile ? 'bottom' : 'right'}
 								align="end"
 								sideOffset={12}
@@ -145,7 +145,7 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 									Provisional No: ST001
 								</DropdownMenuLabel>
 
-								<DropdownMenuSeparator />
+								<DropdownMenuSeparator className="bg-ab-border/80" />
 
 								<DropdownMenuGroup>
 									<DropdownMenuItem className="cursor-pointer rounded-lg py-2 font-medium">
@@ -163,7 +163,7 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 									</DropdownMenuItem>
 								</DropdownMenuGroup>
 
-								<DropdownMenuSeparator />
+								<DropdownMenuSeparator className="bg-ab-border/80" />
 
 								<DropdownMenuItem className="cursor-pointer rounded-lg py-2 font-bold text-destructive transition-colors focus:bg-destructive/10 focus:text-destructive">
 									<LogOut className="mr-2 size-4" />

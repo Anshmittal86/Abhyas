@@ -22,12 +22,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className="light" suppressHydrationWarning>
+		<html lang="en" className="dark" suppressHydrationWarning>
 			<body className={`${inter.variable} bg-bg-main antialiased`}>
 				<ThemeProvider
 					attribute="class"
 					defaultTheme="light"
-					enableSystem={false}
+					enableSystem={true}
 					disableTransitionOnChange
 				>
 					{children}

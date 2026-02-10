@@ -24,7 +24,7 @@ interface FormFieldProps<T extends FieldValues> {
 	name: Path<T>;
 	label: string;
 	placeholder?: string;
-	type?: 'text' | 'email' | 'password' | 'datepicker' | 'select';
+	type?: 'text' | 'email' | 'password' | 'datepicker' | 'select' | 'tel';
 	required?: boolean;
 	options?: SelectOption[];
 }
@@ -46,7 +46,7 @@ const FormField = <T extends FieldValues>({
 			control={control}
 			render={({ field, fieldState }) => (
 				<div className="space-y-2">
-					<label className="ml-1 text-[11px] font-black uppercase tracking-widest text-ab-text-secondary">
+					<label className="ml-1 text-[11px] font-black capitalize tracking-widest text-ab-text-secondary">
 						{label} {required && <span className="text-ab-primary">*</span>}
 					</label>
 
@@ -66,8 +66,8 @@ const FormField = <T extends FieldValues>({
 							</PopoverTrigger>
 
 							<PopoverContent
-								className="rounded-xl border-2 border-ab-border/80 bg-ab-surface p-0 shadow-2xl"
-								align="start"
+								className=" rounded-xl border-2 border-ab-border/80 bg-ab-surface p-0 shadow-2xl"
+								align="center"
 							>
 								<Calendar
 									mode="single"
@@ -76,17 +76,17 @@ const FormField = <T extends FieldValues>({
 										field.onChange(date);
 										setOpen(false);
 									}}
-									className="bg-transparent text-ab-text-primary"
+									className="bg-transparent text-ab-text-primary w-full"
 								/>
 							</PopoverContent>
 						</Popover>
 					: type === 'select' ?
 						<Select value={field.value} onValueChange={field.onChange}>
-							<SelectTrigger className="h-12 w-full cursor-pointer rounded-xl border-2 border-ab-border/80 bg-ab-surface font-bold text-ab-text-primary transition-all focus:border-ab-primary/50 focus:ring-ab-primary/20">
+							<SelectTrigger className="h-10 w-full cursor-pointer rounded-xl border-2 border-ab-border/80 bg-ab-surface font-bold text-ab-text-primary transition-all focus:border-ab-primary/50 focus:ring-ab-primary/20">
 								<SelectValue placeholder={placeholder} />
 							</SelectTrigger>
 
-							<SelectContent className="z-[100] rounded-xl border-2 border-ab-border/80 bg-ab-surface shadow-2xl">
+							<SelectContent className="z-[100] py-4 rounded-xl border-2 border-ab-border/80 bg-ab-surface shadow-2xl">
 								{options.map((opt) => (
 									<SelectItem
 										key={opt.value}
@@ -103,7 +103,7 @@ const FormField = <T extends FieldValues>({
 							type={type}
 							placeholder={placeholder}
 							required={required}
-							className="h-12 w-full rounded-xl border-2 border-ab-border/80 bg-ab-surface font-bold text-ab-text-primary placeholder:text-ab-text-secondary/50 transition-all focus-visible:border-ab-primary/50 focus-visible:ring-ab-primary/20"
+							className="mb-1 h-10 w-full rounded-xl border-2 border-ab-border/80 bg-ab-surface font-bold text-ab-text-primary placeholder:text-ab-text-secondary/50 transition-all focus-visible:border-ab-primary/50 focus-visible:ring-ab-primary/20"
 						/>
 					}
 

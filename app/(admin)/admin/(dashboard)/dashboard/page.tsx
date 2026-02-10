@@ -11,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { CreateStudentSheet } from '@/components/forms/CreateStudentSheet';
 // ✅
 const AdminDashboard = () => {
 	const stats = [
@@ -95,7 +96,7 @@ const AdminDashboard = () => {
 				{stats.map((stat) => (
 					<Card
 						key={stat.title}
-						className="rounded-2xl border-2 border-ab-border/80 shadow-sm transition-colors hover:border-ab-primary/20"
+						className="rounded-2xl border-2 border-ab-border/80 shadow-sm transition-colors bg-ab-bg hover:border-ab-primary/20"
 					>
 						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
 							<CardTitle className="text-[11px] font-bold uppercase tracking-widest opacity-60">
@@ -122,7 +123,7 @@ const AdminDashboard = () => {
 
 			<div className="grid grid-cols-1 gap-6 md:grid-cols-7">
 				{/* Recent Activity */}
-				<Card className="md:col-span-4 rounded-2xl border-2 border-ab-border/80 shadow-sm">
+				<Card className="md:col-span-4 bg-ab-bg rounded-2xl border-2 border-ab-border/80 shadow-sm">
 					<CardHeader>
 						<CardTitle className="text-xl font-bold">Recent Student Activity</CardTitle>
 						<CardDescription className="font-medium text-ab-text-secondary">
@@ -162,7 +163,7 @@ const AdminDashboard = () => {
 
 						<Button
 							variant="outline"
-							className="mt-6 w-full rounded-xl border-2 border-ab-border/80 font-bold transition hover:bg-ab-primary/5"
+							className="mt-6 w-full rounded-xl border-ab-border/80 font-bold transition bg-ab-primary hover:bg-ab-primary/80 text-primary-foreground cursor-pointer"
 						>
 							View Detailed Analytics
 							<ArrowUpRight className="ml-2 size-4" />
@@ -171,16 +172,13 @@ const AdminDashboard = () => {
 				</Card>
 
 				{/* Quick Actions */}
-				<Card className="md:col-span-3 rounded-2xl border-2 border-ab-border/80 shadow-sm">
+				<Card className="md:col-span-3 bg-ab-bg rounded-2xl border-2 border-ab-border/80 shadow-sm">
 					<CardHeader>
 						<CardTitle className="text-xl font-bold">Quick Actions</CardTitle>
 					</CardHeader>
 
 					<CardContent className="space-y-4">
-						<Button className="h-14 w-full rounded-2xl bg-ab-primary text-lg font-bold text-primary-foreground shadow-lg transition-all active:scale-95 hover:bg-ab-primary/90">
-							<Plus className="mr-2 size-6" />
-							Create New Test
-						</Button>
+						<CreateStudentSheet classes={'cursor-pointer w-full py-6'} />
 
 						<div className="group relative">
 							<Button

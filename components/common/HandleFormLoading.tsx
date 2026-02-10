@@ -8,7 +8,7 @@ export function handleFormBtnLoading(
 ): ReactNode {
 	return loadingState ?
 			<div className="flex items-center">
-				<Loader2 size={20} className="animate-spin mr-2 text-white" />
+				<Loader2 size={20} className="animate-spin mr-2 text-primary-foreground" />
 				{loadingMsg}
 			</div>
 		:	defaultMsg;

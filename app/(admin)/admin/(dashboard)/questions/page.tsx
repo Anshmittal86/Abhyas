@@ -1,8 +1,24 @@
 'use client';
 
+import { Search, MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow
+} from '@/components/ui/table';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 
 type QuestionListItem = {
@@ -17,7 +33,7 @@ type QuestionListItem = {
 	answerCount: number;
 };
 
-const MOCK_QUESTIONS: QuestionListItem[] = [
+const QUESTIONS: QuestionListItem[] = [
 	{
 		id: 'q1',
 		questionText: 'What does HTML stand for?',
@@ -32,124 +48,152 @@ const MOCK_QUESTIONS: QuestionListItem[] = [
 ];
 
 export default function AdminQuestionsPage() {
-	const [createOpen, setCreateOpen] = useState(false);
-	const [editOpen, setEditOpen] = useState(false);
 	const [viewOpen, setViewOpen] = useState(false);
-	const [questionToEdit, setQuestionToEdit] = useState<QuestionForEdit | null>(null);
 	const [selectedQuestion, setSelectedQuestion] = useState<QuestionListItem | null>(null);
 
 	return (
-		<main className="flex-1 overflow-auto px-8 py-6 space-y-6 bg-ab-bg">
+		<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
 			{/* Header */}
-			<div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+			<div className="flex items-center justify-between">
 				<div>
-					<h1 className="text-2xl font-semibold text-ab-text-primary">Questions</h1>
-					<p className="text-sm text-ab-text-secondary">Create and manage questions for tests.</p>
+					<h2 className="text-3xl font-black tracking-tight">Questions</h2>
+					<p className="text-sm font-medium italic text-ab-text-secondary">
+						Create and manage questions for tests.
+					</p>
 				</div>
-				<Button onClick={() => setCreateOpen(true)}>Create Question</Button>
 			</div>
 
-			{/* List */}
-			<div className="bg-ab-surface border border-ab-border/40 rounded-xl overflow-hidden">
-				<div className="grid grid-cols-12 gap-3 px-4 py-3 border-b border-ab-border/40 text-xs uppercase tracking-wide text-ab-text-muted">
-					<div className="col-span-5">Question</div>
-					<div className="col-span-2">Test</div>
-					<div className="col-span-2">Correct</div>
-					<div className="col-span-1">Answers</div>
-					<div className="col-span-2">Actions</div>
+			{/* Filters */}
+			<div className="flex justify-between items-center gap-4">
+				<div className="relative w-full max-w-sm">
+					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ab-text-secondary" />
+					<Input
+						placeholder="Search by question or test..."
+						className="h-11 rounded-xl border-2 border-ab-border pl-10 bg-ab-surface"
+					/>
 				</div>
 
-				{MOCK_QUESTIONS.map((q) => (
-					<div
-						key={q.id}
-						className="grid grid-cols-12 gap-3 px-4 py-4 border-b border-ab-border/40 last:border-0 items-center"
-					>
-						<div className="col-span-5">
-							<div className="font-medium text-ab-text-primary line-clamp-2">{q.questionText}</div>
-							<div className="text-xs text-ab-text-muted mt-1">
-								A:{q.optionA} · B:{q.optionB} · C:{q.optionC} · D:{q.optionD}
-							</div>
-						</div>
-
-						<div className="col-span-2 text-sm text-ab-text-primary">{q.testTitle}</div>
-
-						<div className="col-span-2">
-							<span className="px-2 py-1 text-xs rounded-full border border-ab-green-text text-ab-green-text font-bold">
-								{q.correctOption}
-							</span>
-						</div>
-
-						<div className="col-span-1 text-sm text-ab-text-primary">{q.answerCount}</div>
-
-						<div className="col-span-2 flex gap-2">
-							<Button
-								size="sm"
-								variant="outline"
-								onClick={() => {
-									setSelectedQuestion(q);
-									setViewOpen(true);
-								}}
-							>
-								View
-							</Button>
-							<Button
-								size="sm"
-								variant="outline"
-								onClick={() => {
-									setQuestionToEdit({
-										id: q.id,
-										testId: 'test-1',
-										questionText: q.questionText,
-										optionA: q.optionA,
-										optionB: q.optionB,
-										optionC: q.optionC,
-										optionD: q.optionD,
-										correctOption: q.correctOption
-									});
-									setEditOpen(true);
-								}}
-							>
-								Edit
-							</Button>
-							<Button size="sm" variant="outline" className="text-ab-pink-text">
-								Del
-							</Button>
-						</div>
-					</div>
-				))}
+				<Button className="py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer">
+					Create Question
+				</Button>
 			</div>
 
-			{/* View Sheet */}
+			{/* Table */}
+			<div className="overflow-hidden rounded-[22px] border-2 border-ab-border bg-ab-surface shadow-sm">
+				<Table>
+					<TableHeader className="bg-ab-border/20">
+						<TableRow className="border-b-2 border-ab-border">
+							<TableHead className="py-5 pl-8 text-[11px] font-black uppercase tracking-widest">
+								Question
+							</TableHead>
+							<TableHead className="text-[11px] font-black uppercase tracking-widest">
+								Test
+							</TableHead>
+							<TableHead className="text-center text-[11px] font-black uppercase tracking-widest">
+								Correct
+							</TableHead>
+							<TableHead className="text-center text-[11px] font-black uppercase tracking-widest">
+								Answers
+							</TableHead>
+							<TableHead className="pr-8 text-right text-[11px] font-black uppercase tracking-widest">
+								Actions
+							</TableHead>
+						</TableRow>
+					</TableHeader>
+
+					<TableBody>
+						{QUESTIONS.map((q) => (
+							<TableRow key={q.id} className="hover:bg-ab-primary/5 transition-colors">
+								<TableCell className="py-5 pl-8 max-w-xl">
+									<p className="font-black line-clamp-2 text-ab-text-primary">{q.questionText}</p>
+									<p className="text-xs text-ab-text-secondary mt-1 line-clamp-1">
+										A:{q.optionA} · B:{q.optionB} · C:{q.optionC} · D:{q.optionD}
+									</p>
+								</TableCell>
+
+								<TableCell className="font-bold text-ab-text-primary">{q.testTitle}</TableCell>
+
+								{/* Correct Option Pill */}
+								<TableCell className="text-center">
+									<span className="inline-flex h-7 w-7 items-center justify-center rounded-full border font-black bg-ab-green-bg text-ab-green-text border-ab-green-text">
+										{q.correctOption}
+									</span>
+								</TableCell>
+
+								<TableCell className="text-center font-black text-ab-text-primary">
+									{q.answerCount}
+								</TableCell>
+
+								<TableCell className="pr-8 text-right">
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<Button variant="ghost" className="h-8 w-8 p-0 hover:bg-ab-primary/10">
+												<MoreHorizontal className="h-5 w-5" />
+											</Button>
+										</DropdownMenuTrigger>
+
+										<DropdownMenuContent
+											align="end"
+											className="rounded-xl bg-ab-surface border border-ab-border"
+										>
+											<DropdownMenuItem
+												className="font-bold"
+												onClick={() => {
+													setSelectedQuestion(q);
+													setViewOpen(true);
+												}}
+											>
+												View Question
+											</DropdownMenuItem>
+											<DropdownMenuItem className="font-bold">Edit Question</DropdownMenuItem>
+											<DropdownMenuItem className="font-bold text-ab-pink-text">
+												Delete Question
+											</DropdownMenuItem>
+										</DropdownMenuContent>
+									</DropdownMenu>
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			</div>
+
+			{/* View Question Sheet */}
 			<Sheet open={viewOpen} onOpenChange={setViewOpen}>
-				<SheetContent className="w-full sm:max-w-2xl bg-ab-surface border-l border-ab-border/40">
+				<SheetContent className="sm:max-w-2xl overflow-y-auto bg-ab-surface border-l border-ab-border">
 					<SheetHeader>
 						<SheetTitle className="text-ab-text-primary">Question Details</SheetTitle>
 					</SheetHeader>
 
 					{selectedQuestion && (
-						<div className="mt-6 space-y-4">
+						<div className="mt-6 space-y-6">
 							<div>
-								<p className="text-sm text-ab-text-muted">Question</p>
-								<p className="font-medium text-ab-text-primary">{selectedQuestion.questionText}</p>
+								<p className="text-xs uppercase font-bold text-ab-text-secondary">Question</p>
+								<p className="text-lg font-black text-ab-text-primary">
+									{selectedQuestion.questionText}
+								</p>
 							</div>
 
+							{/* Options */}
 							<div className="grid grid-cols-2 gap-4">
 								{(['A', 'B', 'C', 'D'] as const).map((opt) => {
 									const text = selectedQuestion[`option${opt}` as keyof QuestionListItem] as string;
-									const isCorrect = selectedQuestion.correctOption === opt;
+									const correct = selectedQuestion.correctOption === opt;
 
 									return (
 										<div
 											key={opt}
-											className={`p-3 rounded-lg border ${
-												isCorrect ? 'border-ab-green-text bg-ab-green-bg/20' : 'border-ab-border/40'
+											className={`rounded-xl border p-4 ${
+												correct ? 'border-ab-green-text bg-ab-green-bg' : 'border-ab-border'
 											}`}
 										>
-											<p className="text-sm text-ab-text-muted">Option {opt}</p>
+											<p className="text-xs font-bold text-ab-text-secondary">Option {opt}</p>
 											<p
-												className={`${
-													isCorrect ? 'font-bold text-ab-green-text' : 'text-ab-text-primary'
-												}`}
+												className={
+													correct ?
+														'font-black text-ab-green-text'
+													:	'font-medium text-ab-text-primary'
+												}
 											>
 												{text}
 											</p>
@@ -161,30 +205,21 @@ export default function AdminQuestionsPage() {
 							<div className="pt-4 flex gap-2">
 								<Button
 									variant="outline"
-									onClick={() => {
-										setQuestionToEdit({
-											id: selectedQuestion.id,
-											testId: 'test-1',
-											questionText: selectedQuestion.questionText,
-											optionA: selectedQuestion.optionA,
-											optionB: selectedQuestion.optionB,
-											optionC: selectedQuestion.optionC,
-											optionD: selectedQuestion.optionD,
-											correctOption: selectedQuestion.correctOption
-										});
-										setEditOpen(true);
-									}}
+									className="font-bold border-ab-border text-ab-text-primary"
 								>
 									Edit Question
 								</Button>
+
 								<SheetClose asChild>
-									<Button variant="outline">Close</Button>
+									<Button variant="outline" className="border-ab-border text-ab-text-primary">
+										Close
+									</Button>
 								</SheetClose>
 							</div>
 						</div>
 					)}
 				</SheetContent>
 			</Sheet>
-		</main>
+		</div>
 	);
 }

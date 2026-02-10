@@ -16,6 +16,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { CreateStudentSheet } from '@/components/forms/CreateStudentSheet';
 
 const students = [
 	{
@@ -41,7 +42,7 @@ export default function StudentsPage() {
 			</div>
 
 			{/* Filters */}
-			<div className="flex items-center gap-4">
+			<div className="flex justify-between items-center gap-4">
 				<div className="relative w-full max-w-sm">
 					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ab-text-secondary" />
 					<Input
@@ -49,6 +50,8 @@ export default function StudentsPage() {
 						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 focus-visible:ring-ab-primary/20"
 					/>
 				</div>
+
+				<CreateStudentSheet classes={'cursor-pointer'} />
 			</div>
 
 			{/* Table */}

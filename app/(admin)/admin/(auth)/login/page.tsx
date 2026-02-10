@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import FormField from '@/components/FormField';
-import { handleFormBtnLoading } from '@/utils/form-helper';
+import FormField from '@/components/ui/FormField';
+import { handleFormBtnLoading } from '@/components/common/HandleFormLoading';
 import { Lock, Mail, ShieldCheck, ArrowLeft, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 
