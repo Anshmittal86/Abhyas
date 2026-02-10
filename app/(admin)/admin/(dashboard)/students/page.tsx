@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import { Search, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,19 +19,43 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { CreateStudentSheet } from '@/components/forms/CreateStudentSheet';
 
-const students = [
-	{
-		name: 'Ansh Mittal',
-		id: 'ST-001',
-		email: 'anshmit657@gmail.com',
-		attempts: 12,
-		status: 'Active'
-	}
-];
+type StudentDetail = {
+	id: string;
+	name: string;
+	email: string;
+	attempts: number;
+	status: 'Active' | 'Blocked';
+	provisionalNo: string;
+	course: string;
+	dob: string;
+	mobileNo: string;
+	fathersName: string;
+	mothersName: string;
+};
+
+const DUMMY_STUDENT: StudentDetail = {
+	id: 'ST-001',
+	name: 'Ansh Mittal',
+	email: 'anshmit657@gmail.com',
+	attempts: 12,
+	status: 'Active',
+	provisionalNo: 'P-2024-001',
+	course: 'Web Development',
+	dob: '2002-08-15',
+	mobileNo: '+91 9876543210',
+	fathersName: 'Rajesh Mittal',
+	mothersName: 'Sunita Mittal'
+};
 
 export default function StudentsPage() {
+	const [viewOpen, setViewOpen] = useState(false);
+	const DUMMY_STUDENTS: StudentDetail[] = [DUMMY_STUDENT];
+	const [students, setStudents] = useState<StudentDetail[]>(DUMMY_STUDENTS);
+	const [selectedStudent, setSelectedStudent] = useState<StudentDetail | null>(DUMMY_STUDENT);
+
 	return (
 		<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
 			{/* Header */}
@@ -126,7 +153,13 @@ export default function StudentsPage() {
 											align="end"
 											className="rounded-xl border-2 border-ab-border/80"
 										>
-											<DropdownMenuItem className="cursor-pointer font-bold">
+											<DropdownMenuItem
+												className="cursor-pointer font-bold"
+												onClick={() => {
+													setSelectedStudent(student);
+													setViewOpen(true);
+												}}
+											>
 												View Profile
 											</DropdownMenuItem>
 											<DropdownMenuItem className="cursor-pointer font-bold text-ab-pink-text">
@@ -140,6 +173,113 @@ export default function StudentsPage() {
 					</TableBody>
 				</Table>
 			</div>
+
+			<Sheet open={viewOpen} onOpenChange={setViewOpen}>
+				<SheetContent className="sm:max-w-2xl overflow-y-auto bg-ab-surface border-l border-ab-border">
+					<SheetHeader>
+						<SheetTitle className="text-ab-text-primary">Student Details</SheetTitle>
+					</SheetHeader>
+
+					{selectedStudent && (
+						<div className="mt-6 space-y-6">
+							{/* Student Identity */}
+							<div className="space-y-1">
+								<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+									Student Name
+								</p>
+								<p className="text-lg font-black text-ab-text-primary">{selectedStudent.name}</p>
+								<p className="text-xs font-bold text-ab-primary">{selectedStudent.id}</p>
+							</div>
+
+							{/* Contact & Course */}
+							<div className="space-y-1">
+								<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+									Contact & Course
+								</p>
+								<p className="font-medium text-ab-text-primary">{selectedStudent.email}</p>
+								<p className="text-sm text-ab-text-secondary">Course: {selectedStudent.course}</p>
+							</div>
+
+							{/* Key Metrics */}
+							<div className="grid grid-cols-2 gap-4 rounded-xl border border-ab-border bg-ab-surface p-4">
+								<div>
+									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+										Attempts
+									</p>
+									<p className="text-base font-black text-ab-text-primary">
+										{selectedStudent.attempts}
+									</p>
+								</div>
+
+								<div>
+									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+										Status
+									</p>
+									<p className="text-base font-black text-ab-text-primary">
+										{selectedStudent.status}
+									</p>
+								</div>
+
+								<div>
+									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+										Date of Birth
+									</p>
+									<p className="text-base font-black text-ab-text-primary">{selectedStudent.dob}</p>
+								</div>
+
+								<div>
+									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+										Mobile No.
+									</p>
+									<p className="text-base font-black text-ab-text-primary">
+										{selectedStudent.mobileNo}
+									</p>
+								</div>
+							</div>
+
+							{/* Parents */}
+							<div className="grid grid-cols-2 gap-4 rounded-xl border border-ab-border p-4">
+								<div>
+									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+										Father’s Name
+									</p>
+									<p className="font-black text-ab-text-primary">{selectedStudent.fathersName}</p>
+								</div>
+
+								<div>
+									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+										Mother’s Name
+									</p>
+									<p className="font-black text-ab-text-primary">{selectedStudent.mothersName}</p>
+								</div>
+							</div>
+
+							{/* Actions */}
+							<div className="pt-4 flex gap-2">
+								<Button
+									variant="outline"
+									className="font-bold border-ab-border text-ab-text-primary hover:bg-ab-primary/10"
+								>
+									Update Student
+								</Button>
+
+								<Button
+									variant="outline"
+									className="font-bold text-ab-pink-text border-ab-border hover:bg-ab-pink-bg"
+								>
+									Block Student
+								</Button>
+
+								<SheetClose asChild>
+									<Button variant="outline" className="border-ab-border text-ab-text-primary">
+										Close
+									</Button>
+								</SheetClose>
+							</div>
+						</div>
+					)}
+				</SheetContent>
+			</Sheet>
 		</div>
 	);
 }
