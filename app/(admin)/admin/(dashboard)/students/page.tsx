@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, MoreHorizontal } from 'lucide-react';
+import { Search, MoreHorizontal, UserPlus2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -20,7 +20,7 @@ import {
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
-import { CreateStudentSheet } from '@/components/forms/CreateStudentSheet';
+import { StudentFormSheet } from '@/components/forms/StudentFormSheet';
 
 type StudentDetail = {
 	id: string;
@@ -30,7 +30,7 @@ type StudentDetail = {
 	status: 'Active' | 'Blocked';
 	provisionalNo: string;
 	course: string;
-	dob: string;
+	dob: Date;
 	mobileNo: string;
 	fathersName: string;
 	mothersName: string;
@@ -43,8 +43,8 @@ const DUMMY_STUDENT: StudentDetail = {
 	attempts: 12,
 	status: 'Active',
 	provisionalNo: 'P-2024-001',
-	course: 'Web Development',
-	dob: '2002-08-15',
+	course: 'mca',
+	dob: new Date('2002-08-15'),
 	mobileNo: '+91 9876543210',
 	fathersName: 'Rajesh Mittal',
 	mothersName: 'Sunita Mittal'
@@ -78,7 +78,17 @@ export default function StudentsPage() {
 					/>
 				</div>
 
-				<CreateStudentSheet classes={'cursor-pointer'} />
+				<StudentFormSheet
+					trigger={
+						<Button
+							variant="outline"
+							className={`py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer `}
+						>
+							<UserPlus2 className="h-5 w-5" />
+							Create Student
+						</Button>
+					}
+				/>
 			</div>
 
 			{/* Table */}
@@ -224,7 +234,9 @@ export default function StudentsPage() {
 									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
 										Date of Birth
 									</p>
-									<p className="text-base font-black text-ab-text-primary">{selectedStudent.dob}</p>
+									<p className="text-base font-black text-ab-text-primary">
+										{selectedStudent.dob.toString()}
+									</p>
 								</div>
 
 								<div>
@@ -241,14 +253,14 @@ export default function StudentsPage() {
 							<div className="grid grid-cols-2 gap-4 rounded-xl border border-ab-border p-4">
 								<div>
 									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Father’s Name
+										Father&apos;s Name
 									</p>
 									<p className="font-black text-ab-text-primary">{selectedStudent.fathersName}</p>
 								</div>
 
 								<div>
 									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Mother’s Name
+										Mother&apos;s Name
 									</p>
 									<p className="font-black text-ab-text-primary">{selectedStudent.mothersName}</p>
 								</div>
@@ -256,12 +268,29 @@ export default function StudentsPage() {
 
 							{/* Actions */}
 							<div className="pt-4 flex gap-2">
-								<Button
-									variant="outline"
-									className="font-bold border-ab-border text-ab-text-primary hover:bg-ab-primary/10"
-								>
-									Update Student
-								</Button>
+								<StudentFormSheet
+									mode="update"
+									defaultValues={{
+										provisionalNo: selectedStudent.provisionalNo,
+										name: selectedStudent.name,
+										email: selectedStudent.email,
+										mobileNo: selectedStudent.mobileNo,
+										dob: selectedStudent.dob,
+										course: selectedStudent.course,
+										fathersName: selectedStudent.fathersName,
+										mothersName: selectedStudent.mothersName
+									}}
+									onSubmitStudent={async (data) => {
+										console.log('Updating student:', data);
+										// call update API here
+									}}
+									trigger={
+										<Button variant="outline" className="font-bold">
+											<UserPlus2 className="h-5 w-5" />
+											Update Student
+										</Button>
+									}
+								/>
 
 								<Button
 									variant="outline"

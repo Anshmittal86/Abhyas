@@ -4,14 +4,14 @@ import {
 	FileText,
 	Database,
 	MousePointerClick,
-	Plus,
+	UserPlus2,
 	TrendingUp,
 	ArrowUpRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CreateStudentSheet } from '@/components/forms/CreateStudentSheet';
+import { StudentFormSheet } from '@/components/forms/StudentFormSheet';
 // ✅
 const AdminDashboard = () => {
 	const stats = [
@@ -178,7 +178,17 @@ const AdminDashboard = () => {
 					</CardHeader>
 
 					<CardContent className="space-y-4">
-						<CreateStudentSheet classes={'cursor-pointer w-full py-6'} />
+						<StudentFormSheet
+							trigger={
+								<Button
+									variant="outline"
+									className={`py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer `}
+								>
+									<UserPlus2 className="h-5 w-5" />
+									Create Student
+								</Button>
+							}
+						/>
 
 						<div className="group relative">
 							<Button

@@ -15,9 +15,17 @@ import {
 } from '@/components/ui/sheet';
 import FormField from '@/components/ui/FormField';
 import { handleFormBtnLoading } from '../common/HandleFormLoading';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CreateStudentForm, createStudentSchema } from '@/lib/schemas';
-import { UserPlus } from 'lucide-react';
+
+type StudentFormMode = 'create' | 'update';
+
+type StudentFormSheetProps = {
+	mode?: StudentFormMode;
+	defaultValues?: Partial<CreateStudentForm>;
+	trigger?: React.ReactNode;
+	onSubmitStudent?: (data: CreateStudentForm) => Promise<void>;
+};
 
 const courses = [
 	{ value: 'btech', label: 'B.Tech' },
@@ -30,7 +38,12 @@ const courses = [
 	{ value: 'mca', label: 'MCA' }
 ];
 
-export function CreateStudentSheet({ classes = '' }) {
+export function StudentFormSheet({
+	mode = 'create',
+	defaultValues,
+	trigger,
+	onSubmitStudent
+}: StudentFormSheetProps) {
 	const [isLoading, setIsLoading] = useState(false);
 
 	const form = useForm<CreateStudentForm>({
@@ -44,41 +57,70 @@ export function CreateStudentSheet({ classes = '' }) {
 			dob: undefined,
 			course: '',
 			fathersName: '',
-			mothersName: ''
+			mothersName: '',
+			...defaultValues
 		}
 	});
 
 	const onSubmit = async (data: CreateStudentForm) => {
 		setIsLoading(true);
 		try {
-			console.log('Creating student:', data);
-			await new Promise((resolve) => setTimeout(resolve, 2000));
+			if (onSubmitStudent) {
+				await onSubmitStudent(data);
+			} else {
+				console.log('Creating student:', data);
+				await new Promise((r) => setTimeout(r, 1500));
+			}
 			form.reset();
-			console.log('Student created successfully!');
-		} catch (error) {
-			console.error('Failed to create student:', error);
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
+	useEffect(() => {
+		if (mode === 'update' && defaultValues) {
+			form.reset({
+				provisionalNo: '',
+				name: '',
+				email: '',
+				mobileNo: '',
+				gender: undefined,
+				dob: undefined,
+				course: '',
+				fathersName: '',
+				mothersName: '',
+				...defaultValues
+			});
+		}
+
+		if (mode === 'create') {
+			form.reset({
+				provisionalNo: '',
+				name: '',
+				email: '',
+				mobileNo: '',
+				gender: undefined,
+				dob: undefined,
+				course: '',
+				fathersName: '',
+				mothersName: ''
+			});
+		}
+	}, [mode, defaultValues, form]);
+
 	return (
 		<Sheet>
-			<SheetTrigger asChild>
-				<Button
-					variant="outline"
-					className={`py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer ${classes}`}
-				>
-					<UserPlus className="h-5 w-5" />
-					Create Student
-				</Button>
-			</SheetTrigger>
+			{trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
 
 			<SheetContent className="sm:max-w-2xl w-full overflow-y-auto bg-ab-surface">
 				<SheetHeader>
-					<SheetTitle className="text-ab-text-primary">Create New Student</SheetTitle>
+					<SheetTitle className="text-ab-text-primary">
+						{mode === 'create' ? 'Create New Student' : 'Update Student'}
+					</SheetTitle>
 					<SheetDescription className="text-ab-text-secondary">
-						Fill in the details below to register a new student.
+						{mode === 'create' ?
+							'Fill in the details below to register a new student.'
+						:	'Update the student details below.'}
 					</SheetDescription>
 				</SheetHeader>
 
@@ -161,7 +203,11 @@ export function CreateStudentSheet({ classes = '' }) {
 							disabled={isLoading}
 							className="py-4 w-full bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-sm rounded-lg shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer"
 						>
-							{handleFormBtnLoading(isLoading, 'Create Student', 'Creating Student')}
+							{handleFormBtnLoading(
+								isLoading,
+								mode === 'create' ? 'Create Student' : 'Update Student',
+								mode === 'create' ? 'Creating Student' : 'Updating Student'
+							)}
 						</Button>
 
 						<SheetClose asChild>
