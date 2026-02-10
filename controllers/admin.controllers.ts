@@ -6,6 +6,62 @@ import { ApiResponse } from '@/utils/api-response';
 import { handleApiError as handleError } from '@/utils/handle-error';
 import { requireRole } from '@/utils/auth-guard';
 
+export async function getAdminDashboard(request: NextRequest) {
+	try {
+		const { userId } = requireRole(request, ['admin']);
+
+		if (!userId) {
+			throw new ApiError(401, 'Unauthorized');
+		}
+
+		const todayStart = new Date();
+		todayStart.setHours(0, 0, 0, 0);
+
+		const [totalStudents, totalTests, totalQuestions, todayAttempts, recentAttempts] =
+			await Promise.all([
+				prisma.student.count(),
+				prisma.test.count({ where: { adminId: userId } }),
+				prisma.question.count({ where: { adminId: userId } }),
+				prisma.testAttempt.count({
+					where: { startedAt: { gte: todayStart } }
+				}),
+				prisma.testAttempt.findMany({
+					orderBy: { startedAt: 'desc' },
+					take: 5,
+					include: {
+						student: { select: { name: true } },
+						test: { select: { title: true } }
+					}
+				})
+			]);
+
+		const recentActivity = recentAttempts.map((attempt) => ({
+			studentName: attempt.student.name,
+			testTitle: attempt.test.title,
+			score: attempt.score,
+			status: attempt.status
+		}));
+
+		return NextResponse.json(
+			new ApiResponse(
+				200,
+				{
+					stats: {
+						totalStudents,
+						totalTests,
+						totalQuestions,
+						todayAttempts
+					},
+					recentActivity
+				},
+				'Admin dashboard data fetched'
+			)
+		);
+	} catch (error) {
+		return handleError('AdminDashboard', error);
+	}
+}
+
 export async function getAdminLogs(request: NextRequest) {
 	try {
 		// 🔐 Admin authorization
