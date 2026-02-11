@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, MoreHorizontal, UserPlus2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,42 +19,99 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { StudentFormSheet } from '@/components/forms/StudentFormSheet';
+import AlertDialogBox from '@/components/BlockStudentAlert';
+import { toast } from 'sonner';
+import StudentViewSheet from '@/components/admin/students/StudentViewSheet';
+import Loader from '@/components/common/Loader';
 
-type StudentDetail = {
+type StudentDetails = {
 	id: string;
+	provisionalNo: string;
 	name: string;
 	email: string;
-	attempts: number;
-	status: 'Active' | 'Blocked';
-	provisionalNo: string;
-	course: string;
-	dob: Date;
 	mobileNo: string;
-	fathersName: string;
-	mothersName: string;
-};
-
-const DUMMY_STUDENT: StudentDetail = {
-	id: 'ST-001',
-	name: 'Ansh Mittal',
-	email: 'anshmit657@gmail.com',
-	attempts: 12,
-	status: 'Active',
-	provisionalNo: 'P-2024-001',
-	course: 'mca',
-	dob: new Date('2002-08-15'),
-	mobileNo: '+91 9876543210',
-	fathersName: 'Rajesh Mittal',
-	mothersName: 'Sunita Mittal'
+	gender: string;
+	isActive: boolean;
+	enrollmentCount: number;
+	testAttemptCount: number;
+	registeredAt: string;
 };
 
 export default function StudentsPage() {
 	const [viewOpen, setViewOpen] = useState(false);
-	const DUMMY_STUDENTS: StudentDetail[] = [DUMMY_STUDENT];
-	const [students, setStudents] = useState<StudentDetail[]>(DUMMY_STUDENTS);
-	const [selectedStudent, setSelectedStudent] = useState<StudentDetail | null>(DUMMY_STUDENT);
+	const [students, setStudents] = useState<StudentDetails[]>([]);
+	const [blocking, setBlocking] = useState(false);
+	const [selectedId, setSelectedId] = useState<string | null>(null);
+
+	const [loading, setLoading] = useState(false);
+
+	const fetchStudents = async () => {
+		setLoading(true);
+		try {
+			// -----------------------------
+			// UI BRANCH MOCK DATA START
+			// -----------------------------
+
+			setStudents([
+				{
+					id: '1',
+					provisionalNo: 'STU-001',
+					name: 'Ansh Mittal',
+					email: 'ansh@example.com',
+					mobileNo: '9876543210',
+					gender: 'male',
+					isActive: true,
+					enrollmentCount: 2,
+					testAttemptCount: 5,
+					registeredAt: new Date().toISOString()
+				}
+			]);
+
+			// -----------------------------
+			// UI BRANCH MOCK DATA END
+			// -----------------------------
+
+			// TODO: Uncomment this in the main branch
+			// const res = await fetch('/api/admin/student', {
+			// 	method: 'GET',
+			// 	credentials: 'include'
+			// });
+			// if (!res.ok) {
+			// 	throw new Error('Network response was not ok');
+			// }
+			// const result = await res.json();
+			// if (!result?.success || !Array.isArray(result.data)) {
+			// 	toast.error(result?.message || 'Invalid server response');
+			// 	return;
+			// }
+			// setStudents(result.data);
+		} catch (error) {
+			console.error(error);
+			toast.error('Failed to fetch students');
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchStudents();
+	}, []);
+
+	const handleBlockStudent = async (id: string) => {
+		try {
+			// TODO: Connect with Actual Block API
+			// await fetch(`/api/admin/students/${id}/block`, {
+			// 	method: 'PATCH'
+			// });
+
+			setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, isActive: false } : s)));
+
+			toast.success('Student blocked successfully');
+		} catch {
+			toast.error('Failed to block student');
+		}
+	};
 
 	return (
 		<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
@@ -115,200 +172,104 @@ export default function StudentsPage() {
 					</TableHeader>
 
 					<TableBody>
-						{students.map((student) => (
-							<TableRow key={student.id} className="group transition-colors hover:bg-ab-primary/5">
-								<TableCell className="py-5 pl-8">
-									<div className="flex flex-col">
-										<span className="text-[15px] font-black text-ab-text-primary">
-											{student.name}
-										</span>
-										<span className="text-[10px] font-bold uppercase tracking-tighter text-ab-primary">
-											{student.id}
-										</span>
-									</div>
-								</TableCell>
-
-								<TableCell className="font-medium text-ab-text-secondary">
-									{student.email}
-								</TableCell>
-
-								<TableCell className="text-center">
-									<span className="text-sm font-black">{student.attempts}</span>
-								</TableCell>
-
-								<TableCell>
-									<Badge
-										className={`rounded-lg border-none px-3 py-1 font-bold shadow-none ${
-											student.status === 'Active' ?
-												'bg-ab-green-bg text-ab-green-text'
-											:	'bg-ab-pink-bg text-ab-pink-text'
-										}`}
-									>
-										{student.status}
-									</Badge>
-								</TableCell>
-
-								<TableCell className="pr-8 text-right">
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button
-												variant="ghost"
-												className="h-8 w-8 p-0 transition hover:bg-ab-primary/10 hover:text-ab-primary"
-											>
-												<MoreHorizontal className="h-5 w-5" />
-											</Button>
-										</DropdownMenuTrigger>
-
-										<DropdownMenuContent
-											align="end"
-											className="rounded-xl border-2 border-ab-border/80"
-										>
-											<DropdownMenuItem
-												className="cursor-pointer font-bold"
-												onClick={() => {
-													setSelectedStudent(student);
-													setViewOpen(true);
-												}}
-											>
-												View Profile
-											</DropdownMenuItem>
-											<DropdownMenuItem className="cursor-pointer font-bold text-ab-pink-text">
-												Block Student
-											</DropdownMenuItem>
-										</DropdownMenuContent>
-									</DropdownMenu>
+						{loading ?
+							<TableRow>
+								<TableCell colSpan={5} className="text-center py-10">
+									<Loader size={30} showIcon message="Loading students..." />
 								</TableCell>
 							</TableRow>
-						))}
+						:	Array.isArray(students) &&
+							students.map((student) => (
+								<TableRow
+									key={student.id}
+									className="group transition-colors hover:bg-ab-primary/5"
+								>
+									<TableCell className="py-5 pl-8">
+										<div className="flex flex-col">
+											<span className="text-[15px] font-black text-ab-text-primary">
+												{student.name}
+											</span>
+											<span className="text-[10px] font-bold uppercase tracking-tighter text-ab-primary">
+												{student.provisionalNo}
+											</span>
+										</div>
+									</TableCell>
+
+									<TableCell className="font-medium text-ab-text-secondary">
+										{student.email}
+									</TableCell>
+
+									<TableCell className="text-center">
+										<span className="text-sm font-black">{student.testAttemptCount}</span>
+									</TableCell>
+
+									<TableCell>
+										<Badge
+											className={`rounded-lg border-none px-3 py-1 font-bold shadow-none ${
+												student.isActive ?
+													'bg-ab-green-bg text-ab-green-text'
+												:	'bg-ab-pink-bg text-ab-pink-text'
+											}`}
+										>
+											{student.isActive ? 'Active' : 'Blocked'}
+										</Badge>
+									</TableCell>
+
+									<TableCell className="pr-8 text-right">
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<Button
+													variant="ghost"
+													className="h-8 w-8 p-0 transition hover:bg-ab-primary/10 hover:text-ab-primary"
+												>
+													<MoreHorizontal className="h-5 w-5" />
+												</Button>
+											</DropdownMenuTrigger>
+
+											<DropdownMenuContent
+												align="end"
+												className="rounded-xl border-2 border-ab-border/80"
+											>
+												<DropdownMenuItem
+													className="cursor-pointer font-bold flex justify-center"
+													onClick={() => {
+														setSelectedId(student.id);
+														setViewOpen(true);
+													}}
+												>
+													View Profile
+												</DropdownMenuItem>
+
+												<AlertDialogBox
+													name={student.name}
+													onConfirm={async () => {
+														await handleBlockStudent(student.id);
+													}}
+													trigger={
+														<Button
+															variant="ghost"
+															className="font-bold text-ab-pink-text border-ab-border hover:bg-ab-pink-bg"
+														>
+															Block Student
+														</Button>
+													}
+												/>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</TableCell>
+								</TableRow>
+							))
+						}
 					</TableBody>
 				</Table>
 			</div>
 
-			<Sheet open={viewOpen} onOpenChange={setViewOpen}>
-				<SheetContent className="sm:max-w-2xl overflow-y-auto bg-ab-surface border-l border-ab-border">
-					<SheetHeader>
-						<SheetTitle className="text-ab-text-primary">Student Details</SheetTitle>
-					</SheetHeader>
-
-					{selectedStudent && (
-						<div className="mt-6 space-y-6">
-							{/* Student Identity */}
-							<div className="space-y-1">
-								<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-									Student Name
-								</p>
-								<p className="text-lg font-black text-ab-text-primary">{selectedStudent.name}</p>
-								<p className="text-xs font-bold text-ab-primary">{selectedStudent.id}</p>
-							</div>
-
-							{/* Contact & Course */}
-							<div className="space-y-1">
-								<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-									Contact & Course
-								</p>
-								<p className="font-medium text-ab-text-primary">{selectedStudent.email}</p>
-								<p className="text-sm text-ab-text-secondary">Course: {selectedStudent.course}</p>
-							</div>
-
-							{/* Key Metrics */}
-							<div className="grid grid-cols-2 gap-4 rounded-xl border border-ab-border bg-ab-surface p-4">
-								<div>
-									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Attempts
-									</p>
-									<p className="text-base font-black text-ab-text-primary">
-										{selectedStudent.attempts}
-									</p>
-								</div>
-
-								<div>
-									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Status
-									</p>
-									<p className="text-base font-black text-ab-text-primary">
-										{selectedStudent.status}
-									</p>
-								</div>
-
-								<div>
-									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Date of Birth
-									</p>
-									<p className="text-base font-black text-ab-text-primary">
-										{selectedStudent.dob.toString()}
-									</p>
-								</div>
-
-								<div>
-									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Mobile No.
-									</p>
-									<p className="text-base font-black text-ab-text-primary">
-										{selectedStudent.mobileNo}
-									</p>
-								</div>
-							</div>
-
-							{/* Parents */}
-							<div className="grid grid-cols-2 gap-4 rounded-xl border border-ab-border p-4">
-								<div>
-									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Father&apos;s Name
-									</p>
-									<p className="font-black text-ab-text-primary">{selectedStudent.fathersName}</p>
-								</div>
-
-								<div>
-									<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-										Mother&apos;s Name
-									</p>
-									<p className="font-black text-ab-text-primary">{selectedStudent.mothersName}</p>
-								</div>
-							</div>
-
-							{/* Actions */}
-							<div className="pt-4 flex gap-2">
-								<StudentFormSheet
-									mode="update"
-									defaultValues={{
-										provisionalNo: selectedStudent.provisionalNo,
-										name: selectedStudent.name,
-										email: selectedStudent.email,
-										mobileNo: selectedStudent.mobileNo,
-										dob: selectedStudent.dob,
-										course: selectedStudent.course,
-										fathersName: selectedStudent.fathersName,
-										mothersName: selectedStudent.mothersName
-									}}
-									onSubmitStudent={async (data) => {
-										console.log('Updating student:', data);
-										// call update API here
-									}}
-									trigger={
-										<Button variant="outline" className="font-bold">
-											<UserPlus2 className="h-5 w-5" />
-											Update Student
-										</Button>
-									}
-								/>
-
-								<Button
-									variant="outline"
-									className="font-bold text-ab-pink-text border-ab-border hover:bg-ab-pink-bg"
-								>
-									Block Student
-								</Button>
-
-								<SheetClose asChild>
-									<Button variant="outline" className="border-ab-border text-ab-text-primary">
-										Close
-									</Button>
-								</SheetClose>
-							</div>
-						</div>
-					)}
-				</SheetContent>
-			</Sheet>
+			<StudentViewSheet
+				open={viewOpen}
+				onOpenChange={setViewOpen}
+				studentId={selectedId}
+				onBlock={handleBlockStudent}
+			/>
 		</div>
 	);
 }
