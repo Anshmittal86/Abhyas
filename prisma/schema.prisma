@@ -80,7 +80,7 @@ model Student {
 
    provisionalNo String   @unique
    name          String
-   email         String   @unique
+   email         String   @unique 
    mobileNo      String?
 
    gender        Gender?
