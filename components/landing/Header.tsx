@@ -2,9 +2,11 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Moon } from 'lucide-react';
+import { GraduationCap, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
 // ✅
 export function Header() {
+	const { theme, setTheme } = useTheme();
 	return (
 		<nav className="sticky top-0 z-50 flex h-20 items-center justify-between border-b border-ab-border/40 bg-ab-bg/80 px-6 backdrop-blur-md">
 			{/* Left: Logo */}
@@ -55,8 +57,11 @@ export function Header() {
 					variant="ghost"
 					size="icon"
 					className="rounded-xl text-ab-text-secondary transition-colors hover:bg-ab-primary/10 hover:text-ab-primary"
+					onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
 				>
-					<Moon className="size-5" />
+					{theme === 'dark' ?
+						<Sun className="size-4" />
+					:	<Moon className="size-4" />}
 				</Button>
 			</div>
 		</nav>
