@@ -3,7 +3,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { StudentFormSheet } from '@/components/forms/StudentFormSheet';
-import AlertDialogBox from '@/components/BlockStudentAlert';
+import AlertDialogBox from '@/components/common/AlertDialogBox';
 import { UserPlus2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Loader from '@/components/common/Loader';

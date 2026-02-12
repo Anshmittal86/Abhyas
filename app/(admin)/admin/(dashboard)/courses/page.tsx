@@ -1,392 +1,375 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { apiFetch } from '@/lib/apiFetch';
-import LoadingState from '@/components/LoadingState';
-import ErrorState from '@/components/ErrorState';
+import { useState, useEffect } from 'react';
+import { Search, MoreHorizontal, BookPlus } from 'lucide-react';
+import { toast } from 'sonner';
+import { useSearchParams } from 'next/navigation';
+import { CourseFormSheet } from '@/components/forms/CourseFormSheet';
 import { Button } from '@/components/ui/button';
-import { CourseFormSheet } from '@/components/admin/CourseFormSheet';
-import { ChapterFormSheet, type ChapterForEdit } from '@/components/admin/ChapterFormSheet';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import Loader from '@/components/common/Loader';
+import AlertDialogBox from '@/components/common/AlertDialogBox';
 
-type CourseListItem = {
+type Course = {
 	id: string;
 	title: string;
-	description: string | null;
-	duration: string | null;
+	description: string;
+	duration: string;
 	isActive: boolean;
 	enrollmentCount: number;
 	createdAt: string;
 };
 
-type CourseDetail = {
-	id: string;
-	title: string;
-	description: string | null;
-	duration: string | null;
-	isActive: boolean;
-	createdAt: string;
-	chapters: { id: string; code: string; title: string; orderNo: number }[];
-	enrollments?: { id: string }[];
+type ApiResponse = {
+	statusCode: number;
+	data: Course[];
+	message: string;
+	success: boolean;
 };
 
-/** Minimal fields needed for edit form; both CourseListItem and CourseDetail have these */
-type CourseForEdit = Pick<CourseListItem, 'id' | 'title' | 'description' | 'duration' | 'isActive'>;
-
 export default function AdminCoursesPage() {
-	const [courses, setCourses] = useState<CourseListItem[]>([]);
+	const [courses, setCourses] = useState<Course[]>([]);
+	const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [hasError, setHasError] = useState(false);
-	const [createOpen, setCreateOpen] = useState(false);
-	const [editOpen, setEditOpen] = useState(false);
-	const [viewOpen, setViewOpen] = useState(false);
-	const [selectedCourse, setSelectedCourse] = useState<CourseDetail | null>(null);
-	const [courseToEdit, setCourseToEdit] = useState<CourseForEdit | null>(null);
-	const [detailLoading, setDetailLoading] = useState(false);
-	const [addChapterOpen, setAddChapterOpen] = useState(false);
-	const [editChapterOpen, setEditChapterOpen] = useState(false);
-	const [chapterToEdit, setChapterToEdit] = useState<ChapterForEdit | null>(null);
-	const [deletingChapterId, setDeletingChapterId] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+	const searchParams = useSearchParams();
+	const searchQuery = searchParams.get('search') || '';
+	const [updateCourseId, setUpdateCourseId] = useState<string | null>(null);
+	const [updateOpen, setUpdateOpen] = useState(false);
 
-	const fetchCourses = useCallback(async () => {
-		setLoading(true);
-		setHasError(false);
+	// Fetch courses on mount
+	useEffect(() => {
+		fetchCourses();
+	}, []);
+
+	// Filter courses when search query changes
+	useEffect(() => {
+		if (searchQuery) {
+			const filtered = courses.filter(
+				(course) =>
+					course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					course.description?.toLowerCase().includes(searchQuery.toLowerCase())
+			);
+			setFilteredCourses(filtered);
+		} else {
+			setFilteredCourses(courses);
+		}
+	}, [searchQuery, courses]);
+
+	const fetchCourses = async () => {
 		try {
-			const response = await apiFetch('/api/admin/course', {
-				headers: { 'Content-Type': 'application/json' }
-			});
-			if (!response.ok) throw new Error(`API error: ${response.status}`);
-			const result = await response.json();
-			setCourses(result.data ?? []);
-		} catch (error) {
-			if (error instanceof Error && error.message === 'AUTH_EXPIRED') {
-				window.location.href = '/admin-login';
-				return;
-			}
-			console.error('Admin courses fetch error:', error);
-			setHasError(true);
+			// -----------------------------
+			// UI BRANCH MOCK DATA START
+			// -----------------------------
+
+			setCourses([
+				{
+					id: '3a9b58dd-1a3b-424c-ab72-a00269a7fabe',
+					title: 'GenAI',
+					description: 'Generative AI Course with Python',
+					duration: '3 Month',
+					isActive: true,
+					enrollmentCount: 0,
+					createdAt: '2026-02-12T06:24:30.778Z'
+				},
+				{
+					id: '55ffa0ed-c72a-4619-81f6-bef5b755d03d',
+					title: 'CCC',
+					description: 'NIELIT Authorized Course.',
+					duration: '3 Month',
+					isActive: true,
+					enrollmentCount: 0,
+					createdAt: '2026-02-12T06:03:06.640Z'
+				}
+			]);
+
+			// -----------------------------
+			// UI BRANCH MOCK DATA END
+			// -----------------------------
+			// TODO: Uncomment this in the main branch
+			// setLoading(true);
+			// setError(null);
+			// const response = await fetch('/api/admin/course', {
+			// 	method: 'GET',
+			// 	headers: {
+			// 		'Content-Type': 'application/json'
+			// 	},
+			// 	credentials: 'include'
+			// });
+			// if (!response.ok) {
+			// 	throw new Error(`HTTP error! status: ${response.status}`);
+			// }
+			// const result: ApiResponse = await response.json();
+			// if (result.success) {
+			// 	setCourses(result.data);
+			// 	setFilteredCourses(result.data);
+			// } else {
+			// 	throw new Error(result.message || 'Failed to fetch courses');
+			// }
+		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : 'Failed to fetch courses';
+			setError(errorMessage);
+			toast.error(errorMessage);
+			console.error('Fetch courses error:', err);
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	};
 
-	const openView = useCallback(async (course: CourseListItem) => {
-		setViewOpen(true);
-		setDetailLoading(true);
-		setSelectedCourse(null);
-		try {
-			const response = await apiFetch(`/api/admin/course/${course.id}`, {
-				headers: { 'Content-Type': 'application/json' }
-			});
-			if (!response.ok) throw new Error(`API error: ${response.status}`);
-			const result = await response.json();
-			setSelectedCourse(result.data as CourseDetail);
-		} catch (error) {
-			if (error instanceof Error && error.message === 'AUTH_EXPIRED') {
-				window.location.href = '/admin-login';
-				return;
-			}
-			console.error('Course detail fetch error:', error);
-		} finally {
-			setDetailLoading(false);
+	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const params = new URLSearchParams(searchParams);
+		if (e.target.value) {
+			params.set('search', e.target.value);
+		} else {
+			params.delete('search');
 		}
-	}, []);
+		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+	};
 
-	const openEdit = useCallback((course: CourseForEdit) => {
-		setCourseToEdit(course);
-		setEditOpen(true);
-	}, []);
-
-	const refreshCourseDetail = useCallback(async (courseId: string) => {
+	const handleDeleteCourse = async (courseId: string) => {
 		try {
-			const response = await apiFetch(`/api/admin/course/${courseId}`, {
-				headers: { 'Content-Type': 'application/json' }
-			});
-			if (!response.ok) return;
-			const result = await response.json();
-			setSelectedCourse(result.data as CourseDetail);
+			// TODO: Uncomment this in the main branch
+			// const response = await fetch(`/api/admin/course/${courseId}`, {
+			// 	method: 'DELETE',
+			// 	headers: {
+			// 		'Content-Type': 'application/json'
+			// 	},
+			// 	credentials: 'include'
+			// });
+			// if (!response.ok) {
+			// 	throw new Error(`HTTP error! status: ${response.status}`);
+			// }
+			// const result: ApiResponse = await response.json();
+			// if (result.success) {
+			// 	toast.success(result.message);
+			// 	fetchCourses();
+			// } else {
+			// 	throw new Error(result.message || 'Failed to delete course');
+			// }
 		} catch (error) {
-			if (error instanceof Error && error.message === 'AUTH_EXPIRED') {
-				window.location.href = '/admin-login';
-				return;
-			}
+			const errorMessage = error instanceof Error ? error.message : 'Failed to delete course';
+			toast.error(errorMessage);
+			console.error('Delete course error:', error);
 		}
-	}, []);
+	};
 
-	const openAddChapter = useCallback(() => {
-		setAddChapterOpen(true);
-	}, []);
+	if (loading) {
+		return (
+			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary flex items-center justify-center min-h-150">
+				<Loader message="Loading courses..." />
+			</div>
+		);
+	}
 
-	const openEditChapter = useCallback((chapter: ChapterForEdit) => {
-		setChapterToEdit(chapter);
-		setEditChapterOpen(true);
-	}, []);
-
-	const deleteChapter = useCallback(
-		async (courseId: string, chapterId: string) => {
-			if (!window.confirm('Delete this chapter? Tests under it will also be removed.')) return;
-			setDeletingChapterId(chapterId);
-			try {
-				const response = await apiFetch(`/api/admin/chapter/${chapterId}`, { method: 'DELETE' });
-				if (!response.ok) throw new Error(`API error: ${response.status}`);
-				await refreshCourseDetail(courseId);
-			} catch (error) {
-				if (error instanceof Error && error.message === 'AUTH_EXPIRED') {
-					window.location.href = '/admin-login';
-					return;
-				}
-				console.error('Delete chapter error:', error);
-			} finally {
-				setDeletingChapterId(null);
-			}
-		},
-		[refreshCourseDetail]
-	);
-
-	useEffect(() => {
-		void fetchCourses();
-	}, [fetchCourses]);
-
-	if (loading) return <LoadingState />;
-	if (hasError) return <ErrorState onRetry={fetchCourses} />;
+	if (error && courses.length === 0) {
+		return (
+			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
+				<div className="flex items-center justify-between">
+					<div>
+						<h2 className="text-3xl font-black tracking-tight">Courses</h2>
+						<p className="text-sm font-medium italic text-ab-text-secondary">
+							Manage courses and track enrollment activity.
+						</p>
+					</div>
+				</div>
+				<div className="flex flex-col items-center justify-center min-h-100 text-center p-8 rounded-[22px] border-2 border-ab-border/80 bg-ab-surface">
+					<Loader showIcon={false} message="Failed to load courses" subtitle={error} />
+					<Button
+						onClick={fetchCourses}
+						className="mt-6 py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer"
+					>
+						Retry
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
-		<main className="flex-1 overflow-auto px-8 py-6 space-y-6">
-			<div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-				<div className="space-y-1">
-					<h1 className="text-2xl font-semibold text-primary">Courses</h1>
-					<p className="text-sm text-secondary">Create and manage courses and their chapters.</p>
+		<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
+			{/* Header */}
+			<div className="flex items-center justify-between">
+				<div>
+					<h2 className="text-3xl font-black tracking-tight">Courses</h2>
+					<p className="text-sm font-medium italic text-ab-text-secondary">
+						Manage courses and track enrollment activity.
+					</p>
 				</div>
-				<Button className="cursor-pointer" onClick={() => setCreateOpen(true)}>
-					Create Course
-				</Button>
 			</div>
 
-			<div className="bg-surface border border-default rounded-xl overflow-hidden">
-				<div className="grid grid-cols-12 gap-3 px-4 py-3 border-b border-default text-xs text-muted uppercase tracking-wide">
-					<div className="col-span-4">Course</div>
-					<div className="col-span-2">Duration</div>
-					<div className="col-span-2">Enrollments</div>
-					<div className="col-span-2">Status</div>
-					<div className="col-span-2">Actions</div>
+			{/* Filters */}
+			<div className="flex justify-between items-center gap-4">
+				<div className="relative w-full max-w-sm">
+					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ab-text-secondary" />
+					<Input
+						placeholder="Search by course name..."
+						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 focus-visible:ring-ab-primary/20"
+						defaultValue={searchQuery}
+						onChange={handleSearch}
+					/>
 				</div>
 
-				{courses.length === 0 ?
-					<div className="p-6 text-secondary">No courses yet. Create one to get started.</div>
-				:	courses.map((c) => (
-						<div
-							key={c.id}
-							className="grid grid-cols-12 gap-3 px-4 py-4 border-b border-default last:border-b-0 items-center"
+				<CourseFormSheet
+					mode="create"
+					onSuccess={fetchCourses}
+					trigger={
+						<Button
+							variant="outline"
+							className={`py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer `}
 						>
-							<div className="col-span-4">
-								<div className="text-primary font-medium">{c.title}</div>
-								{c.description ?
-									<div className="text-xs text-muted line-clamp-1">{c.description}</div>
-								:	null}
-							</div>
-							<div className="col-span-2 text-primary">{c.duration ?? '—'}</div>
-							<div className="col-span-2 text-primary">{c.enrollmentCount}</div>
-							<div className="col-span-2">
-								<span
-									className={[
-										'inline-flex items-center rounded-full px-2 py-1 text-xs border',
-										c.isActive ?
-											'border-accent-success text-accent-success'
-										:	'border-accent-error text-accent-error'
-									].join(' ')}
-								>
-									{c.isActive ? 'Active' : 'Inactive'}
-								</span>
-							</div>
-							<div className="col-span-2 flex gap-2">
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									className="cursor-pointer"
-									onClick={() => openView(c)}
-								>
-									View
-								</Button>
-								<Button
-									type="button"
-									variant="outline"
-									size="sm"
-									className="cursor-pointer"
-									onClick={() => openEdit(c)}
-								>
-									Edit
-								</Button>
-							</div>
-						</div>
-					))
+							<BookPlus className="h-5 w-5" />
+							Create Course
+						</Button>
+					}
+				/>
+			</div>
+
+			{/* Table */}
+			<div className="overflow-hidden rounded-[22px] border-2 border-ab-border/80 bg-ab-surface shadow-sm">
+				{filteredCourses.length === 0 ?
+					<div className="p-12 text-center">
+						<p className="text-lg font-black text-ab-text-primary mb-2">
+							{searchQuery ? 'No matching courses found' : 'No courses available'}
+						</p>
+						<p className="text-sm text-ab-text-secondary">
+							{searchQuery ?
+								`Try adjusting your search for "${searchQuery}"`
+							:	'Create your first course to get started'}
+						</p>
+					</div>
+				:	<Table>
+						<TableHeader className="bg-ab-border/20">
+							<TableRow className="border-b-2 hover:bg-transparent">
+								<TableHead className="py-5 pl-8 text-[11px] font-black uppercase tracking-widest">
+									Course
+								</TableHead>
+								<TableHead className="text-[11px] font-black uppercase tracking-widest">
+									Duration
+								</TableHead>
+								<TableHead className="text-center text-[11px] font-black uppercase tracking-widest">
+									Enrollments
+								</TableHead>
+								<TableHead className="text-[11px] font-black uppercase tracking-widest">
+									Status
+								</TableHead>
+								<TableHead className="pr-8 text-right text-[11px] font-black uppercase tracking-widest">
+									Actions
+								</TableHead>
+							</TableRow>
+						</TableHeader>
+
+						<TableBody>
+							{filteredCourses.map((course) => (
+								<TableRow key={course.id} className="group transition-colors hover:bg-ab-primary/5">
+									<TableCell className="py-5 pl-8">
+										<div className="flex flex-col max-w-md">
+											<span className="text-[15px] font-black">{course.title}</span>
+											{course.description && (
+												<span className="text-[11px] font-bold text-ab-text-secondary line-clamp-2">
+													{course.description}
+												</span>
+											)}
+											<span className="text-[11px] font-medium text-ab-text-secondary mt-1">
+												Created: {new Date(course.createdAt).toLocaleDateString()}
+											</span>
+										</div>
+									</TableCell>
+
+									<TableCell className="font-bold">{course.duration}</TableCell>
+
+									<TableCell className="text-center font-black">{course.enrollmentCount}</TableCell>
+
+									<TableCell>
+										<Badge
+											className={`rounded-lg border-none px-3 py-1 font-bold shadow-none ${
+												course.isActive ?
+													'bg-ab-green-bg text-ab-green-text'
+												:	'bg-ab-pink-bg text-ab-pink-text'
+											}`}
+										>
+											{course.isActive ? 'Active' : 'Inactive'}
+										</Badge>
+									</TableCell>
+
+									<TableCell className="pr-8 text-right">
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<Button
+													variant="ghost"
+													className="h-8 w-8 p-0 transition hover:bg-ab-primary/10 hover:text-ab-primary"
+												>
+													<MoreHorizontal className="h-5 w-5" />
+												</Button>
+											</DropdownMenuTrigger>
+
+											<DropdownMenuContent
+												align="end"
+												className="rounded-xl border-2 border-ab-border/80"
+											>
+												<DropdownMenuItem className="cursor-pointer font-bold flex justify-center">
+													View Course
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													className="cursor-pointer font-bold flex justify-center"
+													onClick={() => {
+														setUpdateCourseId(course.id);
+														setUpdateOpen(true);
+													}}
+												>
+													Update Course
+												</DropdownMenuItem>
+
+												<AlertDialogBox
+													name={course.title}
+													onConfirm={() => handleDeleteCourse(course.id)}
+													trigger={
+														<Button
+															variant="ghost"
+															className="w-full flex justify-center font-bold text-ab-pink-text hover:bg-ab-pink-bg/50 h-8 px-2"
+														>
+															Delete Course
+														</Button>
+													}
+													title="Delete this course?"
+													description={`Permanently delete "${course.title}"? This action cannot be undone.`}
+												/>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</TableCell>
+								</TableRow>
+							))}
+						</TableBody>
+					</Table>
 				}
 			</div>
 
+			{/* Create and update form sheet  */}
 			<CourseFormSheet
-				open={createOpen}
-				onOpenChange={setCreateOpen}
-				mode="create"
-				onSuccess={fetchCourses}
+				mode={updateCourseId ? 'update' : 'create'}
+				courseId={updateCourseId || undefined}
+				defaultValues={courses.find((c) => c.id === updateCourseId) || undefined}
+				open={updateOpen}
+				onOpenChange={setUpdateOpen}
+				onSuccess={() => {
+					fetchCourses();
+					setUpdateOpen(false);
+				}}
 			/>
-
-			<CourseFormSheet
-				open={editOpen}
-				onOpenChange={setEditOpen}
-				mode="edit"
-				course={courseToEdit}
-				onSuccess={fetchCourses}
-			/>
-
-			<Sheet open={viewOpen} onOpenChange={setViewOpen}>
-				<SheetContent
-					className="w-full sm:max-w-lg bg-surface border-l border-default overflow-y-auto"
-					style={{
-						backgroundColor: 'var(--color-bg-surface)',
-						borderColor: 'var(--color-border-default)'
-					}}
-				>
-					<SheetHeader>
-						<SheetTitle className="text-primary">Course Details</SheetTitle>
-					</SheetHeader>
-					<div className="mt-6 space-y-4">
-						{detailLoading ?
-							<div className="text-secondary">Loading…</div>
-						: selectedCourse ?
-							<>
-								<div className="space-y-2">
-									<div className="text-sm text-muted">Title</div>
-									<div className="text-primary font-medium">{selectedCourse.title}</div>
-								</div>
-								{selectedCourse.description ?
-									<div className="space-y-2">
-										<div className="text-sm text-muted">Description</div>
-										<div className="text-primary text-sm">{selectedCourse.description}</div>
-									</div>
-								:	null}
-								<div className="space-y-2">
-									<div className="text-sm text-muted">Duration</div>
-									<div className="text-primary">{selectedCourse.duration ?? '—'}</div>
-								</div>
-								<div className="space-y-2">
-									<div className="text-sm text-muted">Status</div>
-									<span
-										className={[
-											'inline-flex items-center rounded-full px-2 py-1 text-xs border',
-											selectedCourse.isActive ?
-												'border-accent-success text-accent-success'
-											:	'border-accent-error text-accent-error'
-										].join(' ')}
-									>
-										{selectedCourse.isActive ? 'Active' : 'Inactive'}
-									</span>
-								</div>
-								<div className="space-y-2">
-									<div className="text-sm text-muted">Enrollments</div>
-									<div className="text-primary">{selectedCourse.enrollments?.length ?? 0}</div>
-								</div>
-								<div className="space-y-3">
-									<div className="flex items-center justify-between">
-										<div className="text-sm text-muted font-medium">Chapters</div>
-										<Button
-											type="button"
-											size="sm"
-											className="cursor-pointer"
-											onClick={openAddChapter}
-										>
-											Add Chapter
-										</Button>
-									</div>
-									{selectedCourse.chapters?.length ?
-										<div className="rounded-lg border border-default divide-y divide-default">
-											{[...selectedCourse.chapters]
-												.sort((a, b) => a.orderNo - b.orderNo)
-												.map((ch) => (
-													<div
-														key={ch.id}
-														className="flex items-center justify-between gap-2 px-3 py-2 text-primary text-sm"
-													>
-														<div>
-															<span className="font-medium">{ch.title}</span>
-															<span className="text-muted ml-2">({ch.code})</span>
-															<span className="text-muted ml-2">Order: {ch.orderNo}</span>
-														</div>
-														<div className="flex gap-1 shrink-0">
-															<Button
-																type="button"
-																variant="ghost"
-																size="sm"
-																className="cursor-pointer h-8"
-																onClick={() => openEditChapter(ch)}
-															>
-																Edit
-															</Button>
-															<Button
-																type="button"
-																variant="ghost"
-																size="sm"
-																className="cursor-pointer h-8 text-accent-error hover:text-accent-error"
-																onClick={() =>
-																	selectedCourse && deleteChapter(selectedCourse.id, ch.id)
-																}
-																disabled={deletingChapterId === ch.id}
-															>
-																{deletingChapterId === ch.id ? '…' : 'Delete'}
-															</Button>
-														</div>
-													</div>
-												))}
-										</div>
-									:	<div className="text-secondary text-sm py-2">
-											No chapters yet. Click &quot;Add Chapter&quot; to add one.
-										</div>
-									}
-								</div>
-								<div className="pt-4 flex gap-2">
-									<Button
-										type="button"
-										variant="outline"
-										className="cursor-pointer"
-										onClick={() => openEdit(selectedCourse)}
-									>
-										Edit Course
-									</Button>
-									<SheetClose asChild>
-										<Button type="button" variant="outline" className="cursor-pointer">
-											Close
-										</Button>
-									</SheetClose>
-								</div>
-							</>
-						:	<div className="text-secondary">No course selected.</div>}
-					</div>
-				</SheetContent>
-			</Sheet>
-
-			{selectedCourse && (
-				<>
-					<ChapterFormSheet
-						open={addChapterOpen}
-						onOpenChange={setAddChapterOpen}
-						mode="create"
-						courseId={selectedCourse.id}
-						defaultOrderNo={
-							selectedCourse.chapters?.length ?
-								Math.max(...selectedCourse.chapters.map((c) => c.orderNo)) + 1
-							:	1
-						}
-						onSuccess={() => refreshCourseDetail(selectedCourse.id)}
-					/>
-					<ChapterFormSheet
-						open={editChapterOpen}
-						onOpenChange={setEditChapterOpen}
-						mode="edit"
-						courseId={selectedCourse.id}
-						chapter={chapterToEdit}
-						onSuccess={() => refreshCourseDetail(selectedCourse.id)}
-					/>
-				</>
-			)}
-		</main>
+		</div>
 	);
 }

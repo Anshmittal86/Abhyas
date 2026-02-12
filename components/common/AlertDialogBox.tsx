@@ -17,6 +17,7 @@ type AlertDialogBoxProps = {
 	onConfirm: () => void;
 	trigger?: React.ReactNode;
 	title?: string;
+	btnText?: string;
 	description?: string;
 };
 
@@ -25,6 +26,7 @@ const AlertDialogBox = ({
 	onConfirm,
 	trigger,
 	title = 'Are you absolutely sure?',
+	btnText,
 	description
 }: AlertDialogBoxProps) => {
 	return (
@@ -36,7 +38,7 @@ const AlertDialogBox = ({
 						variant="outline"
 						className="font-bold text-ab-pink-text border-ab-border hover:bg-ab-pink-bg"
 					>
-						Block
+						{btnText}
 					</Button>
 				}
 			</AlertDialogTrigger>

@@ -20,7 +20,7 @@ import {
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { StudentFormSheet } from '@/components/forms/StudentFormSheet';
-import AlertDialogBox from '@/components/BlockStudentAlert';
+import AlertDialogBox from '@/components/common/AlertDialogBox';
 import { toast } from 'sonner';
 import StudentViewSheet from '@/components/admin/students/StudentViewSheet';
 import Loader from '@/components/common/Loader';
@@ -228,7 +228,7 @@ export default function StudentsPage() {
 
 											<DropdownMenuContent
 												align="end"
-												className="rounded-xl border-2 border-ab-border/80"
+												className="rounded-xl border-2 border-ab-border/80 text-center"
 											>
 												<DropdownMenuItem
 													className="cursor-pointer font-bold flex justify-center"
@@ -248,7 +248,7 @@ export default function StudentsPage() {
 													trigger={
 														<Button
 															variant="ghost"
-															className="font-bold text-ab-pink-text border-ab-border hover:bg-ab-pink-bg"
+															className="w-full flex justify-center font-bold text-ab-pink-text hover:bg-ab-pink-bg/50 h-8 px-2 "
 														>
 															Block Student
 														</Button>

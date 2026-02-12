@@ -2,6 +2,7 @@
 // ✅
 import { Controller, FieldValues, Path, Control } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
@@ -24,9 +25,10 @@ interface FormFieldProps<T extends FieldValues> {
 	name: Path<T>;
 	label: string;
 	placeholder?: string;
-	type?: 'text' | 'email' | 'password' | 'datepicker' | 'select' | 'tel';
+	type?: 'text' | 'email' | 'password' | 'datepicker' | 'select' | 'tel' | 'textarea';
 	required?: boolean;
 	options?: SelectOption[];
+	rows?: number;
 }
 
 const FormField = <T extends FieldValues>({
@@ -36,7 +38,8 @@ const FormField = <T extends FieldValues>({
 	placeholder,
 	type = 'text',
 	required = false,
-	options = []
+	options = [],
+	rows = 3
 }: FormFieldProps<T>) => {
 	const [open, setOpen] = useState(false);
 
@@ -86,7 +89,7 @@ const FormField = <T extends FieldValues>({
 								<SelectValue placeholder={placeholder} />
 							</SelectTrigger>
 
-							<SelectContent className="z-[100] py-4 rounded-xl border-2 border-ab-border/80 bg-ab-surface shadow-2xl">
+							<SelectContent className="z-100 py-4 rounded-xl border-2 border-ab-border/80 bg-ab-surface shadow-2xl">
 								{options.map((opt) => (
 									<SelectItem
 										key={opt.value}
@@ -98,6 +101,14 @@ const FormField = <T extends FieldValues>({
 								))}
 							</SelectContent>
 						</Select>
+					: type === 'textarea' ?
+						<Textarea
+							{...field}
+							placeholder={placeholder}
+							required={required}
+							rows={rows}
+							className="min-h-20 h-auto resize-vertical rounded-xl border-2 border-ab-border/80 bg-ab-surface font-bold text-ab-text-primary placeholder:text-ab-text-secondary/50 transition-all focus-visible:border-ab-primary/50 focus-visible:ring-ab-primary/20 p-3"
+						/>
 					:	<Input
 							{...field}
 							type={type}

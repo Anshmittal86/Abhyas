@@ -6,7 +6,8 @@ import {
 	Users,
 	Settings,
 	FileText,
-	LucideIcon
+	LucideIcon,
+	Library
 } from 'lucide-react';
 
 interface MenuItem {
@@ -32,6 +33,7 @@ export const MENU_DATA: MenuConfig = {
 	admin: [
 		{ title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
 		{ title: 'Students', url: '/admin/students', icon: Users },
+		{ title: 'Courses', url: '/admin/courses', icon: Library },
 		{ title: 'Tests', url: '/admin/tests', icon: FileText },
 		{ title: 'Questions', url: '/admin/questions', icon: Settings },
 		{ title: 'Analytics', url: '/admin/analytics', icon: Settings }
