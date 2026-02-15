@@ -24,78 +24,36 @@ import AlertDialogBox from '@/components/common/AlertDialogBox';
 import { toast } from 'sonner';
 import StudentViewSheet from '@/components/admin/students/StudentViewSheet';
 import Loader from '@/components/common/Loader';
-
-type StudentDetails = {
-	id: string;
-	provisionalNo: string;
-	name: string;
-	email: string;
-	mobileNo: string;
-	gender: string;
-	isActive: boolean;
-	enrollmentCount: number;
-	testAttemptCount: number;
-	registeredAt: string;
-};
+import { StudentsListTypes } from '@/types';
+import { EmptyStudents } from '@/components/admin/students/EmptyStudent';
+import { fetchStudents } from '@/lib/api';
 
 export default function StudentsPage() {
 	const [viewOpen, setViewOpen] = useState(false);
-	const [students, setStudents] = useState<StudentDetails[]>([]);
-	const [blocking, setBlocking] = useState(false);
+	const [students, setStudents] = useState<StudentsListTypes[]>([]);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 
 	const [loading, setLoading] = useState(false);
 
-	const fetchStudents = async () => {
+	const loadStudents = async () => {
 		setLoading(true);
 		try {
-			// -----------------------------
-			// UI BRANCH MOCK DATA START
-			// -----------------------------
-
-			setStudents([
-				{
-					id: '1',
-					provisionalNo: 'STU-001',
-					name: 'Ansh Mittal',
-					email: 'ansh@example.com',
-					mobileNo: '9876543210',
-					gender: 'male',
-					isActive: true,
-					enrollmentCount: 2,
-					testAttemptCount: 5,
-					registeredAt: new Date().toISOString()
-				}
-			]);
-
-			// -----------------------------
-			// UI BRANCH MOCK DATA END
-			// -----------------------------
-
-			// TODO: Uncomment this in the main branch
-			// const res = await fetch('/api/admin/student', {
-			// 	method: 'GET',
-			// 	credentials: 'include'
-			// });
-			// if (!res.ok) {
-			// 	throw new Error('Network response was not ok');
-			// }
-			// const result = await res.json();
-			// if (!result?.success || !Array.isArray(result.data)) {
-			// 	toast.error(result?.message || 'Invalid server response');
-			// 	return;
-			// }
-			// setStudents(result.data);
+			const data = await fetchStudents();
+			if (data) {
+				setStudents(data);
+			} else {
+				throw new Error('Failed to fetch students data');
+			}
 		} catch (error) {
-			console.error(error);
-			toast.error('Failed to fetch students');
+			const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+			toast.error(errorMessage || 'Failed to fetch students');
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		fetchStudents();
+		loadStudents();
 	}, []);
 
 	const handleBlockStudent = async (id: string) => {
@@ -136,6 +94,8 @@ export default function StudentsPage() {
 				</div>
 
 				<StudentFormSheet
+					mode="create"
+					onSuccess={loadStudents}
 					trigger={
 						<Button
 							variant="outline"
@@ -157,8 +117,9 @@ export default function StudentsPage() {
 								Student Name
 							</TableHead>
 							<TableHead className="text-[11px] font-black uppercase tracking-widest">
-								Email Address
+								Email
 							</TableHead>
+
 							<TableHead className="text-center text-[11px] font-black uppercase tracking-widest">
 								Attempts
 							</TableHead>
@@ -176,6 +137,12 @@ export default function StudentsPage() {
 							<TableRow>
 								<TableCell colSpan={5} className="text-center py-10">
 									<Loader size={30} showIcon message="Loading students..." />
+								</TableCell>
+							</TableRow>
+						: students.length === 0 ?
+							<TableRow>
+								<TableCell colSpan={5}>
+									<EmptyStudents />
 								</TableCell>
 							</TableRow>
 						:	Array.isArray(students) &&

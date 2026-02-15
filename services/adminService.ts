@@ -5,7 +5,7 @@ import { prisma } from '@/src/db/client';
 
 // Internal utils
 import { generateAccessToken, generateRefreshToken } from '../utils/tokens';
-import { ApiError } from '@/utils/api-error.js';
+import { ApiError } from '@/utils/api-error';
 
 export const generateAccessAndRefreshTokens = async (type: 'admin' | 'student', id: string) => {
 	const SALT_ROUND = Number(process.env.SALT_ROUND || 10);

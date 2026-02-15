@@ -8,12 +8,9 @@ export const createStudentSchema = z.object({
 	mobileNo: z.string().optional(),
 	gender: GenderEnum.optional(),
 	dob: z.date('Date of birth is required'),
-	course: z.string('Course is required'),
+	courseId: z.uuid('Course Id is required'),
 	fathersName: z.string().optional(),
 	mothersName: z.string().optional()
 });
 
 export const updateStudentSchema = createStudentSchema.partial();
-
-export type CreateStudentForm = z.infer<typeof createStudentSchema>;
-export type UpdateStudentForm = z.infer<typeof updateStudentSchema>;

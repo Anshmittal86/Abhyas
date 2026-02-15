@@ -17,13 +17,14 @@ import FormField from '@/components/ui/FormField';
 import { handleFormBtnLoading } from '../common/HandleFormLoading';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { CreateCourseForm, createCourseSchema } from '@/lib/schemas/course';
+import { createCourseSchema } from '@/lib/schemas/course';
+import { CreateCourseFormTypes } from '@/types';
 
 type CourseFormMode = 'create' | 'update';
 
 type CourseFormSheetProps = {
 	mode?: CourseFormMode;
-	defaultValues?: Partial<CreateCourseForm>;
+	defaultValues?: Partial<CreateCourseFormTypes>;
 	courseId?: string;
 	trigger?: React.ReactNode;
 	open?: boolean;
@@ -53,7 +54,7 @@ export function CourseFormSheet({
 }: CourseFormSheetProps) {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const form = useForm<CreateCourseForm>({
+	const form = useForm<CreateCourseFormTypes>({
 		resolver: zodResolver(createCourseSchema), // You'll need to define this schema
 		defaultValues: {
 			title: '',
@@ -63,32 +64,29 @@ export function CourseFormSheet({
 		}
 	});
 
-	const onSubmit = async (data: CreateCourseForm) => {
+	const onSubmit = async (data: CreateCourseFormTypes) => {
 		setIsLoading(true);
 		try {
 			let response;
 
 			if (mode === 'create') {
-				// TODO: Uncomment this in the main branch
-				// response = await fetch('/api/admin/course', {
-				// 	method: 'POST',
-				// 	headers: {
-				// 		'Content-Type': 'application/json'
-				// 	},
-				// 	credentials: 'include',
-				// 	body: JSON.stringify(data)
-				// });
+				response = await fetch('/api/admin/course', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					credentials: 'include',
+					body: JSON.stringify(data)
+				});
 			} else {
-				// Update API - you'll implement later
-				// TODO: Uncomment this in the main branch
-				// response = await fetch(`/api/admin/course/${courseId}`, {
-				// 	method: 'PATCH',
-				// 	headers: {
-				// 		'Content-Type': 'application/json'
-				// 	},
-				// 	credentials: 'include',
-				// 	body: JSON.stringify(data)
-				// });
+				response = await fetch(`/api/admin/course/${courseId}`, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					credentials: 'include',
+					body: JSON.stringify(data)
+				});
 			}
 
 			if (!response.ok) {
@@ -121,7 +119,7 @@ export function CourseFormSheet({
 				duration: ''
 			});
 		} else if (mode === 'update' && defaultValues) {
-			form.reset(defaultValues as CreateCourseForm);
+			form.reset(defaultValues as CreateCourseFormTypes);
 		}
 	}, [mode, defaultValues, form]);
 

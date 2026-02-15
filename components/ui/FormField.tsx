@@ -89,16 +89,18 @@ const FormField = <T extends FieldValues>({
 								<SelectValue placeholder={placeholder} />
 							</SelectTrigger>
 
-							<SelectContent className="z-100 py-4 rounded-xl border-2 border-ab-border/80 bg-ab-surface shadow-2xl">
-								{options.map((opt) => (
-									<SelectItem
-										key={opt.value}
-										value={opt.value}
-										className="cursor-pointer font-bold transition-colors focus:bg-ab-primary focus:text-primary-foreground"
-									>
-										{opt.label}
-									</SelectItem>
-								))}
+							<SelectContent className="z-100 px-2 py-2 rounded-xl border-2 border-ab-border/80 bg-ab-surface shadow-2xl">
+								{options.length > 0 ?
+									options.map((opt) => (
+										<SelectItem
+											key={opt.value}
+											value={opt.value}
+											className="cursor-pointer font-bold transition-colors focus:bg-ab-primary focus:text-primary-foreground"
+										>
+											{opt.label}
+										</SelectItem>
+									))
+								:	<span className="font-bold text-sm">Not have any courses yet!</span>}
 							</SelectContent>
 						</Select>
 					: type === 'textarea' ?

@@ -5,5 +5,3 @@ export const createCourseSchema = z.object({
 	description: z.string().max(500, 'Description must be less than 500 characters').optional(),
 	duration: z.string().min(1, 'Duration is required')
 });
-
-export type CreateCourseForm = z.infer<typeof createCourseSchema>;

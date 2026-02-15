@@ -24,39 +24,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Loader from '@/components/common/Loader';
 import AlertDialogBox from '@/components/common/AlertDialogBox';
-
-type Course = {
-	id: string;
-	title: string;
-	description: string;
-	duration: string;
-	isActive: boolean;
-	enrollmentCount: number;
-	createdAt: string;
-};
-
-type ApiResponse = {
-	statusCode: number;
-	data: Course[];
-	message: string;
-	success: boolean;
-};
+import { fetchCourses } from '@/lib/api';
+import { SuccessResponseTypes, CoursesListTypes, toggleCourseActivateType } from '@/types';
+import { EmptyCourses } from '@/components/admin/courses/EmptyCourses';
+import CourseViewSheet from '@/components/admin/courses/CourseViewSheet';
 
 export default function AdminCoursesPage() {
-	const [courses, setCourses] = useState<Course[]>([]);
-	const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const [courses, setCourses] = useState<CoursesListTypes[]>([]);
+	const [filteredCourses, setFilteredCourses] = useState<CoursesListTypes[]>([]);
+	const [loading, setLoading] = useState(false);
 	const searchParams = useSearchParams();
 	const searchQuery = searchParams.get('search') || '';
 	const [updateCourseId, setUpdateCourseId] = useState<string | null>(null);
 	const [updateOpen, setUpdateOpen] = useState(false);
-
-	// Fetch courses on mount
-	useEffect(() => {
-		fetchCourses();
-	}, []);
-
+	const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+	const [isOpen, setIsOpen] = useState(false);
 	// Filter courses when search query changes
 	useEffect(() => {
 		if (searchQuery) {
@@ -71,65 +53,28 @@ export default function AdminCoursesPage() {
 		}
 	}, [searchQuery, courses]);
 
-	const fetchCourses = async () => {
+	const loadCourses = async () => {
+		setLoading(true);
 		try {
-			// -----------------------------
-			// UI BRANCH MOCK DATA START
-			// -----------------------------
+			const data = await fetchCourses();
 
-			setCourses([
-				{
-					id: '3a9b58dd-1a3b-424c-ab72-a00269a7fabe',
-					title: 'GenAI',
-					description: 'Generative AI Course with Python',
-					duration: '3 Month',
-					isActive: true,
-					enrollmentCount: 0,
-					createdAt: '2026-02-12T06:24:30.778Z'
-				},
-				{
-					id: '55ffa0ed-c72a-4619-81f6-bef5b755d03d',
-					title: 'CCC',
-					description: 'NIELIT Authorized Course.',
-					duration: '3 Month',
-					isActive: true,
-					enrollmentCount: 0,
-					createdAt: '2026-02-12T06:03:06.640Z'
-				}
-			]);
-
-			// -----------------------------
-			// UI BRANCH MOCK DATA END
-			// -----------------------------
-			// TODO: Uncomment this in the main branch
-			// setLoading(true);
-			// setError(null);
-			// const response = await fetch('/api/admin/course', {
-			// 	method: 'GET',
-			// 	headers: {
-			// 		'Content-Type': 'application/json'
-			// 	},
-			// 	credentials: 'include'
-			// });
-			// if (!response.ok) {
-			// 	throw new Error(`HTTP error! status: ${response.status}`);
-			// }
-			// const result: ApiResponse = await response.json();
-			// if (result.success) {
-			// 	setCourses(result.data);
-			// 	setFilteredCourses(result.data);
-			// } else {
-			// 	throw new Error(result.message || 'Failed to fetch courses');
-			// }
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Failed to fetch courses';
-			setError(errorMessage);
+			if (data) {
+				setCourses(data);
+				setFilteredCourses(data);
+			} else {
+				throw new Error('Failed to fetch courses data');
+			}
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
 			toast.error(errorMessage);
-			console.error('Fetch courses error:', err);
 		} finally {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		loadCourses();
+	}, []);
 
 	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const params = new URLSearchParams(searchParams);
@@ -143,24 +88,25 @@ export default function AdminCoursesPage() {
 
 	const handleDeleteCourse = async (courseId: string) => {
 		try {
-			// TODO: Uncomment this in the main branch
-			// const response = await fetch(`/api/admin/course/${courseId}`, {
-			// 	method: 'DELETE',
-			// 	headers: {
-			// 		'Content-Type': 'application/json'
-			// 	},
-			// 	credentials: 'include'
-			// });
-			// if (!response.ok) {
-			// 	throw new Error(`HTTP error! status: ${response.status}`);
-			// }
-			// const result: ApiResponse = await response.json();
-			// if (result.success) {
-			// 	toast.success(result.message);
-			// 	fetchCourses();
-			// } else {
-			// 	throw new Error(result.message || 'Failed to delete course');
-			// }
+			const response = await fetch(`/api/admin/course/${courseId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include'
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const result = (await response.json()) as SuccessResponseTypes<null>;
+			if (result.message) {
+				toast.success(result.message || 'Course deleted successfully');
+				await loadCourses();
+			} else {
+				throw new Error(result.message || 'Failed to delete course');
+			}
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Failed to delete course';
 			toast.error(errorMessage);
@@ -168,34 +114,50 @@ export default function AdminCoursesPage() {
 		}
 	};
 
+	const handleDeactivateCourse = async (courseId: string) => {
+		try {
+			const res = await fetch(`/api/admin/course/${courseId}/deactivate`, {
+				method: 'POST',
+				credentials: 'include'
+			});
+
+			if (!res.ok) {
+				throw new Error(`HTTP error! status: ${res.status}`);
+			}
+
+			const result = (await res.json()) as SuccessResponseTypes<toggleCourseActivateType>;
+
+			if (!result.success) {
+				throw new Error(result.message || 'Failed to update course status');
+			}
+
+			if (result.success) {
+				// Update specific course in state
+				setCourses((prev) =>
+					prev.map((course) =>
+						course.id === courseId ? { ...course, isActive: !course.isActive } : course
+					)
+				);
+				setFilteredCourses((prev) =>
+					prev.map((course) =>
+						course.id === courseId ? { ...course, isActive: !course.isActive } : course
+					)
+				);
+
+				toast.success(result.message || 'Successfully update the course status');
+			}
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : 'Failed to update course status';
+			toast.error(errorMessage);
+			console.error('Update course status error:', error);
+		}
+	};
+
 	if (loading) {
 		return (
 			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary flex items-center justify-center min-h-150">
 				<Loader message="Loading courses..." />
-			</div>
-		);
-	}
-
-	if (error && courses.length === 0) {
-		return (
-			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
-				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-3xl font-black tracking-tight">Courses</h2>
-						<p className="text-sm font-medium italic text-ab-text-secondary">
-							Manage courses and track enrollment activity.
-						</p>
-					</div>
-				</div>
-				<div className="flex flex-col items-center justify-center min-h-100 text-center p-8 rounded-[22px] border-2 border-ab-border/80 bg-ab-surface">
-					<Loader showIcon={false} message="Failed to load courses" subtitle={error} />
-					<Button
-						onClick={fetchCourses}
-						className="mt-6 py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer"
-					>
-						Retry
-					</Button>
-				</div>
 			</div>
 		);
 	}
@@ -226,7 +188,7 @@ export default function AdminCoursesPage() {
 
 				<CourseFormSheet
 					mode="create"
-					onSuccess={fetchCourses}
+					onSuccess={loadCourses}
 					trigger={
 						<Button
 							variant="outline"
@@ -241,40 +203,41 @@ export default function AdminCoursesPage() {
 
 			{/* Table */}
 			<div className="overflow-hidden rounded-[22px] border-2 border-ab-border/80 bg-ab-surface shadow-sm">
-				{filteredCourses.length === 0 ?
-					<div className="p-12 text-center">
-						<p className="text-lg font-black text-ab-text-primary mb-2">
-							{searchQuery ? 'No matching courses found' : 'No courses available'}
-						</p>
-						<p className="text-sm text-ab-text-secondary">
-							{searchQuery ?
-								`Try adjusting your search for "${searchQuery}"`
-							:	'Create your first course to get started'}
-						</p>
-					</div>
-				:	<Table>
-						<TableHeader className="bg-ab-border/20">
-							<TableRow className="border-b-2 hover:bg-transparent">
-								<TableHead className="py-5 pl-8 text-[11px] font-black uppercase tracking-widest">
-									Course
-								</TableHead>
-								<TableHead className="text-[11px] font-black uppercase tracking-widest">
-									Duration
-								</TableHead>
-								<TableHead className="text-center text-[11px] font-black uppercase tracking-widest">
-									Enrollments
-								</TableHead>
-								<TableHead className="text-[11px] font-black uppercase tracking-widest">
-									Status
-								</TableHead>
-								<TableHead className="pr-8 text-right text-[11px] font-black uppercase tracking-widest">
-									Actions
-								</TableHead>
-							</TableRow>
-						</TableHeader>
+				<Table>
+					<TableHeader className="bg-ab-border/20">
+						<TableRow className="border-b-2 hover:bg-transparent">
+							<TableHead className="py-5 pl-8 text-[11px] font-black uppercase tracking-widest">
+								Course
+							</TableHead>
+							<TableHead className="text-[11px] font-black uppercase tracking-widest">
+								Duration
+							</TableHead>
+							<TableHead className="text-center text-[11px] font-black uppercase tracking-widest">
+								Enrollments
+							</TableHead>
+							<TableHead className="text-[11px] font-black uppercase tracking-widest">
+								Status
+							</TableHead>
+							<TableHead className="pr-8 text-right text-[11px] font-black uppercase tracking-widest">
+								Actions
+							</TableHead>
+						</TableRow>
+					</TableHeader>
 
-						<TableBody>
-							{filteredCourses.map((course) => (
+					<TableBody>
+						{loading ?
+							<TableRow>
+								<TableCell colSpan={5} className="text-center py-10">
+									<Loader size={30} showIcon message="Loading courses..." />
+								</TableCell>
+							</TableRow>
+						: courses.length === 0 ?
+							<TableRow>
+								<TableCell colSpan={5}>
+									<EmptyCourses />
+								</TableCell>
+							</TableRow>
+						:	filteredCourses.map((course) => (
 								<TableRow key={course.id} className="group transition-colors hover:bg-ab-primary/5">
 									<TableCell className="py-5 pl-8">
 										<div className="flex flex-col max-w-md">
@@ -321,7 +284,13 @@ export default function AdminCoursesPage() {
 												align="end"
 												className="rounded-xl border-2 border-ab-border/80"
 											>
-												<DropdownMenuItem className="cursor-pointer font-bold flex justify-center">
+												<DropdownMenuItem
+													className="cursor-pointer font-bold flex justify-center"
+													onClick={() => {
+														setSelectedCourseId(course.id);
+														setIsOpen(true);
+													}}
+												>
 													View Course
 												</DropdownMenuItem>
 												<DropdownMenuItem
@@ -352,10 +321,10 @@ export default function AdminCoursesPage() {
 										</DropdownMenu>
 									</TableCell>
 								</TableRow>
-							))}
-						</TableBody>
-					</Table>
-				}
+							))
+						}
+					</TableBody>
+				</Table>
 			</div>
 
 			{/* Create and update form sheet  */}
@@ -366,9 +335,16 @@ export default function AdminCoursesPage() {
 				open={updateOpen}
 				onOpenChange={setUpdateOpen}
 				onSuccess={() => {
-					fetchCourses();
+					loadCourses();
 					setUpdateOpen(false);
 				}}
+			/>
+
+			<CourseViewSheet
+				open={isOpen}
+				onOpenChange={setIsOpen}
+				courseId={selectedCourseId}
+				onDeactivate={handleDeactivateCourse}
 			/>
 		</div>
 	);

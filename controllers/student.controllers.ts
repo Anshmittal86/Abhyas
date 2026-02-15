@@ -289,7 +289,6 @@ export async function createStudent(request: NextRequest) {
 			return student;
 		});
 
-		// Sending Email
 		const loginLink = `${process.env.FRONTEND_URL}/student-login?provisionalNo=${encodeURIComponent(newStudent.provisionalNo)}`;
 
 		const html = renderStudentEmail({
@@ -299,8 +298,17 @@ export async function createStudent(request: NextRequest) {
 			loginLink
 		});
 
+		//* Sending Email To Student
 		await sendEmail({
 			email: newStudent.email,
+			subject: 'Student Account Created Successfully',
+			html,
+			text: `Provisional No: ${newStudent.provisionalNo}`
+		});
+
+		//* Sending Email To Admin Also for Reference
+		await sendEmail({
+			email: process.env.ADMIN_EMAIL,
 			subject: 'Student Account Created Successfully',
 			html,
 			text: `Provisional No: ${newStudent.provisionalNo}`

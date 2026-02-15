@@ -7,40 +7,7 @@ import AlertDialogBox from '@/components/common/AlertDialogBox';
 import { UserPlus2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Loader from '@/components/common/Loader';
-
-type StudentDetailResponse = {
-	id: string;
-	provisionalNo: string;
-	name: string;
-	email: string;
-	mobileNo: string;
-	gender: string;
-	dob: string | null;
-	fatherName: string;
-	motherName: string;
-	isActive: boolean;
-	registeredAt: string;
-	enrollments: {
-		id: string;
-		courseId: string;
-		course: {
-			id: string;
-			title: string;
-		};
-		enrolledAt: string;
-	}[];
-	testAttempts: {
-		id: string;
-		testId: string;
-		test: {
-			id: string;
-			title: string;
-		};
-		startedAt: string;
-		submittedAt: string;
-		score: number;
-	}[];
-};
+import { StudentTypes, SuccessResponseTypes } from '@/types';
 
 type Props = {
 	open: boolean;
@@ -50,7 +17,7 @@ type Props = {
 };
 
 export default function StudentViewSheet({ open, onOpenChange, studentId, onBlock }: Props) {
-	const [student, setStudent] = useState<StudentDetailResponse | null>(null);
+	const [student, setStudent] = useState<StudentTypes | undefined>(undefined);
 	const [blocking, setBlocking] = useState(false);
 
 	const [loading, setLoading] = useState(false);
@@ -62,63 +29,20 @@ export default function StudentViewSheet({ open, onOpenChange, studentId, onBloc
 			try {
 				setLoading(true);
 
-				// -----------------------------
-				// UI BRANCH MOCK DATA START
-				// -----------------------------
+				const res = await fetch(`/api/admin/student/${studentId}`, {
+					method: 'GET',
+					credentials: 'include'
+				});
 
-				const mockStudent: StudentDetailResponse = {
-					id: studentId,
-					provisionalNo: 'STU-001',
-					name: 'Ansh Mittal',
-					email: 'anshmit657@gmail.com',
-					mobileNo: '9876543210',
-					gender: 'female',
-					dob: null,
-					fatherName: 'Rajesh Mittal',
-					motherName: 'Sunita Mittal',
-					isActive: true,
-					registeredAt: new Date().toISOString(),
-					enrollments: [
-						{
-							id: 'en1',
-							courseId: 'c1',
-							course: { id: 'c1', title: 'Web Development' },
-							enrolledAt: new Date().toISOString()
-						}
-					],
-					testAttempts: [
-						{
-							id: 't1',
-							testId: 'test1',
-							test: { id: 'test1', title: 'HTML' },
-							startedAt: new Date().toISOString(),
-							submittedAt: new Date().toISOString(),
-							score: 50
-						}
-					]
-				};
-
-				await new Promise((resolve) => setTimeout(resolve, 500));
-				setStudent(mockStudent);
-
-				// -----------------------------
-				// UI BRANCH MOCK DATA END
-				// -----------------------------
-
-				// TODO: Uncomment this in the main branch
-				// const res = await fetch(`/api/admin/student/${studentId}`, {
-				// 	method: 'GET',
-				// 	credentials: 'include'
-				// });
-				// const result = await res.json();
-				// if (!result?.success) {
-				// 	setStudent(null);
-				// 	return;
-				// }
-				// setStudent(result.data);
+				const result = (await res.json()) as SuccessResponseTypes<StudentTypes>;
+				if (!result?.success) {
+					setStudent(undefined);
+					return;
+				}
+				setStudent(result.data);
 			} catch (error) {
 				console.error(error);
-				setStudent(null);
+				setStudent(undefined);
 			} finally {
 				setLoading(false);
 			}
@@ -129,7 +53,7 @@ export default function StudentViewSheet({ open, onOpenChange, studentId, onBloc
 
 	useEffect(() => {
 		if (!open) {
-			setStudent(null);
+			setStudent(undefined);
 		}
 	}, [open]);
 
@@ -253,13 +177,14 @@ export default function StudentViewSheet({ open, onOpenChange, studentId, onBloc
 					<div className="flex gap-2 pt-4">
 						<StudentFormSheet
 							mode="update"
+							studentId={student?.id}
 							defaultValues={{
 								provisionalNo: student?.provisionalNo ?? '',
 								name: student?.name ?? '',
 								email: student?.email ?? '',
 								mobileNo: student?.mobileNo ?? '',
 								dob: student?.dob ? new Date(student.dob) : undefined,
-								course: student?.enrollments?.[0]?.course?.title ?? '',
+								courseId: student?.enrollments?.[0]?.course?.id,
 								fathersName: student?.fatherName ?? '',
 								mothersName: student?.motherName ?? ''
 							}}

@@ -16,37 +16,59 @@ import {
 import FormField from '@/components/ui/FormField';
 import { handleFormBtnLoading } from '../common/HandleFormLoading';
 import { useState, useEffect } from 'react';
-import { CreateStudentForm, createStudentSchema } from '@/lib/schemas';
+import { createStudentSchema } from '@/lib/schemas';
+import { CreateStudentFormTypes, StudentTypes, UpdateStudentFormTypes } from '@/types/student';
+import { SuccessResponseTypes, CoursesListTypes } from '@/types';
+import { toast } from 'sonner';
+import { fetchCourses } from '@/lib/api';
 
 type StudentFormMode = 'create' | 'update';
 
 type StudentFormSheetProps = {
 	mode?: StudentFormMode;
-	defaultValues?: Partial<CreateStudentForm>;
+	studentId?: string;
+	defaultValues?: Partial<CreateStudentFormTypes>;
 	trigger?: React.ReactNode;
-	onSubmitStudent?: (data: CreateStudentForm) => Promise<void>;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+	onSuccess?: () => void;
 };
-
-const courses = [
-	{ value: 'btech', label: 'B.Tech' },
-	{ value: 'bsc', label: 'B.Sc' },
-	{ value: 'bca', label: 'BCA' },
-	{ value: 'ba', label: 'BA' },
-	{ value: 'bcom', label: 'B.Com' },
-	{ value: 'mtech', label: 'M.Tech' },
-	{ value: 'msc', label: 'M.Sc' },
-	{ value: 'mca', label: 'MCA' }
-];
 
 export function StudentFormSheet({
 	mode = 'create',
+	studentId,
 	defaultValues,
 	trigger,
-	onSubmitStudent
+	open,
+	onOpenChange,
+	onSuccess
 }: StudentFormSheetProps) {
 	const [isLoading, setIsLoading] = useState(false);
+	const [courses, setCourses] = useState<CoursesListTypes[]>([]);
 
-	const form = useForm<CreateStudentForm>({
+	const loadCourses = async () => {
+		setIsLoading(true);
+		try {
+			const data = await fetchCourses();
+
+			if (data) {
+				setCourses(data);
+			} else {
+				throw new Error('Failed to fetch courses data');
+			}
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+			toast.error(errorMessage);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		loadCourses();
+	}, [open, studentId]);
+
+	const form = useForm<CreateStudentFormTypes>({
 		resolver: zodResolver(createStudentSchema),
 		defaultValues: {
 			provisionalNo: '',
@@ -55,44 +77,71 @@ export function StudentFormSheet({
 			mobileNo: '',
 			gender: undefined,
 			dob: undefined,
-			course: '',
 			fathersName: '',
 			mothersName: '',
+			courseId: '',
 			...defaultValues
 		}
 	});
 
-	const onSubmit = async (data: CreateStudentForm) => {
+	const onSubmit = async (data: CreateStudentFormTypes) => {
 		setIsLoading(true);
 		try {
-			if (onSubmitStudent) {
-				await onSubmitStudent(data);
+			let response;
+
+			if (mode === 'create') {
+				response = await fetch('/api/admin/student', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					body: JSON.stringify({
+						provisionalNo: data.provisionalNo,
+						name: data.name,
+						email: data.email,
+						mobileNo: data.mobileNo,
+						gender: data.gender,
+						fatherName: data.fathersName,
+						motherName: data.mothersName,
+						courseIds: data.courseId ? [data.courseId] : []
+					})
+				});
 			} else {
-				console.log('Creating student:', data);
-				await new Promise((r) => setTimeout(r, 1500));
+				response = await fetch(`/api/admin/student/${studentId}`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+					body: JSON.stringify({
+						provisionalNo: data.provisionalNo,
+						name: data.name,
+						mobileNo: data.mobileNo,
+						gender: data.gender,
+						fatherName: data.fathersName,
+						motherName: data.mothersName
+					})
+				});
 			}
-			form.reset();
+
+			if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+			const result = (await response.json()) as SuccessResponseTypes<StudentTypes | null>;
+
+			if (result.success) {
+				toast.success(result.message);
+
+				form.reset();
+				onSuccess?.();
+				onOpenChange?.(false);
+			}
+		} catch (error) {
+			if (error instanceof Error) {
+				toast.error('Failed to save student');
+			}
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		if (mode === 'update' && defaultValues) {
-			form.reset({
-				provisionalNo: '',
-				name: '',
-				email: '',
-				mobileNo: '',
-				gender: undefined,
-				dob: undefined,
-				course: '',
-				fathersName: '',
-				mothersName: '',
-				...defaultValues
-			});
-		}
-
 		if (mode === 'create') {
 			form.reset({
 				provisionalNo: '',
@@ -101,15 +150,17 @@ export function StudentFormSheet({
 				mobileNo: '',
 				gender: undefined,
 				dob: undefined,
-				course: '',
 				fathersName: '',
-				mothersName: ''
+				mothersName: '',
+				courseId: ''
 			});
+		} else if (mode === 'update' && defaultValues) {
+			form.reset(defaultValues as UpdateStudentFormTypes);
 		}
 	}, [mode, defaultValues, form]);
 
 	return (
-		<Sheet>
+		<Sheet open={open} onOpenChange={onOpenChange}>
 			{trigger && <SheetTrigger asChild>{trigger}</SheetTrigger>}
 
 			<SheetContent className="sm:max-w-2xl w-full overflow-y-auto bg-ab-surface">
@@ -171,12 +222,17 @@ export function StudentFormSheet({
 
 						<FormField
 							control={form.control}
-							name="course"
+							name="courseId"
 							label="Course"
 							type="select"
 							placeholder="Select Course"
 							required
-							options={courses}
+							options={courses.map((course) => {
+								return {
+									value: course.id,
+									label: course.title
+								};
+							})}
 						/>
 						<div className="grid grid-cols-2 gap-3">
 							<FormField
