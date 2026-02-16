@@ -1,4 +1,4 @@
-import { createQuestion, getQuestions } from '@/controllers/question.controllers';
+import { createTestQuestion, getTestQuestions } from '@/controllers/question.controllers';
 
-export { createQuestion as POST };
-export { getQuestions as GET };
+export { createTestQuestion as POST };
+export { getTestQuestions as GET };

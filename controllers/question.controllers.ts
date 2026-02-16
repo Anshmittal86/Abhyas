@@ -9,301 +9,460 @@ import { requireRole } from '@/utils/auth-guard';
 
 import { createQuestionSchema, updateQuestionSchema } from '@/validators/question.validator';
 
-export async function createQuestion(request: NextRequest) {
-  try {
-    // 🔐 Admin id from middleware
-    const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
-    if (!adminId || role !== 'admin') {
-      throw new ApiError(401, 'Unauthorized access');
-    }
+export async function createTestQuestion(request: NextRequest) {
+	try {
+		// 🔐 Admin id from middleware
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+		if (!adminId || role !== 'admin') {
+			throw new ApiError(401, 'Unauthorized access');
+		}
 
-    // 📦 Validate request body
-    const body = await request.json();
-    const { testId, questionText, optionA, optionB, optionC, optionD, correctOption } = createQuestionSchema.parse(body);
+		// 📦 Validate request body
+		const body = await request.json();
 
-    // ✅ Check test exists & belongs to admin
-    const test = await prisma.test.findFirst({
-      where: { id: testId, adminId }
-    });
+		const parsedBody = createQuestionSchema.parse(body);
 
-    if (!test) {
-      throw new ApiError(404, 'Test not found or access denied');
-    }
+		const { testId, questionText, questionType, explanation, marks } = parsedBody;
 
-    // 🧠 Create question
-    const question = await prisma.question.create({
-      data: {
-        testId,
-        adminId,
-        questionText,
-        optionA,
-        optionB,
-        optionC,
-        optionD,
-        correctOption // Prisma enum OptionChoice will accept "A" | "B" | "C" | "D"
-      }
-    });
+		const options = 'options' in parsedBody ? parsedBody.options : undefined;
 
-    // 🧾 Audit log
-    logEvent('QuestionCreated', {
-      adminId,
-      testId,
-      questionId: question.id
-    });
+		// ✅ Check test exists & belongs to admin
+		const test = await prisma.test.findFirst({
+			where: { id: testId, adminId }
+		});
 
-    return NextResponse.json(new ApiResponse(201, question, 'Question created successfully'), {
-      status: 201
-    });
-  } catch (error) {
-    return handleError('CreateQuestion', error);
-  }
+		if (!test) {
+			throw new ApiError(404, 'Test not found or access denied');
+		}
+
+		// 🔒 Transaction: create question + options atomically
+
+		const result = await prisma.$transaction(async (tx) => {
+			const question = await tx.question.create({
+				data: {
+					testId,
+					adminId,
+					questionType,
+					questionText,
+					marks,
+					...(explanation !== undefined && { explanation })
+				}
+			});
+
+			if (options && options.length > 0) {
+				await tx.questionOption.createMany({
+					data: options.map((opt) => ({
+						questionId: question.id,
+						optionText: opt.optionText,
+						isCorrect: opt.isCorrect,
+						orderIndex: opt.orderIndex
+					}))
+				});
+			}
+
+			return question;
+		});
+
+		// 🧾 Audit log
+		logEvent('QuestionCreated', {
+			adminId,
+			testId,
+			questionId: result.id,
+			questionType
+		});
+
+		return NextResponse.json(
+			new ApiResponse(201, result, `${questionType} question created successfully`),
+			{
+				status: 201
+			}
+		);
+	} catch (error) {
+		return handleError('CreateTestQuestion', error);
+	}
 }
 
-export async function getQuestions(request: NextRequest) {
-  try {
-    // 🔐 Admin ID Should Come from Middleware
-    const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+export async function getTestQuestions(request: NextRequest) {
+	try {
+		// 🔐 Auth guard
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
-    if (!adminId || role !== 'admin') {
-      throw new ApiError(401, 'Unauthorized access');
-    }
+		if (!adminId || role !== 'admin') {
+			throw new ApiError(401, 'Unauthorized access');
+		}
 
-    // 📋 Fetch all questions
-    const questions = await prisma.question.findMany({
-      select: {
-        id: true,
-        questionText: true,
-        optionA: true,
-        optionB: true,
-        optionC: true,
-        optionD: true,
-        correctOption: true,
-        createdAt: true,
-        updatedAt: true,
-        testId: true,
-        test: {
-          select: {
-            id: true,
-            title: true
-          }
-        },
-        _count: {
-          select: {
-            answers: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+		// 📋 Fetch questions with options
+		const questions = await prisma.question.findMany({
+			where: {
+				adminId
+			},
+			include: {
+				options: {
+					select: {
+						id: true,
+						optionText: true,
+						isCorrect: true,
+						orderIndex: true
+					},
+					orderBy: {
+						orderIndex: 'asc'
+					}
+				},
+				test: {
+					select: {
+						id: true,
+						title: true
+					}
+				},
+				_count: {
+					select: {
+						answers: true
+					}
+				}
+			},
+			orderBy: {
+				createdAt: 'asc'
+			}
+		});
 
-    // 📊 Format response with answer count
-    const formattedQuestions = questions.map((question) => ({
-      id: question.id,
-      questionText: question.questionText,
-      optionA: question.optionA,
-      optionB: question.optionB,
-      optionC: question.optionC,
-      optionD: question.optionD,
-      correctOption: question.correctOption,
-      testId: question.testId,
-      testTitle: question.test?.title,
-      answerCount: question._count.answers,
-      createdAt: question.createdAt,
-      updatedAt: question.updatedAt
-    }));
+		// 📊 Format response
+		const formattedQuestions = questions.map((question) => ({
+			id: question.id,
+			questionText: question.questionText,
+			questionType: question.questionType,
+			explanation: question.explanation,
+			marks: question.marks,
+			options: question.options.map((opt) => ({
+				id: opt.id,
+				optionText: opt.optionText,
+				isCorrect: opt.isCorrect,
+				orderIndex: opt.orderIndex
+			})),
 
-    return NextResponse.json(new ApiResponse(200, formattedQuestions, 'Questions fetched successfully'), {
-      status: 200
-    });
-  } catch (error) {
-    return handleError('GetQuestions', error);
-  }
+			testId: question.testId,
+			testTitle: question.test?.title,
+
+			answerCount: question._count.answers,
+
+			createdAt: question.createdAt,
+			updatedAt: question.updatedAt
+		}));
+
+		return NextResponse.json(
+			new ApiResponse(200, formattedQuestions, 'Questions fetched successfully'),
+			{
+				status: 200
+			}
+		);
+	} catch (error) {
+		return handleError('GetTestQuestions', error);
+	}
 }
 
-export async function getQuestionById(request: NextRequest, { params }: { params: Promise<{ questionId: string }> }) {
-  try {
-    const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+export async function getTestQuestionById(
+	request: NextRequest,
+	{ params }: { params: Promise<{ questionId: string }> }
+) {
+	try {
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
-    if (!adminId || role !== 'admin') {
-      throw new ApiError(401, 'Unauthorized access');
-    }
+		if (!adminId || role !== 'admin') {
+			throw new ApiError(401, 'Unauthorized access');
+		}
 
-    const { questionId } = await params;
+		const { questionId } = await params;
 
-    if (!questionId) {
-      throw new ApiError(400, 'Question ID is required');
-    }
+		if (!questionId) {
+			throw new ApiError(400, 'Question ID is required');
+		}
 
-    const question = await prisma.question.findFirst({
-      where: {
-        id: questionId,
-        adminId
-      },
-      select: {
-        id: true,
-        questionText: true,
-        optionA: true,
-        optionB: true,
-        optionC: true,
-        optionD: true,
-        correctOption: true,
-        createdAt: true,
-        updatedAt: true,
-        testId: true,
-        test: {
-          select: {
-            id: true,
-            title: true,
-            chapter: {
-              select: {
-                id: true,
-                title: true,
-                code: true
-              }
-            }
-          }
-        },
-        answers: {
-          select: {
-            id: true,
-            selectedOption: true,
-            isCorrect: true,
-            answeredAt: true,
-            attempt: {
-              select: {
-                id: true,
-                student: {
-                  select: {
-                    id: true,
-                    name: true,
-                    provisionalNo: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    });
+		const question = await prisma.question.findFirst({
+			where: {
+				id: questionId,
+				adminId
+			},
+			include: {
+				options: {
+					select: {
+						id: true,
+						optionText: true,
+						isCorrect: true,
+						orderIndex: true
+					},
+					orderBy: {
+						orderIndex: 'asc'
+					}
+				},
+				test: {
+					select: {
+						id: true,
+						title: true,
+						chapter: {
+							select: {
+								id: true,
+								title: true,
+								code: true
+							}
+						}
+					}
+				},
+				answers: {
+					select: {
+						id: true,
+						textAnswer: true,
+						codeAnswer: true,
+						isCorrect: true,
+						marksAwarded: true,
+						answeredAt: true,
+						selectedOption: {
+							select: {
+								id: true,
+								optionText: true,
+								isCorrect: true
+							}
+						},
+						attempt: {
+							select: {
+								id: true,
+								student: {
+									select: {
+										id: true,
+										name: true,
+										provisionalNo: true
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		});
 
-    if (!question) {
-      throw new ApiError(404, 'Question not found');
-    }
+		if (!question) {
+			throw new ApiError(404, 'Question not found');
+		}
 
-    return NextResponse.json(new ApiResponse(200, question, 'Question fetched successfully'), {
-      status: 200
-    });
-  } catch (error) {
-    return handleError('GetQuestionById', error);
-  }
+		const formattedQuestion = {
+			id: question.id,
+			questionText: question.questionText,
+			questionType: question.questionType,
+			explanation: question.explanation,
+			marks: question.marks,
+
+			options: question.options,
+
+			test: {
+				id: question.test.id,
+				title: question.test.title,
+				chapter: question.test.chapter
+			},
+
+			answers: question.answers.map((answer) => ({
+				id: answer.id,
+				selectedOption: answer.selectedOption,
+				textAnswer: answer.textAnswer,
+				codeAnswer: answer.codeAnswer,
+				isCorrect: answer.isCorrect,
+				marksAwarded: answer.marksAwarded,
+				answeredAt: answer.answeredAt,
+				student: answer.attempt.student
+			})),
+
+			createdAt: question.createdAt,
+			updatedAt: question.updatedAt
+		};
+
+		return NextResponse.json(
+			new ApiResponse(200, formattedQuestion, 'Question fetched successfully'),
+			{
+				status: 200
+			}
+		);
+	} catch (error) {
+		return handleError('GetTestQuestionById', error);
+	}
 }
 
-export async function updateQuestion(request: NextRequest, { params }: { params: Promise<{ questionId: string }> }) {
-  try {
-    const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+export async function updateTestQuestion(
+	request: NextRequest,
+	{ params }: { params: Promise<{ questionId: string }> }
+) {
+	try {
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
-    if (!adminId || role !== 'admin') {
-      throw new ApiError(401, 'Unauthorized access');
-    }
+		if (!adminId || role !== 'admin') {
+			throw new ApiError(401, 'Unauthorized access');
+		}
 
-    const { questionId } = await params;
+		const { questionId } = await params;
 
-    if (!questionId) {
-      throw new ApiError(400, 'Question ID is required');
-    }
+		if (!questionId) {
+			throw new ApiError(400, 'Question ID is required');
+		}
 
-    // ✅ Check question exists & belongs to admin
-    const question = await prisma.question.findFirst({
-      where: {
-        id: questionId,
-        adminId
-      }
-    });
+		// ✅ check ownership
+		const existingQuestion = await prisma.question.findFirst({
+			where: {
+				id: questionId,
+				adminId
+			}
+		});
 
-    if (!question) {
-      throw new ApiError(404, 'Question not found or access denied');
-    }
+		if (!existingQuestion) {
+			throw new ApiError(404, 'Question not found or access denied');
+		}
 
-    // 📦 Validate request body
-    const body = await request.json();
-    const { questionText, optionA, optionB, optionC, optionD, correctOption } = updateQuestionSchema.parse(body);
+		// 📦 Validate request body
+		const body = await request.json();
+		const parsedData = updateQuestionSchema.parse(body);
 
-    // 🧠 Update question
-    const updatedQuestion = await prisma.question.update({
-      where: {
-        id: questionId
-      },
-      data: {
-        questionText,
-        optionA,
-        optionB,
-        optionC,
-        optionD,
-        correctOption
-      }
-    });
+		const { questionText, questionType, explanation, marks } = parsedData;
 
-    // 🧾 Audit log
-    logEvent('QuestionUpdated', {
-      adminId,
-      questionId: updatedQuestion.id,
-      testId: updatedQuestion.testId
-    });
+		const options = 'options' in parsedData ? parsedData.options : undefined;
 
-    return NextResponse.json(new ApiResponse(200, updatedQuestion, 'Question updated successfully'), {
-      status: 200
-    });
-  } catch (error) {
-    return handleError('UpdateQuestion', error);
-  }
+		const hasOptionsField = Object.prototype.hasOwnProperty.call(body, 'options');
+
+		if (hasOptionsField) {
+			// options field present but invalid after parsing
+			if (!options) {
+				throw new ApiError(400, 'Invalid options format');
+			}
+
+			const effectiveType = questionType ?? existingQuestion.questionType;
+
+			if (effectiveType === 'MCQ' && options.length < 2) {
+				throw new ApiError(400, 'MCQ question must have at least 2 options');
+			}
+
+			if (effectiveType === 'TRUE_FALSE' && options.length !== 2) {
+				throw new ApiError(400, 'TRUE_FALSE question must have exactly 2 options');
+			}
+		}
+
+		// transaction update
+		const updatedQuestion = await prisma.$transaction(async (tx) => {
+			// update question
+			const question = await tx.question.update({
+				where: {
+					id: questionId
+				},
+				data: {
+					questionText,
+					questionType,
+					marks,
+					...(explanation !== undefined && { explanation })
+				}
+			});
+
+			// update options if provided
+			if (options) {
+				// delete old options
+				await tx.questionOption.deleteMany({
+					where: {
+						questionId
+					}
+				});
+
+				// insert new options
+				if (options.length > 0) {
+					await tx.questionOption.createMany({
+						data: options.map((opt) => ({
+							questionId,
+							optionText: opt.optionText,
+							isCorrect: opt.isCorrect,
+							orderIndex: opt.orderIndex
+						}))
+					});
+				}
+			}
+
+			return question;
+		});
+
+		// 🧾 Audit log
+		logEvent('QuestionUpdated', {
+			adminId,
+			questionId: updatedQuestion.id,
+			testId: updatedQuestion.testId,
+			questionType: updatedQuestion.questionType
+		});
+
+		return NextResponse.json(
+			new ApiResponse(200, updatedQuestion, 'Question updated successfully'),
+			{
+				status: 200
+			}
+		);
+	} catch (error) {
+		return handleError('UpdateTestQuestion', error);
+	}
 }
 
-export async function deleteQuestion(request: NextRequest, { params }: { params: Promise<{ questionId: string }> }) {
-  try {
-    const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+export async function deleteTestQuestion(
+	request: NextRequest,
+	{ params }: { params: Promise<{ questionId: string }> }
+) {
+	try {
+		// 🔐 Auth guard
+		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
-    if (!adminId || role !== 'admin') {
-      throw new ApiError(401, 'Unauthorized access');
-    }
+		if (!adminId || role !== 'admin') {
+			throw new ApiError(401, 'Unauthorized access');
+		}
 
-    const { questionId } = await params;
+		const { questionId } = await params;
 
-    if (!questionId) {
-      throw new ApiError(400, 'Question ID is required');
-    }
+		if (!questionId) {
+			throw new ApiError(400, 'Question ID is required');
+		}
 
-    // ✅ Check question exists & belongs to admin
-    const question = await prisma.question.findFirst({
-      where: {
-        id: questionId,
-        adminId
-      }
-    });
+		// ✅ verify ownership and fetch minimal data
+		const existingQuestion = await prisma.question.findFirst({
+			where: {
+				id: questionId,
+				adminId
+			},
+			select: {
+				id: true,
+				testId: true,
+				questionType: true,
+				_count: {
+					select: {
+						answers: true
+					}
+				}
+			}
+		});
 
-    if (!question) {
-      throw new ApiError(404, 'Question not found or access denied');
-    }
+		if (!existingQuestion) {
+			throw new ApiError(404, 'Question not found or access denied');
+		}
 
-    // 🗑️ Delete question (cascades to AttemptAnswers)
-    await prisma.question.delete({
-      where: {
-        id: questionId
-      }
-    });
+		// optional safety rule (recommended)
+		// prevent deletion if students already attempted it
+		if (existingQuestion._count.answers > 0) {
+			throw new ApiError(400, 'Cannot delete question that has student attempts');
+		}
 
-    // 🧾 Audit log
-    logEvent('QuestionDeleted', {
-      adminId,
-      questionId: question.id,
-      testId: question.testId
-    });
+		// 🗑️ delete question (cascade deletes options and answers automatically)
+		await prisma.question.delete({
+			where: {
+				id: questionId
+			}
+		});
 
-    return NextResponse.json(new ApiResponse(200, null, 'Question deleted successfully'), {
-      status: 200
-    });
-  } catch (error) {
-    return handleError('DeleteQuestion', error);
-  }
+		// 🧾 audit log
+		logEvent('QuestionDeleted', {
+			adminId,
+			questionId: existingQuestion.id,
+			testId: existingQuestion.testId,
+			questionType: existingQuestion.questionType
+		});
+
+		return NextResponse.json(new ApiResponse(200, null, 'Question deleted successfully'), {
+			status: 200
+		});
+	} catch (error) {
+		return handleError('DeleteTestQuestion', error);
+	}
 }

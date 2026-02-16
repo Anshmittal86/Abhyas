@@ -1,9 +1,9 @@
 import {
-	getQuestionById,
-	updateQuestion,
-	deleteQuestion
+	getTestQuestionById,
+	updateTestQuestion,
+	deleteTestQuestion
 } from '@/controllers/question.controllers';
 
-export { getQuestionById as GET };
-export { updateQuestion as PATCH };
-export { deleteQuestion as DELETE };
+export { getTestQuestionById as GET };
+export { updateTestQuestion as PATCH };
+export { deleteTestQuestion as DELETE };
