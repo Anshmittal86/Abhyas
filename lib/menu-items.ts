@@ -7,7 +7,8 @@ import {
 	Settings,
 	FileText,
 	LucideIcon,
-	Library
+	Library,
+	ListOrdered
 } from 'lucide-react';
 
 interface MenuItem {
@@ -34,6 +35,7 @@ export const MENU_DATA: MenuConfig = {
 		{ title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
 		{ title: 'Students', url: '/admin/students', icon: Users },
 		{ title: 'Courses', url: '/admin/courses', icon: Library },
+		{ title: 'Chapters', url: '/admin/chapters', icon: ListOrdered },
 		{ title: 'Tests', url: '/admin/tests', icon: FileText },
 		{ title: 'Questions', url: '/admin/questions', icon: Settings },
 		{ title: 'Analytics', url: '/admin/analytics', icon: Settings }

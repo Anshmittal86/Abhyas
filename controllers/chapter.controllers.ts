@@ -89,7 +89,8 @@ export async function getChapters(request: NextRequest) {
 						id: true,
 						title: true
 					}
-				}
+				},
+				createdAt: true
 			},
 			orderBy: {
 				orderNo: 'asc'
@@ -106,7 +107,8 @@ export async function getChapters(request: NextRequest) {
 			course: {
 				id: Chapter.course.id,
 				title: Chapter.course.title
-			}
+			},
+			createdAt: Chapter.createdAt
 		}));
 
 		return NextResponse.json(
@@ -167,7 +169,8 @@ export async function getChapterById(
 						totalQuestions: true,
 						durationMinutes: true
 					}
-				}
+				},
+				createdAt: true
 			}
 		});
 

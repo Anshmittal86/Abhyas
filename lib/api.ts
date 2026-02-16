@@ -1,6 +1,7 @@
 import { CoursesListTypes } from '@/types/courses';
 import { StudentsListTypes } from '@/types/student';
-import { ResponseTypes } from '@/types/api';
+import { SuccessResponseTypes } from '@/types/api';
+import { ChaptersListTypes } from '@/types/chapters';
 
 export const fetchStudents = async (): Promise<StudentsListTypes[] | undefined> => {
 	try {
@@ -9,19 +10,16 @@ export const fetchStudents = async (): Promise<StudentsListTypes[] | undefined> 
 			credentials: 'include'
 		});
 
-		const result = (await res.json()) as ResponseTypes<StudentsListTypes[]>;
+		const result = (await res.json()) as SuccessResponseTypes<StudentsListTypes[]>;
 
-		if (!res.ok || !result?.success) {
-			throw new Error(result?.message || 'Network response was not ok');
+		if (!result.success) {
+			throw new Error(result.message || 'Failed to fetch students');
 		}
 
-		return result.data;
+		return result.data || [];
 	} catch (error) {
-		if (error instanceof Error) {
-			console.error(`Failed to fetch Students: ${error.message}`);
-		} else {
-			console.error(`Unknown Error At Fetch Student: ${error}`);
-		}
+		console.error('fetchStudents error:', error);
+		throw error;
 	}
 };
 
@@ -35,18 +33,38 @@ export const fetchCourses = async (): Promise<CoursesListTypes[] | undefined> =>
 			credentials: 'include'
 		});
 
-		const result = (await response.json()) as ResponseTypes<CoursesListTypes[]>;
+		const result = (await response.json()) as SuccessResponseTypes<CoursesListTypes[]>;
 
-		if (!response.ok || !result?.success) {
-			throw new Error(result?.message || 'Fetching Courses Failed');
+		if (!result.success) {
+			throw new Error(result.message || 'Failed to fetch courses');
 		}
 
-		return result.data;
+		return result.data || [];
 	} catch (error) {
-		if (error instanceof Error) {
-			console.error(`Failed to fetch Courses: ${error.message}`);
-		} else {
-			console.error(`Unknown Error At Fetch Courses: ${error}`);
-		}
+		console.error('fetchCourses error:', error);
+		throw error;
 	}
 };
+
+export async function fetchChapters(): Promise<ChaptersListTypes[] | undefined> {
+	try {
+		const res = await fetch('/api/admin/chapter', {
+			method: 'GET',
+			credentials: 'include'
+		});
+
+		if (!res.ok) {
+			throw new Error(`HTTP error! status: ${res.status}`);
+		}
+
+		const result = (await res.json()) as SuccessResponseTypes<ChaptersListTypes[]>;
+
+		if (!result.success) {
+			throw new Error(result.message || 'Failed to fetch chapters');
+		}
+
+		return result.data || [];
+	} catch (error) {
+		console.error('fetchChapters error:', error);
+	}
+}
