@@ -29,6 +29,9 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MENU_DATA } from '@/lib/menu-items';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface AppSidebarProps {
 	userRole: 'student' | 'admin';
@@ -38,6 +41,8 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 	const { isMobile } = useSidebar();
 	const pathname = usePathname();
 	const { theme, setTheme } = useTheme();
+	const router = useRouter();
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
 
 	const navItems = MENU_DATA[userRole] || [];
 
@@ -165,9 +170,43 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 
 								<DropdownMenuSeparator className="bg-ab-border/80" />
 
-								<DropdownMenuItem className="cursor-pointer rounded-lg py-2 font-bold text-destructive transition-colors focus:bg-destructive/10 focus:text-destructive">
-									<LogOut className="mr-2 size-4" />
-									Log out
+								<DropdownMenuItem
+									className="cursor-pointer rounded-lg py-2 font-bold text-destructive transition-colors focus:bg-destructive/10 focus:text-destructive"
+									onClick={async () => {
+										// logout flow: POST to API (cookies included) -> redirect to login
+										setIsLoggingOut(true);
+										try {
+											const res = await fetch('/api/auth/logout', {
+												method: 'POST',
+												credentials: 'include'
+											});
+											if (res.ok) {
+												const json = await res.json().catch(() => ({}));
+												toast.success(json?.message || 'Logged out');
+												// use Next.js router.replace to replace history and avoid back navigation
+												const loginPath = userRole === 'admin' ? '/admin/login' : '/login';
+												router.replace(loginPath);
+											} else {
+												const err = await res.json().catch(() => ({}));
+												toast.error(err?.message || 'Failed to logout');
+											}
+										} catch (err) {
+											toast.error(err instanceof Error ? err.message : 'Logout failed');
+										} finally {
+											setIsLoggingOut(false);
+										}
+									}}
+								>
+									{isLoggingOut ?
+										<span className="flex items-center">
+											<LogOut className="mr-2 size-4 animate-spin" />
+											Logging out...
+										</span>
+									:	<>
+											<LogOut className="mr-2 size-4" />
+											Log out
+										</>
+									}
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>

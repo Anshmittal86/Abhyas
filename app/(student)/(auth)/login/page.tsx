@@ -47,7 +47,7 @@ export default function StudentLoginInner() {
 			const result = await response.json();
 			if (response.ok && result.success) {
 				toast.success('Welcome back to Abyash!');
-				router.push('student/dashboard');
+				router.push('/dashboard');
 			} else {
 				toast.error(result.message || 'Invalid credentials');
 			}
