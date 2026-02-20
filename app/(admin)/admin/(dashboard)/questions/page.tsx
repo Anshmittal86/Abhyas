@@ -1,7 +1,7 @@
 'use client';
 
-import { Search, MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { Search, MoreHorizontal, SquarePen } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,37 +19,63 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
-
-type QuestionListItem = {
-	id: string;
-	questionText: string;
-	optionA: string;
-	optionB: string;
-	optionC: string;
-	optionD: string;
-	correctOption: 'A' | 'B' | 'C' | 'D';
-	testTitle: string;
-	answerCount: number;
-};
-
-const QUESTIONS: QuestionListItem[] = [
-	{
-		id: 'q1',
-		questionText: 'What does HTML stand for?',
-		optionA: 'Hyper Text Markup Language',
-		optionB: 'High Text Machine Language',
-		optionC: 'Hyperlinks and Text Markup Language',
-		optionD: 'None',
-		correctOption: 'A',
-		testTitle: 'HTML Basics',
-		answerCount: 24
-	}
-];
+import CreateQuestionFormSheet from '@/components/forms/CreateQuestionFormSheet';
+import { QuestionListTypes, SuccessResponseTypes } from '@/types';
 
 export default function AdminQuestionsPage() {
 	const [viewOpen, setViewOpen] = useState(false);
-	const [selectedQuestion, setSelectedQuestion] = useState<QuestionListItem | null>(null);
+	const [questions, setQuestions] = useState<QuestionListTypes[]>([]);
+	const [filteredQuestions, setFilteredQuestions] = useState<QuestionListTypes[]>([]);
+	const [selectedQuestion, setSelectedQuestion] = useState<QuestionListTypes | null>(null);
+	const [loading, setLoading] = useState(false);
+
+	const fetchQuestions = async () => {
+		try {
+			setLoading(true);
+
+			const res = await fetch('/api/admin/question', {
+				method: 'GET',
+				credentials: 'include'
+			});
+
+			if (!res.ok) {
+				throw new Error(`HTTP error ${res.status}`);
+			}
+
+			const result = (await res.json()) as SuccessResponseTypes<QuestionListTypes[]>;
+
+			if (result.success) {
+				setQuestions(result.data || []);
+				setFilteredQuestions(result.data || []);
+			} else {
+				throw new Error(result.message);
+			}
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchQuestions();
+	}, []);
+
+	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value.toLowerCase();
+
+		if (!value) {
+			setFilteredQuestions(questions);
+			return;
+		}
+
+		const filtered = questions.filter(
+			(q) =>
+				q.questionText.toLowerCase().includes(value) || q.testTitle.toLowerCase().includes(value)
+		);
+
+		setFilteredQuestions(filtered);
+	};
 
 	return (
 		<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
@@ -70,12 +96,22 @@ export default function AdminQuestionsPage() {
 					<Input
 						placeholder="Search by question or test..."
 						className="h-11 rounded-xl border-2 border-ab-border pl-10 bg-ab-surface"
+						onChange={handleSearch}
+						value={
+							filteredQuestions.length !== questions.length ? filteredQuestions[0].questionText : ''
+						}
+						disabled={loading}
 					/>
 				</div>
 
-				<Button className="py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer">
-					Create Question
-				</Button>
+				<CreateQuestionFormSheet
+					trigger={
+						<Button className="py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer">
+							<SquarePen className="mr-2 h-5 w-5" />
+							Create Question
+						</Button>
+					}
+				/>
 			</div>
 
 			{/* Table */}
@@ -102,42 +138,45 @@ export default function AdminQuestionsPage() {
 					</TableHeader>
 
 					<TableBody>
-						{QUESTIONS.map((q) => (
-							<TableRow key={q.id} className="hover:bg-ab-primary/5 transition-colors">
+						{loading && (
+							<TableRow>
+								<TableCell colSpan={5} className="text-center py-10">
+									Loading questions...
+								</TableCell>
+							</TableRow>
+						)}
+
+						{filteredQuestions.map((q) => (
+							<TableRow key={q.id} className="hover:bg-ab-primary/5">
+								{/* Question */}
 								<TableCell className="py-5 pl-8 max-w-xl">
-									<p className="font-black line-clamp-2 text-ab-text-primary">{q.questionText}</p>
-									<p className="text-xs text-ab-text-secondary mt-1 line-clamp-1">
-										A:{q.optionA} · B:{q.optionB} · C:{q.optionC} · D:{q.optionD}
+									<p className="font-black line-clamp-2">{q.questionText}</p>
+
+									<p className="text-xs text-ab-text-secondary mt-1">
+										{q.questionType} • {q.marks} marks
 									</p>
 								</TableCell>
 
-								<TableCell className="font-bold text-ab-text-primary">{q.testTitle}</TableCell>
+								{/* Test */}
+								<TableCell className="font-bold">{q.test.title}</TableCell>
 
-								{/* Correct Option Pill */}
-								<TableCell className="text-center">
-									<span className="inline-flex h-7 w-7 items-center justify-center rounded-full border font-black bg-ab-green-bg text-ab-green-text border-ab-green-text">
-										{q.correctOption}
-									</span>
-								</TableCell>
+								{/* Question Type */}
+								<TableCell className="text-center font-black">{q.questionType}</TableCell>
 
-								<TableCell className="text-center font-black text-ab-text-primary">
-									{q.answerCount}
-								</TableCell>
+								{/* Answer count */}
+								<TableCell className="text-center font-black">{q.answerCount}</TableCell>
 
+								{/* Actions */}
 								<TableCell className="pr-8 text-right">
 									<DropdownMenu>
 										<DropdownMenuTrigger asChild>
-											<Button variant="ghost" className="h-8 w-8 p-0 hover:bg-ab-primary/10">
+											<Button variant="ghost" className="h-8 w-8 p-0">
 												<MoreHorizontal className="h-5 w-5" />
 											</Button>
 										</DropdownMenuTrigger>
 
-										<DropdownMenuContent
-											align="end"
-											className="rounded-xl bg-ab-surface border border-ab-border"
-										>
+										<DropdownMenuContent align="end">
 											<DropdownMenuItem
-												className="font-bold"
 												onClick={() => {
 													setSelectedQuestion(q);
 													setViewOpen(true);
@@ -145,8 +184,8 @@ export default function AdminQuestionsPage() {
 											>
 												View Question
 											</DropdownMenuItem>
-											<DropdownMenuItem className="font-bold">Edit Question</DropdownMenuItem>
-											<DropdownMenuItem className="font-bold text-ab-pink-text">
+
+											<DropdownMenuItem className="text-ab-pink-text">
 												Delete Question
 											</DropdownMenuItem>
 										</DropdownMenuContent>
@@ -157,69 +196,6 @@ export default function AdminQuestionsPage() {
 					</TableBody>
 				</Table>
 			</div>
-
-			{/* View Question Sheet */}
-			<Sheet open={viewOpen} onOpenChange={setViewOpen}>
-				<SheetContent className="sm:max-w-2xl overflow-y-auto bg-ab-surface border-l border-ab-border">
-					<SheetHeader>
-						<SheetTitle className="text-ab-text-primary">Question Details</SheetTitle>
-					</SheetHeader>
-
-					{selectedQuestion && (
-						<div className="mt-6 space-y-6">
-							<div>
-								<p className="text-xs uppercase font-bold text-ab-text-secondary">Question</p>
-								<p className="text-lg font-black text-ab-text-primary">
-									{selectedQuestion.questionText}
-								</p>
-							</div>
-
-							{/* Options */}
-							<div className="grid grid-cols-2 gap-4">
-								{(['A', 'B', 'C', 'D'] as const).map((opt) => {
-									const text = selectedQuestion[`option${opt}` as keyof QuestionListItem] as string;
-									const correct = selectedQuestion.correctOption === opt;
-
-									return (
-										<div
-											key={opt}
-											className={`rounded-xl border p-4 ${
-												correct ? 'border-ab-green-text bg-ab-green-bg' : 'border-ab-border'
-											}`}
-										>
-											<p className="text-xs font-bold text-ab-text-secondary">Option {opt}</p>
-											<p
-												className={
-													correct ?
-														'font-black text-ab-green-text'
-													:	'font-medium text-ab-text-primary'
-												}
-											>
-												{text}
-											</p>
-										</div>
-									);
-								})}
-							</div>
-
-							<div className="pt-4 flex gap-2">
-								<Button
-									variant="outline"
-									className="font-bold border-ab-border text-ab-text-primary"
-								>
-									Edit Question
-								</Button>
-
-								<SheetClose asChild>
-									<Button variant="outline" className="border-ab-border text-ab-text-primary">
-										Close
-									</Button>
-								</SheetClose>
-							</div>
-						</div>
-					)}
-				</SheetContent>
-			</Sheet>
 		</div>
 	);
 }

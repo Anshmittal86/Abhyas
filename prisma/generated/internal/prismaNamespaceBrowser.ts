@@ -197,6 +197,8 @@ export const QuestionScalarFieldEnum = {
   explanation: 'explanation',
   difficulty: 'difficulty',
   marks: 'marks',
+  starterCode: 'starterCode',
+  language: 'language',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   testId: 'testId',

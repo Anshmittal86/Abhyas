@@ -230,6 +230,10 @@ model Question {
   explanation   String?
   difficulty    Int? // future AI Analytics ke liye
   marks         Int @default(1)
+
+  starterCode   String?
+  language      String?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

@@ -22,40 +22,19 @@ import {
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import Loader from '@/components/common/Loader';
-
-type TestDetail = {
-	id: string;
-	title: string;
-	durationMinutes: number;
-	totalQuestions: number;
-	questionCount: number;
-	attemptCount: number;
-	chapter: {
-		id: string;
-		code: string;
-		title: string;
-		course: {
-			id: string;
-			title: string;
-		};
-	};
-};
-
-type ApiResponse = {
-	statusCode: number;
-	data: TestDetail[];
-	message: string;
-	success: boolean;
-};
+import { TestsListTypes } from '@/types';
+import { SuccessResponseTypes } from '@/types';
+import CreateTestFormSheet from '@/components/forms/createTestFormSheet';
+import { EmptyTests } from '@/components/admin/tests/EmptyTests';
+import AlertDialogBox from '@/components/common/AlertDialogBox';
 
 export default function AdminTestsPage() {
 	const [viewOpen, setViewOpen] = useState(false);
 	const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
-	const [tests, setTests] = useState<TestDetail[]>([]);
-	const [filteredTests, setFilteredTests] = useState<TestDetail[]>([]);
+	const [tests, setTests] = useState<TestsListTypes[]>([]);
+	const [filteredTests, setFilteredTests] = useState<TestsListTypes[]>([]);
 
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
 	const searchParams = useSearchParams();
 	const searchQuery = searchParams.get('search') || '';
 
@@ -81,62 +60,31 @@ export default function AdminTestsPage() {
 
 	const fetchTests = async () => {
 		try {
-			// -----------------------------
-			// UI BRANCH MOCK DATA START
-			// -----------------------------
+			setLoading(true);
 
-			setTests([
-				{
-					id: '1a409ea5-33d5-4f44-9572-5f1d5be8aa15',
-					title: 'HTML',
-					durationMinutes: 10,
-					totalQuestions: 10,
-					questionCount: 10,
-					attemptCount: 3,
-					chapter: {
-						id: '4b1add8b-3d39-4f6f-8790-9ee8595ff123',
-						code: 'CH01',
-						title: 'HTML',
-						course: {
-							id: '9f5af464-772b-4454-977f-8df8f292c0dd',
-							title: 'Web Development'
-						}
-					}
-				}
-			]);
+			const response = await fetch('/api/admin/test', {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include' // Include cookies for auth
+			});
 
-			// -----------------------------
-			// UI BRANCH MOCK DATA END
-			// -----------------------------
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
 
-			// TODO: Uncomment this in the main branch
-			// setLoading(true);
-			// setError(null);
+			const result = (await response.json()) as SuccessResponseTypes<TestsListTypes[]>;
 
-			// const response = await fetch('/api/admin/test', {
-			// 	method: 'GET',
-			// 	headers: {
-			// 		'Content-Type': 'application/json'
-			// 	},
-			// 	credentials: 'include' // Include cookies for auth
-			// });
-
-			// if (!response.ok) {
-			// 	throw new Error(`HTTP error! status: ${response.status}`);
-			// }
-
-			// const result: ApiResponse = await response.json();
-
-			// if (result.success) {
-			// 	setTests(result.data);
-			// 	setFilteredTests(result.data);
-			// 	toast.success(result.message);
-			// } else {
-			// 	throw new Error(result.message || 'Failed to fetch tests');
-			// }
+			if (result.success) {
+				setTests(result.data || []);
+				setFilteredTests(result.data || []);
+				toast.success(result.message);
+			} else {
+				throw new Error(result.message || 'Failed to fetch tests');
+			}
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tests';
-			setError(errorMessage);
 			toast.error(errorMessage);
 			console.error('Fetch tests error:', err);
 		} finally {
@@ -155,34 +103,52 @@ export default function AdminTestsPage() {
 		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
 	};
 
+	const handleDeleteTest = async (testId: string) => {
+		try {
+			const response = await fetch(`/api/admin/test/${testId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'include'
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const result = (await response.json()) as SuccessResponseTypes<null>;
+
+			if (result.success) {
+				toast.success(result.message || 'Test deleted successfully');
+
+				await fetchTests();
+			} else {
+				throw new Error(result.message || 'Failed to delete test');
+			}
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : 'Failed to delete test';
+
+			toast.error(errorMessage);
+
+			console.error('Delete test error:', error);
+		}
+	};
+
+	const handleTestTitleUpdated = (testId: string, newTitle: string) => {
+		setTests((prev) =>
+			prev.map((test) => (test.id === testId ? { ...test, title: newTitle } : test))
+		);
+
+		setFilteredTests((prev) =>
+			prev.map((test) => (test.id === testId ? { ...test, title: newTitle } : test))
+		);
+	};
+
 	if (loading) {
 		return (
-			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary flex items-center justify-center min-h-[600px]">
+			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary flex items-center justify-center min-h-150">
 				<Loader message="Loading tests..." />
-			</div>
-		);
-	}
-
-	if (error && tests.length === 0) {
-		return (
-			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
-				<div className="flex items-center justify-between">
-					<div>
-						<h2 className="text-3xl font-black tracking-tight">Tests</h2>
-						<p className="text-sm font-medium italic text-ab-text-secondary">
-							Create and manage tests for chapters.
-						</p>
-					</div>
-				</div>
-				<div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8 rounded-[22px] border-2 border-ab-border/80 bg-ab-surface">
-					<Loader showIcon={false} message="Failed to load tests" subtitle={error} />
-					<Button
-						onClick={fetchTests}
-						className="mt-6 py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer"
-					>
-						Retry
-					</Button>
-				</div>
 			</div>
 		);
 	}
@@ -211,25 +177,13 @@ export default function AdminTestsPage() {
 					/>
 				</div>
 
-				<Button className="py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer">
-					Create Test
-				</Button>
+				<CreateTestFormSheet trigger="Create Test" onSuccess={fetchTests} />
 			</div>
 
 			{/* Table */}
 			<div className="overflow-hidden rounded-[22px] border-2 border-ab-border/80 bg-ab-surface shadow-sm">
-				{filteredTests.length === 0 ?
-					<div className="p-12 text-center">
-						<p className="text-lg font-black text-ab-text-primary mb-2">
-							{searchQuery ? 'No matching tests found' : 'No tests available'}
-						</p>
-						<p className="text-sm text-ab-text-secondary">
-							{searchQuery ?
-								`Try adjusting your search for "${searchQuery}"`
-							:	'Create your first test to get started'}
-						</p>
-					</div>
-				:	<Table>
+				{
+					<Table>
 						<TableHeader className="bg-ab-border/20">
 							<TableRow className="border-b-2 hover:bg-transparent">
 								<TableHead className="py-5 pl-8 text-[11px] font-black uppercase tracking-widest">
@@ -251,69 +205,96 @@ export default function AdminTestsPage() {
 						</TableHeader>
 
 						<TableBody>
-							{filteredTests.map((test) => (
-								<TableRow key={test.id} className="group transition-colors hover:bg-ab-primary/5">
-									<TableCell className="py-5 pl-8">
-										<div className="flex flex-col">
-											<span className="text-[15px] font-black">{test.title}</span>
-											<span className="text-[11px] font-bold text-ab-text-secondary">
-												{test.chapter.course.title} · {test.chapter.title}
-											</span>
-										</div>
-									</TableCell>
-
-									<TableCell className="font-bold">{test.chapter.code}</TableCell>
-
-									<TableCell className="text-center font-black">
-										{test.durationMinutes} min
-									</TableCell>
-
-									<TableCell className="text-center font-black">
-										{test.questionCount} / {test.totalQuestions}
-									</TableCell>
-
-									<TableCell className="pr-8 text-right">
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
-												<Button
-													variant="ghost"
-													className="h-8 w-8 p-0 transition hover:bg-ab-primary/10 hover:text-ab-primary"
-												>
-													<MoreHorizontal className="h-5 w-5" />
-												</Button>
-											</DropdownMenuTrigger>
-
-											<DropdownMenuContent
-												align="end"
-												className="rounded-xl border-2 border-ab-border/80"
-											>
-												<DropdownMenuItem
-													className="cursor-pointer font-bold"
-													onClick={() => {
-														setSelectedTestId(test.id);
-														setViewOpen(true);
-													}}
-												>
-													View Test
-												</DropdownMenuItem>
-												<DropdownMenuItem className="cursor-pointer font-bold">
-													Update Test
-												</DropdownMenuItem>
-												<DropdownMenuItem className="cursor-pointer font-bold text-ab-pink-text">
-													Delete Test
-												</DropdownMenuItem>
-											</DropdownMenuContent>
-										</DropdownMenu>
+							{loading ?
+								<TableRow>
+									<TableCell colSpan={5} className="text-center py-10">
+										<Loader size={30} showIcon message="Loading tests..." />
 									</TableCell>
 								</TableRow>
-							))}
+							: tests.length === 0 ?
+								<TableRow>
+									<TableCell colSpan={5}>
+										<EmptyTests />
+									</TableCell>
+								</TableRow>
+							:	filteredTests.map((test) => (
+									<TableRow key={test.id} className="group transition-colors hover:bg-ab-primary/5">
+										<TableCell className="py-5 pl-8">
+											<div className="flex flex-col">
+												<span className="text-[15px] font-black">{test.title}</span>
+												<span className="text-[11px] font-bold text-ab-text-secondary">
+													{test.chapter.course.title} · {test.chapter.title}
+												</span>
+											</div>
+										</TableCell>
+
+										<TableCell className="font-bold">{test.chapter.code}</TableCell>
+
+										<TableCell className="text-center font-black">
+											{test.durationMinutes} min
+										</TableCell>
+
+										<TableCell className="text-center font-black">
+											{test.questionCount} / {test.totalQuestions}
+										</TableCell>
+
+										<TableCell className="pr-8 text-right">
+											<DropdownMenu>
+												<DropdownMenuTrigger asChild>
+													<Button
+														variant="ghost"
+														className="h-8 w-8 p-0 transition hover:bg-ab-primary/10 hover:text-ab-primary"
+													>
+														<MoreHorizontal className="h-5 w-5" />
+													</Button>
+												</DropdownMenuTrigger>
+
+												<DropdownMenuContent
+													align="end"
+													className="rounded-xl border-2 border-ab-border/80 bg-ab-bg"
+												>
+													<DropdownMenuItem
+														className="cursor-pointer font-bold flex justify-center"
+														onClick={() => {
+															setSelectedTestId(test.id);
+															setViewOpen(true);
+														}}
+													>
+														View Test
+													</DropdownMenuItem>
+
+													<AlertDialogBox
+														name={test.title}
+														onConfirm={() => handleDeleteTest(test.id)}
+														trigger={
+															<Button
+																variant="ghost"
+																className="w-full flex justify-center font-bold text-ab-pink-text hover:bg-ab-pink-bg/50 h-8 px-2 cursor-pointer"
+															>
+																Delete Test
+															</Button>
+														}
+														title="Delete this test?"
+														description={`Permanently delete "${test.title}"? All student attempts, answers, and progress for this test will be permanently lost. This action cannot be undone.`}
+													/>
+												</DropdownMenuContent>
+											</DropdownMenu>
+										</TableCell>
+									</TableRow>
+								))
+							}
 						</TableBody>
 					</Table>
 				}
 			</div>
 
 			{/* View Test Sheet */}
-			<TestViewSheet open={viewOpen} onOpenChange={setViewOpen} testId={selectedTestId} />
+			<TestViewSheet
+				open={viewOpen}
+				onOpenChange={setViewOpen}
+				testId={selectedTestId}
+				onTitleUpdated={handleTestTitleUpdated}
+			/>
 		</div>
 	);
 }

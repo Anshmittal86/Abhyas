@@ -2,6 +2,7 @@ import { CoursesListTypes } from '@/types/courses';
 import { StudentsListTypes } from '@/types/student';
 import { SuccessResponseTypes } from '@/types/api';
 import { ChaptersListTypes } from '@/types/chapters';
+import { TestsListTypes } from '@/types';
 
 export const fetchStudents = async (): Promise<StudentsListTypes[] | undefined> => {
 	try {
@@ -46,7 +47,7 @@ export const fetchCourses = async (): Promise<CoursesListTypes[] | undefined> =>
 	}
 };
 
-export async function fetchChapters(): Promise<ChaptersListTypes[] | undefined> {
+export const fetchChapters = async (): Promise<ChaptersListTypes[] | undefined> => {
 	try {
 		const res = await fetch('/api/admin/chapter', {
 			method: 'GET',
@@ -67,4 +68,24 @@ export async function fetchChapters(): Promise<ChaptersListTypes[] | undefined> 
 	} catch (error) {
 		console.error('fetchChapters error:', error);
 	}
-}
+};
+
+export const fetchTests = async (): Promise<TestsListTypes[] | undefined> => {
+	try {
+		const res = await fetch('/api/admin/test', {
+			method: 'GET',
+			credentials: 'include'
+		});
+
+		const result = (await res.json()) as SuccessResponseTypes<TestsListTypes[]>;
+
+		if (!result.success) {
+			throw new Error(result.message || 'Failed to fetch tests');
+		}
+
+		return result.data;
+	} catch (error) {
+		console.error('fetchTests error:', error);
+		throw error;
+	}
+};

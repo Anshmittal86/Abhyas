@@ -64,7 +64,6 @@ export default function ChapterFormSheet({
 
 	// Set form data when opening
 	useEffect(() => {
-		// ✅ जब भी defaultValues या chapterId change हो, form update हो
 		if (open || isOpen) {
 			setFormData({
 				courseId: initialCourseId || defaultValues?.courseId || '',

@@ -25,7 +25,7 @@ interface FormFieldProps<T extends FieldValues> {
 	name: Path<T>;
 	label: string;
 	placeholder?: string;
-	type?: 'text' | 'email' | 'password' | 'datepicker' | 'select' | 'tel' | 'textarea';
+	type?: 'text' | 'email' | 'password' | 'datepicker' | 'select' | 'tel' | 'textarea' | 'number';
 	required?: boolean;
 	options?: SelectOption[];
 	rows?: number;
@@ -90,6 +90,13 @@ const FormField = <T extends FieldValues>({
 							</SelectTrigger>
 
 							<SelectContent className="z-100 px-2 py-2 rounded-xl border-2 border-ab-border/80 bg-ab-surface shadow-2xl">
+								<SelectItem
+									key={' '}
+									value={' '}
+									className="cursor-pointer font-bold transition-colors focus:bg-ab-primary focus:text-primary-foreground"
+								>
+									{placeholder}
+								</SelectItem>
 								{options.length > 0 ?
 									options.map((opt) => (
 										<SelectItem
@@ -110,6 +117,14 @@ const FormField = <T extends FieldValues>({
 							required={required}
 							rows={rows}
 							className="min-h-20 h-auto resize-vertical rounded-xl border-2 border-ab-border/80 bg-ab-surface font-bold text-ab-text-primary placeholder:text-ab-text-secondary/50 transition-all focus-visible:border-ab-primary/50 focus-visible:ring-ab-primary/20 p-3"
+						/>
+					: type === 'number' ?
+						<Input
+							{...field}
+							type="number"
+							placeholder={placeholder}
+							required={required}
+							className="mb-1 h-10 w-full rounded-xl border-2 border-ab-border/80 bg-ab-surface font-bold text-ab-text-primary placeholder:text-ab-text-secondary/50 transition-all focus-visible:border-ab-primary/50 focus-visible:ring-ab-primary/20"
 						/>
 					:	<Input
 							{...field}

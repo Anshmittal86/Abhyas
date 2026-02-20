@@ -43,6 +43,8 @@ export type QuestionMinAggregateOutputType = {
   explanation: string | null
   difficulty: number | null
   marks: number | null
+  starterCode: string | null
+  language: string | null
   createdAt: Date | null
   updatedAt: Date | null
   testId: string | null
@@ -56,6 +58,8 @@ export type QuestionMaxAggregateOutputType = {
   explanation: string | null
   difficulty: number | null
   marks: number | null
+  starterCode: string | null
+  language: string | null
   createdAt: Date | null
   updatedAt: Date | null
   testId: string | null
@@ -69,6 +73,8 @@ export type QuestionCountAggregateOutputType = {
   explanation: number
   difficulty: number
   marks: number
+  starterCode: number
+  language: number
   createdAt: number
   updatedAt: number
   testId: number
@@ -94,6 +100,8 @@ export type QuestionMinAggregateInputType = {
   explanation?: true
   difficulty?: true
   marks?: true
+  starterCode?: true
+  language?: true
   createdAt?: true
   updatedAt?: true
   testId?: true
@@ -107,6 +115,8 @@ export type QuestionMaxAggregateInputType = {
   explanation?: true
   difficulty?: true
   marks?: true
+  starterCode?: true
+  language?: true
   createdAt?: true
   updatedAt?: true
   testId?: true
@@ -120,6 +130,8 @@ export type QuestionCountAggregateInputType = {
   explanation?: true
   difficulty?: true
   marks?: true
+  starterCode?: true
+  language?: true
   createdAt?: true
   updatedAt?: true
   testId?: true
@@ -220,6 +232,8 @@ export type QuestionGroupByOutputType = {
   explanation: string | null
   difficulty: number | null
   marks: number
+  starterCode: string | null
+  language: string | null
   createdAt: Date
   updatedAt: Date
   testId: string
@@ -256,6 +270,8 @@ export type QuestionWhereInput = {
   explanation?: Prisma.StringNullableFilter<"Question"> | string | null
   difficulty?: Prisma.IntNullableFilter<"Question"> | number | null
   marks?: Prisma.IntFilter<"Question"> | number
+  starterCode?: Prisma.StringNullableFilter<"Question"> | string | null
+  language?: Prisma.StringNullableFilter<"Question"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Question"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Question"> | Date | string
   testId?: Prisma.StringFilter<"Question"> | string
@@ -273,6 +289,8 @@ export type QuestionOrderByWithRelationInput = {
   explanation?: Prisma.SortOrderInput | Prisma.SortOrder
   difficulty?: Prisma.SortOrderInput | Prisma.SortOrder
   marks?: Prisma.SortOrder
+  starterCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  language?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   testId?: Prisma.SortOrder
@@ -293,6 +311,8 @@ export type QuestionWhereUniqueInput = Prisma.AtLeast<{
   explanation?: Prisma.StringNullableFilter<"Question"> | string | null
   difficulty?: Prisma.IntNullableFilter<"Question"> | number | null
   marks?: Prisma.IntFilter<"Question"> | number
+  starterCode?: Prisma.StringNullableFilter<"Question"> | string | null
+  language?: Prisma.StringNullableFilter<"Question"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Question"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Question"> | Date | string
   testId?: Prisma.StringFilter<"Question"> | string
@@ -310,6 +330,8 @@ export type QuestionOrderByWithAggregationInput = {
   explanation?: Prisma.SortOrderInput | Prisma.SortOrder
   difficulty?: Prisma.SortOrderInput | Prisma.SortOrder
   marks?: Prisma.SortOrder
+  starterCode?: Prisma.SortOrderInput | Prisma.SortOrder
+  language?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   testId?: Prisma.SortOrder
@@ -331,6 +353,8 @@ export type QuestionScalarWhereWithAggregatesInput = {
   explanation?: Prisma.StringNullableWithAggregatesFilter<"Question"> | string | null
   difficulty?: Prisma.IntNullableWithAggregatesFilter<"Question"> | number | null
   marks?: Prisma.IntWithAggregatesFilter<"Question"> | number
+  starterCode?: Prisma.StringNullableWithAggregatesFilter<"Question"> | string | null
+  language?: Prisma.StringNullableWithAggregatesFilter<"Question"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Question"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Question"> | Date | string
   testId?: Prisma.StringWithAggregatesFilter<"Question"> | string
@@ -344,6 +368,8 @@ export type QuestionCreateInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   test: Prisma.TestCreateNestedOneWithoutQuestionsInput
@@ -359,6 +385,8 @@ export type QuestionUncheckedCreateInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   testId: string
@@ -374,6 +402,8 @@ export type QuestionUpdateInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   test?: Prisma.TestUpdateOneRequiredWithoutQuestionsNestedInput
@@ -389,6 +419,8 @@ export type QuestionUncheckedUpdateInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   testId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -404,6 +436,8 @@ export type QuestionCreateManyInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   testId: string
@@ -417,6 +451,8 @@ export type QuestionUpdateManyMutationInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -428,6 +464,8 @@ export type QuestionUncheckedUpdateManyInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   testId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -451,6 +489,8 @@ export type QuestionCountOrderByAggregateInput = {
   explanation?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   marks?: Prisma.SortOrder
+  starterCode?: Prisma.SortOrder
+  language?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   testId?: Prisma.SortOrder
@@ -469,6 +509,8 @@ export type QuestionMaxOrderByAggregateInput = {
   explanation?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   marks?: Prisma.SortOrder
+  starterCode?: Prisma.SortOrder
+  language?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   testId?: Prisma.SortOrder
@@ -482,6 +524,8 @@ export type QuestionMinOrderByAggregateInput = {
   explanation?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
   marks?: Prisma.SortOrder
+  starterCode?: Prisma.SortOrder
+  language?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   testId?: Prisma.SortOrder
@@ -629,6 +673,8 @@ export type QuestionCreateWithoutAdminInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   test: Prisma.TestCreateNestedOneWithoutQuestionsInput
@@ -643,6 +689,8 @@ export type QuestionUncheckedCreateWithoutAdminInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   testId: string
@@ -686,6 +734,8 @@ export type QuestionScalarWhereInput = {
   explanation?: Prisma.StringNullableFilter<"Question"> | string | null
   difficulty?: Prisma.IntNullableFilter<"Question"> | number | null
   marks?: Prisma.IntFilter<"Question"> | number
+  starterCode?: Prisma.StringNullableFilter<"Question"> | string | null
+  language?: Prisma.StringNullableFilter<"Question"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Question"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Question"> | Date | string
   testId?: Prisma.StringFilter<"Question"> | string
@@ -699,6 +749,8 @@ export type QuestionCreateWithoutTestInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   admin: Prisma.AdminCreateNestedOneWithoutQuestionsInput
@@ -713,6 +765,8 @@ export type QuestionUncheckedCreateWithoutTestInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   adminId: string
@@ -753,6 +807,8 @@ export type QuestionCreateWithoutOptionsInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   test: Prisma.TestCreateNestedOneWithoutQuestionsInput
@@ -767,6 +823,8 @@ export type QuestionUncheckedCreateWithoutOptionsInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   testId: string
@@ -797,6 +855,8 @@ export type QuestionUpdateWithoutOptionsInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   test?: Prisma.TestUpdateOneRequiredWithoutQuestionsNestedInput
@@ -811,6 +871,8 @@ export type QuestionUncheckedUpdateWithoutOptionsInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   testId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -825,6 +887,8 @@ export type QuestionCreateWithoutAnswersInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   test: Prisma.TestCreateNestedOneWithoutQuestionsInput
@@ -839,6 +903,8 @@ export type QuestionUncheckedCreateWithoutAnswersInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   testId: string
@@ -869,6 +935,8 @@ export type QuestionUpdateWithoutAnswersInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   test?: Prisma.TestUpdateOneRequiredWithoutQuestionsNestedInput
@@ -883,6 +951,8 @@ export type QuestionUncheckedUpdateWithoutAnswersInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   testId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -897,6 +967,8 @@ export type QuestionCreateManyAdminInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   testId: string
@@ -909,6 +981,8 @@ export type QuestionUpdateWithoutAdminInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   test?: Prisma.TestUpdateOneRequiredWithoutQuestionsNestedInput
@@ -923,6 +997,8 @@ export type QuestionUncheckedUpdateWithoutAdminInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   testId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -937,6 +1013,8 @@ export type QuestionUncheckedUpdateManyWithoutAdminInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   testId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -949,6 +1027,8 @@ export type QuestionCreateManyTestInput = {
   explanation?: string | null
   difficulty?: number | null
   marks?: number
+  starterCode?: string | null
+  language?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   adminId: string
@@ -961,6 +1041,8 @@ export type QuestionUpdateWithoutTestInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   admin?: Prisma.AdminUpdateOneRequiredWithoutQuestionsNestedInput
@@ -975,6 +1057,8 @@ export type QuestionUncheckedUpdateWithoutTestInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -989,6 +1073,8 @@ export type QuestionUncheckedUpdateManyWithoutTestInput = {
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
+  starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   adminId?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1041,6 +1127,8 @@ export type QuestionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   explanation?: boolean
   difficulty?: boolean
   marks?: boolean
+  starterCode?: boolean
+  language?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   testId?: boolean
@@ -1059,6 +1147,8 @@ export type QuestionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   explanation?: boolean
   difficulty?: boolean
   marks?: boolean
+  starterCode?: boolean
+  language?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   testId?: boolean
@@ -1074,6 +1164,8 @@ export type QuestionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   explanation?: boolean
   difficulty?: boolean
   marks?: boolean
+  starterCode?: boolean
+  language?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   testId?: boolean
@@ -1089,13 +1181,15 @@ export type QuestionSelectScalar = {
   explanation?: boolean
   difficulty?: boolean
   marks?: boolean
+  starterCode?: boolean
+  language?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   testId?: boolean
   adminId?: boolean
 }
 
-export type QuestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "questionText" | "questionType" | "explanation" | "difficulty" | "marks" | "createdAt" | "updatedAt" | "testId" | "adminId", ExtArgs["result"]["question"]>
+export type QuestionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "questionText" | "questionType" | "explanation" | "difficulty" | "marks" | "starterCode" | "language" | "createdAt" | "updatedAt" | "testId" | "adminId", ExtArgs["result"]["question"]>
 export type QuestionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   test?: boolean | Prisma.TestDefaultArgs<ExtArgs>
   admin?: boolean | Prisma.AdminDefaultArgs<ExtArgs>
@@ -1127,6 +1221,8 @@ export type $QuestionPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     explanation: string | null
     difficulty: number | null
     marks: number
+    starterCode: string | null
+    language: string | null
     createdAt: Date
     updatedAt: Date
     testId: string
@@ -1564,6 +1660,8 @@ export interface QuestionFieldRefs {
   readonly explanation: Prisma.FieldRef<"Question", 'String'>
   readonly difficulty: Prisma.FieldRef<"Question", 'Int'>
   readonly marks: Prisma.FieldRef<"Question", 'Int'>
+  readonly starterCode: Prisma.FieldRef<"Question", 'String'>
+  readonly language: Prisma.FieldRef<"Question", 'String'>
   readonly createdAt: Prisma.FieldRef<"Question", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Question", 'DateTime'>
   readonly testId: Prisma.FieldRef<"Question", 'String'>

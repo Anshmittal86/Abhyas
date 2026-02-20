@@ -95,10 +95,11 @@ export async function getTests(request: NextRequest) {
 							}
 						}
 					}
-				}
+				},
+				createdAt: true
 			},
 			orderBy: {
-				createdAt: 'desc'
+				createdAt: 'asc'
 			}
 		});
 
@@ -115,7 +116,8 @@ export async function getTests(request: NextRequest) {
 				code: test.chapter.code,
 				title: test.chapter.title,
 				course: test.chapter.course
-			}
+			},
+			createdAt: test.createdAt
 		}));
 
 		return NextResponse.json(new ApiResponse(200, formattedTests, 'Tests fetched successfully'), {
@@ -154,6 +156,7 @@ export async function getTestById(
 				durationMinutes: true,
 				totalQuestions: true,
 				createdAt: true,
+				updatedAt: true,
 				admin: {
 					select: {
 						id: true,
@@ -170,29 +173,30 @@ export async function getTestById(
 							select: {
 								id: true,
 								title: true,
-								description: true
+								description: true,
+								duration: true,
+								isActive: true
 							}
 						}
 					}
 				},
+
 				questions: {
 					select: {
 						id: true,
 						questionText: true,
-						optionA: true,
-						optionB: true,
-						optionC: true,
-						optionD: true,
-						correctOption: true
-					}
+						questionType: true
+					},
+					orderBy: {
+						createdAt: 'asc'
+					},
+					take: 5 // Limit to 5 questions for preview
 				},
-				attempts: {
+
+				_count: {
 					select: {
-						id: true,
-						studentId: true,
-						score: true,
-						startedAt: true,
-						submittedAt: true
+						questions: true,
+						attempts: true
 					}
 				}
 			}
@@ -202,7 +206,44 @@ export async function getTestById(
 			throw new ApiError(404, 'Test not found');
 		}
 
-		return NextResponse.json(new ApiResponse(200, test, 'Test fetched successfully'), {
+		const formattedTest = {
+			id: test.id,
+			title: test.title,
+			durationMinutes: test.durationMinutes,
+			maxQuestions: test.totalQuestions,
+
+			questionCount: test._count.questions,
+			attemptCount: test._count.attempts,
+
+			createdAt: test.createdAt,
+			updatedAt: test.updatedAt,
+
+			admin: {
+				id: test.admin.id,
+				name: test.admin.name,
+				email: test.admin.email
+			},
+
+			chapter: {
+				id: test.chapter.id,
+				code: test.chapter.code,
+				title: test.chapter.title,
+				course: {
+					id: test.chapter.course.id,
+					title: test.chapter.course.title,
+					description: test.chapter.course.description,
+					duration: test.chapter.course.duration,
+					isActive: test.chapter.course.isActive
+				}
+			},
+			questions: test.questions.map((q) => ({
+				id: q.id,
+				questionText: q.questionText,
+				questionType: q.questionType
+			}))
+		};
+
+		return NextResponse.json(new ApiResponse(200, formattedTest, 'Test fetched successfully'), {
 			status: 200
 		});
 	} catch (error) {
@@ -227,21 +268,20 @@ export async function updateTest(
 			throw new ApiError(400, 'Test ID is required');
 		}
 
-		// 🔍 Verify test exists & belongs to admin
-		const test = await prisma.test.findFirst({
+		const existingTest = await prisma.test.findFirst({
 			where: {
 				id: testId,
 				adminId
 			}
 		});
 
-		if (!test) {
+		if (!existingTest) {
 			throw new ApiError(404, 'Test not found or access denied');
 		}
 
 		// 📦 Parse & validate request body
 		const body = await request.json();
-		const { title, durationMinutes, totalQuestions } = updateTestSchema.parse(body);
+		const { title } = updateTestSchema.parse(body);
 
 		// 🧠 Update test
 		const updatedTest = await prisma.test.update({
@@ -249,25 +289,23 @@ export async function updateTest(
 				id: testId
 			},
 			data: {
-				title,
-				durationMinutes,
-				totalQuestions
+				title
 			}
 		});
 
 		// 🧾 Audit log
-		logEvent('TestUpdated', {
+		logEvent('TestTitleUpdated', {
 			adminId,
 			testId: updatedTest.id,
-			chapterId: updatedTest.chapterId,
-			title: updatedTest.title
+			oldTitle: existingTest.title,
+			newTitle: updatedTest.title
 		});
 
-		return NextResponse.json(new ApiResponse(200, updatedTest, 'Test updated successfully'), {
+		return NextResponse.json(new ApiResponse(200, updatedTest, 'Test title updated successfully'), {
 			status: 200
 		});
 	} catch (error) {
-		return handleError('UpdateTest', error);
+		return handleError('UpdateTestTitle', error);
 	}
 }
 

@@ -132,15 +132,13 @@ export async function getTestQuestions(request: NextRequest) {
 			questionType: question.questionType,
 			explanation: question.explanation,
 			marks: question.marks,
-			options: question.options.map((opt) => ({
-				id: opt.id,
-				optionText: opt.optionText,
-				isCorrect: opt.isCorrect,
-				orderIndex: opt.orderIndex
-			})),
 
-			testId: question.testId,
-			testTitle: question.test?.title,
+			options: question.options,
+
+			test: {
+				id: question.test.id,
+				title: question.test.title
+			},
 
 			answerCount: question._count.answers,
 

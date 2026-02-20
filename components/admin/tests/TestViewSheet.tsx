@@ -1,182 +1,85 @@
 'use client';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow
+} from '@/components/ui/table';
+
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+	DialogTrigger
+} from '@/components/ui/dialog';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+import { Pencil } from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
 import Loader from '@/components/common/Loader';
+
 import { useState, useEffect } from 'react';
-
-type Question = {
-	id: string;
-	questionText: string;
-	optionA: string;
-	optionB: string;
-	optionC: string;
-	optionD: string;
-	correctOption: string;
-};
-
-type Attempt = {
-	id: string;
-	studentId: string;
-	score: number;
-	startedAt: string;
-	submittedAt: string;
-};
-
-type TestDetailResponse = {
-	id: string;
-	title: string;
-	durationMinutes: number;
-	totalQuestions: number;
-	createdAt: string;
-	admin: {
-		id: string;
-		name: string;
-		email: string;
-	};
-	chapter: {
-		id: string;
-		code: string;
-		title: string;
-		course: {
-			id: string;
-			title: string;
-			description: string | null;
-		};
-	};
-	questions: Question[];
-	attempts: Attempt[];
-};
-
-type ApiResponse = {
-	statusCode: number;
-	data: TestDetailResponse;
-	message: string;
-	success: boolean;
-};
+import { TestDetailsTypes } from '@/types';
+import { SuccessResponseTypes } from '@/types';
+import { toast } from 'sonner';
 
 type Props = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	testId: string | null;
+	onTitleUpdated?: (testId: string, newTitle: string) => void;
 };
 
-export default function TestViewSheet({ open, onOpenChange, testId }: Props) {
-	const [test, setTest] = useState<TestDetailResponse | null>(null);
+export default function TestViewSheet({ open, onOpenChange, testId, onTitleUpdated }: Props) {
+	const [test, setTest] = useState<TestDetailsTypes | null>(null);
 	const [loading, setLoading] = useState(false);
+
+	const [editOpen, setEditOpen] = useState(false);
+	const [newTitle, setNewTitle] = useState('');
+	const [updating, setUpdating] = useState(false);
 
 	useEffect(() => {
 		if (!open || !testId) return;
 
 		const fetchTest = async () => {
 			try {
-				// -----------------------------
-				// UI BRANCH MOCK DATA START
-				// -----------------------------
+				setLoading(true);
 
-				setTest({
-					id: '1a409ea5-33d5-4f44-9572-5f1d5be8aa15',
-					title: 'HTML',
-					durationMinutes: 10,
-					totalQuestions: 10,
-					createdAt: '2026-01-30T07:08:28.180Z',
-					admin: {
-						id: '8f15fdb7-9a3d-49bf-a328-1ff264d13451',
-						name: 'admin',
-						email: 'anshmittal977@gmail.com'
-					},
-					chapter: {
-						id: '4b1add8b-3d39-4f6f-8790-9ee8595ff123',
-						code: 'CH01',
-						title: 'HTML',
-						course: {
-							id: '9f5af464-772b-4454-977f-8df8f292c0dd',
-							title: 'Web Development',
-							description: null
-						}
-					},
-					questions: [
-						{
-							id: 'ef67c1ab-0181-419c-86a3-e874cc13bbd0',
-							questionText: 'Which tag is used to create a hyperlink in HTML?',
-							optionA: '<link>',
-							optionB: '<a>',
-							optionC: '<href>',
-							optionD: '<hyperlink>',
-							correctOption: 'B'
-						},
-						{
-							id: '70a1e6cb-128c-4014-a7f4-96cd52dfb81a',
-							questionText: 'Which HTML tag is used to display an image?',
-							optionA: '<image>',
-							optionB: '<img>',
-							optionC: '<src>',
-							optionD: '<picture>',
-							correctOption: 'B'
-						},
-						{
-							id: '72ccf3d8-d59d-485b-ad22-86c5a110e6f6',
-							questionText: 'What does HTML stand for?',
-							optionA: 'Hyper Trainer Marking Language',
-							optionB: 'Hyper Text Marketing Language',
-							optionC: 'Hyper Text Markup Language',
-							optionD: 'Hyper Tool Multi Language',
-							correctOption: 'C'
-						}
-					],
-					attempts: [
-						{
-							id: '6d93bd1c-5b35-49d2-aae0-64c1337bccdb',
-							studentId: '025a9048-e096-439e-a993-9f25a45ac10e',
-							score: 50,
-							startedAt: '2026-02-03T07:55:12.139Z',
-							submittedAt: '2026-02-03T07:56:58.784Z'
-						},
-						{
-							id: 'd118da0b-e9b5-4f43-a339-aac7f6412162',
-							studentId: '025a9048-e096-439e-a993-9f25a45ac10e',
-							score: 0,
-							startedAt: '2026-02-08T19:38:49.545Z',
-							submittedAt: '2026-02-09T05:22:39.444Z'
-						},
-						{
-							id: 'ccfcb54d-a803-43d9-95db-1c4fffa7f548',
-							studentId: '025a9048-e096-439e-a993-9f25a45ac10e',
-							score: 20,
-							startedAt: '2026-02-09T05:22:39.547Z',
-							submittedAt: '2026-02-09T05:28:20.256Z'
-						}
-					]
+				const response = await fetch(`/api/admin/test/${testId}`, {
+					method: 'GET',
+					credentials: 'include',
+					headers: {
+						'Content-Type': 'application/json'
+					}
 				});
 
-				// -----------------------------
-				// UI BRANCH MOCK DATA END
-				// -----------------------------
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
 
-				// TODO: Uncomment this in the main branch
-				// setLoading(true);
+				const result = (await response.json()) as SuccessResponseTypes<TestDetailsTypes>;
 
-				// const response = await fetch(`/api/admin/test/${testId}`, {
-				// 	method: 'GET',
-				// 	credentials: 'include',
-				// 	headers: {
-				// 		'Content-Type': 'application/json'
-				// 	}
-				// });
-
-				// if (!response.ok) {
-				// 	throw new Error(`HTTP error! status: ${response.status}`);
-				// }
-
-				// const result: ApiResponse = await response.json();
-
-				// if (result.success) {
-				// 	setTest(result.data);
-				// } else {
-				// 	setTest(null);
-				// }
+				if (result.success) {
+					setTest(result.data || null);
+				} else {
+					setTest(null);
+				}
 			} catch (error) {
-				console.error('Failed to fetch test:', error);
+				toast.error('Failed to fetch test details');
+				console.error('Fetch test details error:', error);
 				setTest(null);
 			} finally {
 				setLoading(false);
@@ -187,16 +90,70 @@ export default function TestViewSheet({ open, onOpenChange, testId }: Props) {
 	}, [testId, open]);
 
 	useEffect(() => {
+		if (test) {
+			setNewTitle(test.title);
+		}
+
 		if (!open) {
 			setTest(null);
 		}
-	}, [open]);
+	}, [open, test]);
+
+	const handleUpdateTitle = async () => {
+		if (!newTitle.trim()) {
+			toast.error('Title cannot be empty');
+			return;
+		}
+
+		if (newTitle === test?.title) {
+			setEditOpen(false);
+			return;
+		}
+
+		try {
+			setUpdating(true);
+
+			const res = await fetch(`/api/admin/test/${test?.id}`, {
+				method: 'PATCH',
+
+				headers: {
+					'Content-Type': 'application/json'
+				},
+
+				credentials: 'include',
+
+				body: JSON.stringify({
+					title: newTitle
+				})
+			});
+
+			const result = (await res.json()) as SuccessResponseTypes<TestDetailsTypes>;
+
+			if (result.success) {
+				toast.success('Test title updated');
+
+				setTest((prev) => (prev ? { ...prev, title: newTitle } : prev));
+
+				onTitleUpdated?.(result.data?.id || '', newTitle);
+
+				setEditOpen(false);
+			} else {
+				throw new Error(result.message);
+			}
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Update failed';
+
+			toast.error(message);
+		} finally {
+			setUpdating(false);
+		}
+	};
 
 	if (loading) {
 		return (
 			<Sheet open={open} onOpenChange={onOpenChange}>
 				<SheetContent className="sm:max-w-2xl bg-ab-surface border-l border-ab-border">
-					<Loader size={35} height="full" showIcon message="Loading Test Details..." />
+					<Loader height="full" message="Loading Test Details..." />
 				</SheetContent>
 			</Sheet>
 		);
@@ -206,7 +163,9 @@ export default function TestViewSheet({ open, onOpenChange, testId }: Props) {
 		return (
 			<Sheet open={open} onOpenChange={onOpenChange}>
 				<SheetContent className="sm:max-w-2xl bg-ab-surface border-l border-ab-border">
-					<p className="text-center text-ab-text-secondary py-10">Test data not available</p>
+					<p className="text-center text-ab-text-secondary py-10 font-medium">
+						Test data not available
+					</p>
 				</SheetContent>
 			</Sheet>
 		);
@@ -215,155 +174,219 @@ export default function TestViewSheet({ open, onOpenChange, testId }: Props) {
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent className="sm:max-w-4xl h-screen overflow-y-auto bg-ab-surface border-l border-ab-border">
+				{/* Header */}
 				<SheetHeader>
-					<SheetTitle className="text-ab-text-primary">Test Details</SheetTitle>
+					<SheetTitle className="text-xl font-black text-ab-text-primary tracking-tight">
+						Test Details
+					</SheetTitle>
 				</SheetHeader>
 
-				<div className="mt-6 space-y-8">
-					{/* Test Identity */}
-					<div className="space-y-1">
-						<p className="text-2xl font-black text-ab-text-primary">{test.title}</p>
-						<p className="text-xs font-bold text-ab-primary">{test.chapter.code}</p>
-						<p className="text-sm text-ab-text-secondary">
-							Created on {test.createdAt ? new Date(test.createdAt).toLocaleDateString() : 'N/A'}
-						</p>
+				<div className="mt-6 space-y-6">
+					{/* Identity */}
+					<Card className="bg-ab-surface border-ab-border shadow-sm">
+						<CardHeader>
+							<CardTitle className="text-ab-text-primary text-lg font-black flex items-center gap-3">
+								<span className="text-2xl font-black text-ab-text-primary">{test.title}</span>
+
+								<Dialog open={editOpen} onOpenChange={setEditOpen}>
+									<DialogTrigger asChild>
+										<Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-ab-primary/10">
+											<Pencil className="h-4 w-4 text-ab-text-secondary" />
+										</Button>
+									</DialogTrigger>
+
+									<DialogContent className="bg-ab-surface border-ab-border">
+										<DialogHeader>
+											<DialogTitle className="text-ab-text-primary">Update Test Title</DialogTitle>
+										</DialogHeader>
+
+										<div className="space-y-3 pt-2">
+											<Label className="text-xs font-bold text-ab-text-secondary">Test Title</Label>
+
+											<Input
+												value={newTitle}
+												onChange={(e) => setNewTitle(e.target.value)}
+												className="border-ab-border"
+											/>
+										</div>
+
+										<DialogFooter className="pt-4">
+											<Button variant="outline" onClick={() => setEditOpen(false)}>
+												Cancel
+											</Button>
+
+											<Button
+												onClick={handleUpdateTitle}
+												disabled={updating}
+												className="bg-ab-primary hover:bg-ab-primary/90"
+											>
+												{updating ? 'Updating...' : 'Update'}
+											</Button>
+										</DialogFooter>
+									</DialogContent>
+								</Dialog>
+							</CardTitle>
+						</CardHeader>
+
+						<CardContent className="space-y-1 text-sm">
+							<p className="text-ab-text-secondary font-medium">
+								Chapter: {test.chapter.title} ({test.chapter.code})
+							</p>
+
+							<p className="text-ab-text-secondary font-medium">
+								Course: {test.chapter.course.title}
+							</p>
+
+							<p className="text-ab-text-secondary font-medium">
+								Created on {new Date(test.createdAt).toLocaleDateString()}
+							</p>
+						</CardContent>
+					</Card>
+
+					{/* Metrics */}
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+						<Card className="bg-ab-surface border-ab-border">
+							<CardContent className="p-4">
+								<p className="text-xs text-ab-text-secondary uppercase font-bold tracking-wide">
+									Duration
+								</p>
+								<p className="font-black text-ab-text-primary text-lg">
+									{test.durationMinutes} min
+								</p>
+							</CardContent>
+						</Card>
+
+						<Card className="bg-ab-surface border-ab-border">
+							<CardContent className="p-4">
+								<p className="text-xs text-ab-text-secondary uppercase font-bold tracking-wide">
+									Max Questions
+								</p>
+								<p className="font-black text-ab-text-primary text-lg">{test.maxQuestions}</p>
+							</CardContent>
+						</Card>
+
+						<Card className="bg-ab-surface border-ab-border">
+							<CardContent className="p-4">
+								<p className="text-xs text-ab-text-secondary uppercase font-bold tracking-wide">
+									Current Questions
+								</p>
+								<p className="font-black text-ab-text-primary text-lg">{test.questionCount}</p>
+							</CardContent>
+						</Card>
+
+						<Card className="bg-ab-surface border-ab-border">
+							<CardContent className="p-4">
+								<p className="text-xs text-ab-text-secondary uppercase font-bold tracking-wide">
+									Attempts
+								</p>
+								<p className="font-black text-ab-text-primary text-lg">{test.attemptCount}</p>
+							</CardContent>
+						</Card>
 					</div>
 
-					{/* Course & Chapter */}
-					<div className="space-y-1">
-						<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-							Course and Chapter
-						</p>
-						<p className="font-medium text-ab-text-primary">
-							{test.chapter.course.title} → {test.chapter.title}
-						</p>
-						<p className="text-xs font-bold text-ab-text-secondary">
-							Chapter Code: {test.chapter.code}
-						</p>
-					</div>
+					{/* Questions Preview */}
+					<Card className="bg-ab-surface border-ab-border">
+						<CardHeader>
+							<CardTitle className="text-ab-text-primary text-base font-black">
+								Questions Preview
+							</CardTitle>
+						</CardHeader>
 
-					{/* Key Metrics */}
-					<div className="grid grid-cols-2 md:grid-cols-4 gap-4 rounded-xl border border-ab-border bg-ab-surface p-4">
-						<div>
-							<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-								Duration
-							</p>
-							<p className="text-base font-black text-ab-text-primary">
-								{test.durationMinutes} minutes
-							</p>
-						</div>
+						<CardContent className="p-0">
+							<Table>
+								<TableHeader className="bg-ab-border/20">
+									<TableRow>
+										<TableHead className="font-bold text-ab-text-secondary">#</TableHead>
 
-						<div>
-							<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-								Total Questions
-							</p>
-							<p className="text-base font-black text-ab-text-primary">{test.totalQuestions}</p>
-						</div>
+										<TableHead className="font-bold text-ab-text-secondary">Question</TableHead>
 
-						<div>
-							<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
-								Attempts
-							</p>
-							<p className="text-base font-black text-ab-text-primary">{test.attempts.length}</p>
-						</div>
+										<TableHead className="font-bold text-ab-text-secondary">Type</TableHead>
+									</TableRow>
+								</TableHeader>
 
-						<div>
-							<p className="text-xs font-bold uppercase tracking-widest text-ab-text-secondary">
+								<TableBody>
+									{test.questions.map((q, index) => (
+										<TableRow key={q.id} className="hover:bg-ab-primary/5">
+											<TableCell className="font-bold text-ab-text-secondary">
+												{index + 1}
+											</TableCell>
+
+											<TableCell className="font-medium text-ab-text-primary">
+												{q.questionText}
+											</TableCell>
+
+											<TableCell>
+												{/* status pill safe */}
+												<Badge
+													className="
+														bg-ab-blue-bg
+														text-ab-blue-text
+														border-none
+														font-bold
+														rounded-full
+														px-3
+													"
+												>
+													{q.questionType}
+												</Badge>
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
+						</CardContent>
+					</Card>
+
+					{/* Admin Info */}
+					<Card className="bg-ab-surface border-ab-border">
+						<CardHeader>
+							<CardTitle className="text-ab-text-primary text-base font-black">
 								Created By
-							</p>
-							<p className="text-xs font-black text-ab-text-primary">{test.admin.name}</p>
-						</div>
-					</div>
+							</CardTitle>
+						</CardHeader>
 
-					{/* Questions */}
-					<div className="rounded-xl border border-ab-border p-4 space-y-3">
-						<p className="text-xs uppercase font-bold text-ab-text-secondary">
-							Questions ({test.questions.length})
-						</p>
+						<CardContent className="text-sm">
+							<p className="font-bold text-ab-text-primary">{test.admin.name}</p>
 
-						{test.questions.slice(0, 3).map((question) => (
-							<div
-								key={question.id}
-								className="p-4 bg-ab-bg/50 rounded-lg border-l-4 border-ab-primary"
-							>
-								<p className="font-black mb-2 text-sm leading-relaxed">{question.questionText}</p>
-								<div className="text-xs space-y-1 text-ab-text-secondary">
-									<div>A. {question.optionA}</div>
-									<div>B. {question.optionB}</div>
-									<div>C. {question.optionC}</div>
-									<div>D. {question.optionD}</div>
-									<div className="text-ab-primary font-bold">
-										Correct: <span className="uppercase">{question.correctOption}</span>
-									</div>
-								</div>
-							</div>
-						))}
+							<p className="text-ab-text-secondary">{test.admin.email}</p>
+						</CardContent>
+					</Card>
 
-						{test.questions.length > 3 && (
-							<p className="text-sm text-ab-text-secondary">
-								Showing first 3 of {test.questions.length} questions...
-							</p>
-						)}
-					</div>
-
-					{/* Test Attempts */}
-					<div className="rounded-xl border border-ab-border p-4 space-y-3">
-						<p className="text-xs uppercase font-bold text-ab-text-secondary">
-							Test Attempts ({test.attempts.length})
-						</p>
-
-						{test.attempts.length === 0 ?
-							<p className="text-sm text-ab-text-secondary">No attempts yet</p>
-						:	<div className="space-y-2">
-								{test.attempts.slice(0, 5).map((attempt) => (
-									<div
-										key={attempt.id}
-										className="flex justify-between items-center p-3 bg-ab-bg/50 rounded-lg"
-									>
-										<div className="flex-1">
-											<p className="font-black text-sm">
-												Student ID: {attempt.studentId.slice(0, 8)}...
-											</p>
-											<p className="text-xs text-ab-text-secondary">
-												{new Date(attempt.startedAt).toLocaleDateString()} -{' '}
-												<span className="font-bold text-ab-primary">
-													{new Date(attempt.submittedAt).toLocaleDateString()}
-												</span>
-											</p>
-										</div>
-										<div className="text-right">
-											<p className="text-2xl font-black text-ab-primary">{attempt.score}%</p>
-											<p className="text-xs text-ab-text-secondary">Score</p>
-										</div>
-									</div>
-								))}
-								{test.attempts.length > 5 && (
-									<p className="text-sm text-ab-text-secondary">
-										Showing recent 5 of {test.attempts.length} attempts...
-									</p>
-								)}
-							</div>
-						}
-					</div>
-
-					{/* Actions */}
-					<div className="flex gap-2 pt-4">
+					{/* Footer Actions */}
+					<div className="flex gap-2 pt-2">
 						<Button
 							variant="outline"
-							className="font-bold border-ab-border text-ab-text-primary hover:bg-ab-primary/10"
+							className="
+								border-ab-border
+								font-bold
+								text-ab-text-primary
+								hover:bg-ab-primary/10
+							"
 						>
 							Update Test
 						</Button>
 
 						<Button
 							variant="outline"
-							className="font-bold text-ab-pink-text border-ab-border hover:bg-ab-pink-bg"
+							className="
+								border-ab-border
+								font-bold
+								text-ab-pink-text
+								hover:bg-ab-pink-bg/40
+							"
 						>
 							Delete Test
 						</Button>
 
 						<SheetClose asChild>
-							<Button variant="outline" className="border-ab-border text-ab-text-primary">
+							<Button
+								variant="outline"
+								className="
+									border-ab-border
+									font-bold
+									text-ab-text-secondary
+								"
+							>
 								Close
 							</Button>
 						</SheetClose>
