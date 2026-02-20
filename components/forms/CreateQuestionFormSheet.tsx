@@ -40,6 +40,7 @@ export default function CreateQuestionFormSheet({ open, onOpenChange, onSuccess,
 			questionType: 'MCQ',
 			explanation: '',
 			marks: 1,
+
 			options: [
 				{ optionText: '', isCorrect: false, orderIndex: 0 },
 				{ optionText: '', isCorrect: false, orderIndex: 1 },

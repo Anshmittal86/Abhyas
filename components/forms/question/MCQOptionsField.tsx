@@ -3,21 +3,21 @@
 import { UseFormReturn, useFieldArray } from 'react-hook-form';
 import FormField from '@/components/ui/FormField';
 import { CreateQuestionFormTypes } from '@/types';
-import { useState } from 'react';
+import { useEffect } from 'react';
 
 type Props = {
 	form: UseFormReturn<CreateQuestionFormTypes>;
 };
 
 export default function MCQOptionsField({ form }: Props) {
-	const { fields, replace } = useFieldArray({
+	const { fields, replace, update } = useFieldArray({
 		control: form.control,
 		name: 'options'
 	});
 
-	// ensure always 4 options exist
-	const ensureFourOptions = () => {
-		if (fields.length !== 4) {
+	// ensure options exist ONLY once
+	useEffect(() => {
+		if (!fields || fields.length === 0) {
 			replace(
 				Array.from({ length: 4 }).map((_, index) => ({
 					optionText: '',
@@ -26,20 +26,16 @@ export default function MCQOptionsField({ form }: Props) {
 				}))
 			);
 		}
-	};
-
-	// run once on mount
-	useState(() => {
-		ensureFourOptions();
-	});
+	}, []); // important: empty dependency
 
 	const handleCorrectChange = (selectedIndex: number) => {
-		const newOptions = fields.map((opt, index) => ({
-			...opt,
-			isCorrect: index === selectedIndex
-		}));
-
-		replace(newOptions);
+		fields.forEach((field, index) => {
+			update(index, {
+				optionText: form.getValues(`options.${index}.optionText`), // preserve text
+				isCorrect: index === selectedIndex,
+				orderIndex: index
+			});
+		});
 	};
 
 	return (
@@ -50,8 +46,8 @@ export default function MCQOptionsField({ form }: Props) {
 				<div key={field.id} className="flex items-center gap-3">
 					<input
 						type="radio"
-						name="correctOption"
-						checked={form.watch(`options.${index}.isCorrect`)}
+						value={index}
+						checked={field.isCorrect === true}
 						onChange={() => handleCorrectChange(index)}
 						className="h-4 w-4 cursor-pointer"
 					/>

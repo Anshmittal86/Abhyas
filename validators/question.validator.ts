@@ -5,7 +5,7 @@ const baseQuestionSchema = z.object({
 	questionText: z.string().min(5, 'Question text is required'),
 	questionType: z.enum(['MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'LONG_ANSWER', 'CODE']),
 	explanation: z.string().optional(),
-	marks: z.number().int().min(1).default(1)
+	marks: z.coerce.number().int().min(1).max(20).default(1)
 });
 
 const optionSchema = z.object({
@@ -18,7 +18,7 @@ const baseUpdateQuestionSchema = z.object({
 	questionText: z.string().min(5).optional(),
 	questionType: z.enum(['MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'LONG_ANSWER', 'CODE']).optional(),
 	explanation: z.string().optional(),
-	marks: z.number().int().min(1).optional()
+	marks: z.coerce.number().int().min(1).max(20).optional()
 });
 
 const mcqSchema = baseQuestionSchema.extend({

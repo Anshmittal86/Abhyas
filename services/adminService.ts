@@ -14,18 +14,20 @@ export const generateAccessAndRefreshTokens = async (type: 'admin' | 'student', 
 	const expiryMs = ms(REFRESH_TOKEN_EXPIRY as ms.StringValue); // '7d' → ms
 	const expiresAt = new Date(Date.now() + expiryMs);
 
-	// Validate user exists
+	// Validate user exists and capture provisional number for students
+	let provisionalNo: string | undefined = undefined;
 	if (type === 'admin') {
 		const admin = await prisma.admin.findUnique({ where: { id } });
 		if (!admin) throw new ApiError(404, 'Admin not found');
 	} else {
 		const student = await prisma.student.findUnique({ where: { id } });
 		if (!student) throw new ApiError(404, 'Student not found');
+		provisionalNo = student.provisionalNo;
 	}
 
-	// Generate tokens
-	const accessToken = generateAccessToken(id, type);
-	const refreshToken = generateRefreshToken(id, type);
+	// Generate tokens (include provisionalNo for students)
+	const accessToken = generateAccessToken(id, type, provisionalNo);
+	const refreshToken = generateRefreshToken(id, type, provisionalNo);
 
 	// Hash refresh token (DB only)
 	const tokenHash = await bcrypt.hash(refreshToken, SALT_ROUND);

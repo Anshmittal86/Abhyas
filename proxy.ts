@@ -33,21 +33,56 @@ export async function proxy(request: NextRequest) {
 	}
 
 	// Role-based route guard for UI
-	if (pathname.startsWith('/admin') && user.role !== 'admin') {
-		return NextResponse.redirect(new URL('/student/dashboard', request.url));
+	if (pathname.startsWith('/admin')) {
+		if (user.role !== 'admin') {
+			// If a student is logged in, send them to their dashboard
+			if (user.role === 'student') return NextResponse.redirect(new URL('/dashboard', request.url));
+			// Fallback: send to admin login
+			return NextResponse.redirect(new URL('/admin/login', request.url));
+		}
 	}
-	if (pathname.startsWith('/student') && user.role !== 'student') {
-		return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+
+	// Student UI prefixes
+	const isStudentUi =
+		pathname.startsWith('/dashboard') ||
+		pathname.startsWith('/courses') ||
+		pathname.startsWith('/tests') ||
+		pathname.startsWith('/test') ||
+		pathname.startsWith('/leaderboard');
+
+	if (isStudentUi) {
+		if (user.role !== 'student') {
+			// If an admin is logged in, send to admin dashboard
+			if (user.role === 'admin')
+				return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+			// Fallback: send to student login
+			return NextResponse.redirect(new URL('/login', request.url));
+		}
+	}
+
+	// Student provisionalNo enforcement: redirect to login if missing
+	if (pathname.startsWith('/student/dashboard') && user.role === 'student' && !user.provisionalNo) {
+		return NextResponse.redirect(new URL('/login', request.url));
 	}
 
 	// For APIs you CAN add an early role check, but controllers already enforce it.
-	// Return NextResponse.next(), attaching any rotated cookies if needed:
-	return responseWithCookies ?? NextResponse.next();
+	// Return NextResponse.next(), attaching any rotated cookies if needed and user headers:
+	const response = responseWithCookies ?? NextResponse.next();
+
+	// attach headers for downstream code (controllers / pages can read these)
+	if (!response.headers.get('x-user-id')) {
+		response.headers.set('x-user-id', user.id);
+		response.headers.set('x-user-role', user.role);
+		if (user.provisionalNo) response.headers.set('x-provisional-no', user.provisionalNo);
+	}
+
+	return response;
 }
 
 type AuthUser = {
 	id: string;
 	role: 'admin' | 'student';
+	provisionalNo?: string;
 };
 
 type EnsureUserResult = {
@@ -64,7 +99,7 @@ async function ensureUser(
 		try {
 			const decoded = verifyJwt('access', accessToken) as AuthUser;
 			return {
-				user: { id: decoded.id, role: decoded.role },
+				user: { id: decoded.id, role: decoded.role, provisionalNo: decoded.provisionalNo },
 				responseWithCookies: null
 			};
 		} catch {
@@ -76,10 +111,14 @@ async function ensureUser(
 	if (refreshToken) {
 		try {
 			const decoded = verifyJwt('refresh', refreshToken) as AuthUser;
-			const user: AuthUser = { id: decoded.id, role: decoded.role };
+			const user: AuthUser = {
+				id: decoded.id,
+				role: decoded.role,
+				provisionalNo: (decoded as any).provisionalNo
+			};
 
-			const newAccessToken = generateAccessToken(user.id, user.role);
-			const newRefreshToken = generateRefreshToken(user.id, user.role);
+			const newAccessToken = generateAccessToken(user.id, user.role, user.provisionalNo);
+			const newRefreshToken = generateRefreshToken(user.id, user.role, user.provisionalNo);
 
 			const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || '15m';
 			const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '7d';
@@ -92,6 +131,7 @@ async function ensureUser(
 			// Use NextResponse.next() so the original request continues, but attach new cookies
 			const response = NextResponse.next();
 
+			// attach rotated cookies
 			response.cookies.set('accessToken', newAccessToken, {
 				httpOnly: true,
 				secure: process.env.NODE_ENV === 'production',
@@ -107,6 +147,10 @@ async function ensureUser(
 				path: '/',
 				maxAge: refreshTokenMaxAgeSeconds
 			});
+			// attach user headers for downstream APIs/pages
+			response.headers.set('x-user-id', user.id);
+			response.headers.set('x-user-role', user.role);
+			if (user.provisionalNo) response.headers.set('x-provisional-no', user.provisionalNo);
 
 			return {
 				user,
@@ -124,8 +168,15 @@ async function ensureUser(
 
 export const config = {
 	matcher: [
-		'/student/:path*', // all student UI
-		'/admin/:path*', // all admin UI
+		// Admin UI
+		'/admin/:path*',
+		// Student UI (real route prefixes)
+		'/dashboard/:path*',
+		'/courses/:path*',
+		'/tests/:path*',
+		'/test/:path*',
+		'/leaderboard/:path*',
+		// Protect relevant APIs
 		'/api/admin/:path*',
 		'/api/student/:path*'
 	]

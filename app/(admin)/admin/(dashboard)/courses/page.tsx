@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MoreHorizontal, BookPlus } from 'lucide-react';
+import { Search, MoreHorizontal, BookPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { CourseFormSheet } from '@/components/forms/CourseFormSheet';
@@ -83,6 +83,12 @@ export default function AdminCoursesPage() {
 		} else {
 			params.delete('search');
 		}
+		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+	};
+
+	const handleClearSearch = () => {
+		const params = new URLSearchParams(searchParams);
+		params.delete('search');
 		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
 	};
 
@@ -176,14 +182,23 @@ export default function AdminCoursesPage() {
 
 			{/* Filters */}
 			<div className="flex justify-between items-center gap-4">
-				<div className="relative w-full max-w-sm">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ab-text-secondary" />
+				<div className="relative w-full max-w-sm group">
+					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ab-text-secondary" />
 					<Input
 						placeholder="Search by course name..."
-						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 focus-visible:ring-ab-primary/20"
-						defaultValue={searchQuery}
+						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 pr-10 focus-visible:ring-ab-primary/20"
+						value={searchQuery}
 						onChange={handleSearch}
 					/>
+					{searchQuery && (
+						<button
+							onClick={handleClearSearch}
+							className="absolute right-3 top-1/2 -translate-y-1/2 text-ab-text-secondary hover:text-ab-text-primary transition-colors"
+							aria-label="Clear search"
+						>
+							<X className="h-4 w-4" />
+						</button>
+					)}
 				</div>
 
 				<CourseFormSheet

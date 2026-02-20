@@ -1,7 +1,9 @@
 'use client';
 
-import { Search, MoreHorizontal, SquarePen } from 'lucide-react';
+import { Search, MoreHorizontal, SquarePen, Trash2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,14 +22,41 @@ import {
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import CreateQuestionFormSheet from '@/components/forms/CreateQuestionFormSheet';
+import AlertDialogBox from '@/components/common/AlertDialogBox';
+import Loader from '@/components/common/Loader';
+import { EmptyQuestions } from '@/components/admin/questions/EmptyQuestions';
 import { QuestionListTypes, SuccessResponseTypes } from '@/types';
+import { deleteQuestion } from '@/lib/api';
+import { handleFormBtnLoading } from '@/components/common/HandleFormLoading';
 
 export default function AdminQuestionsPage() {
+	const searchParams = useSearchParams();
+	const searchQuery = searchParams.get('search') || '';
+
 	const [viewOpen, setViewOpen] = useState(false);
 	const [questions, setQuestions] = useState<QuestionListTypes[]>([]);
 	const [filteredQuestions, setFilteredQuestions] = useState<QuestionListTypes[]>([]);
 	const [selectedQuestion, setSelectedQuestion] = useState<QuestionListTypes | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [deletingQuestionId, setDeletingQuestionId] = useState<string | null>(null);
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState<{
+		id: string;
+		question: QuestionListTypes;
+	} | null>(null);
+
+	// Filter questions when search query changes
+	useEffect(() => {
+		if (searchQuery) {
+			const filtered = questions.filter(
+				(q) =>
+					q.questionText.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					q.test.title.toLowerCase().includes(searchQuery.toLowerCase())
+			);
+			setFilteredQuestions(filtered);
+		} else {
+			setFilteredQuestions(questions);
+		}
+	}, [searchQuery, questions]);
 
 	const fetchQuestions = async () => {
 		try {
@@ -62,20 +91,49 @@ export default function AdminQuestionsPage() {
 	}, []);
 
 	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const value = e.target.value.toLowerCase();
-
-		if (!value) {
-			setFilteredQuestions(questions);
-			return;
+		const params = new URLSearchParams(searchParams);
+		if (e.target.value) {
+			params.set('search', e.target.value);
+		} else {
+			params.delete('search');
 		}
-
-		const filtered = questions.filter(
-			(q) =>
-				q.questionText.toLowerCase().includes(value) || q.testTitle.toLowerCase().includes(value)
-		);
-
-		setFilteredQuestions(filtered);
+		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
 	};
+
+	const handleClearSearch = () => {
+		const params = new URLSearchParams(searchParams);
+		params.delete('search');
+		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+	};
+
+	const handleDeleteQuestion = async (questionId: string) => {
+		try {
+			setDeletingQuestionId(questionId);
+
+			await deleteQuestion(questionId);
+
+			// Remove from lists
+			setQuestions((prev) => prev.filter((q) => q.id !== questionId));
+			setFilteredQuestions((prev) => prev.filter((q) => q.id !== questionId));
+
+			toast.success('Question deleted successfully');
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Failed to delete question';
+			toast.error(message);
+			console.error('Delete question error:', error);
+		} finally {
+			setDeletingQuestionId(null);
+			setShowDeleteConfirm(null);
+		}
+	};
+
+	if (loading) {
+		return (
+			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary flex items-center justify-center min-h-150">
+				<Loader message="Loading questions..." />
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
@@ -91,17 +149,24 @@ export default function AdminQuestionsPage() {
 
 			{/* Filters */}
 			<div className="flex justify-between items-center gap-4">
-				<div className="relative w-full max-w-sm">
+				<div className="relative w-full max-w-sm group">
 					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ab-text-secondary" />
 					<Input
 						placeholder="Search by question or test..."
-						className="h-11 rounded-xl border-2 border-ab-border pl-10 bg-ab-surface"
+						className="h-11 rounded-xl border-2 border-ab-border pl-10 pr-10 bg-ab-surface focus-visible:ring-ab-primary/20"
 						onChange={handleSearch}
-						value={
-							filteredQuestions.length !== questions.length ? filteredQuestions[0].questionText : ''
-						}
+						value={searchQuery}
 						disabled={loading}
 					/>
+					{searchQuery && (
+						<button
+							onClick={handleClearSearch}
+							className="absolute right-3 top-1/2 -translate-y-1/2 text-ab-text-secondary hover:text-ab-text-primary transition-colors"
+							aria-label="Clear search"
+						>
+							<X className="h-4 w-4" />
+						</button>
+					)}
 				</div>
 
 				<CreateQuestionFormSheet
@@ -138,61 +203,79 @@ export default function AdminQuestionsPage() {
 					</TableHeader>
 
 					<TableBody>
-						{loading && (
+						{filteredQuestions.length === 0 ?
 							<TableRow>
-								<TableCell colSpan={5} className="text-center py-10">
-									Loading questions...
+								<TableCell colSpan={5}>
+									<EmptyQuestions />
 								</TableCell>
 							</TableRow>
-						)}
+						:	filteredQuestions.map((q) => (
+								<TableRow key={q.id} className="hover:bg-ab-primary/5">
+									{/* Question */}
+									<TableCell className="py-5 pl-8 max-w-xl">
+										<p className="font-black line-clamp-2">{q.questionText}</p>
 
-						{filteredQuestions.map((q) => (
-							<TableRow key={q.id} className="hover:bg-ab-primary/5">
-								{/* Question */}
-								<TableCell className="py-5 pl-8 max-w-xl">
-									<p className="font-black line-clamp-2">{q.questionText}</p>
+										<p className="text-xs text-ab-text-secondary mt-1">
+											{q.questionType} • {q.marks} marks
+										</p>
+									</TableCell>
 
-									<p className="text-xs text-ab-text-secondary mt-1">
-										{q.questionType} • {q.marks} marks
-									</p>
-								</TableCell>
+									{/* Test */}
+									<TableCell className="font-bold">{q.test.title}</TableCell>
 
-								{/* Test */}
-								<TableCell className="font-bold">{q.test.title}</TableCell>
+									{/* Question Type */}
+									<TableCell className="text-center font-black">{q.questionType}</TableCell>
 
-								{/* Question Type */}
-								<TableCell className="text-center font-black">{q.questionType}</TableCell>
+									{/* Answer count */}
+									<TableCell className="text-center font-black">{q.answerCount}</TableCell>
 
-								{/* Answer count */}
-								<TableCell className="text-center font-black">{q.answerCount}</TableCell>
+									{/* Actions */}
+									<TableCell className="pr-8 text-right">
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<Button variant="ghost" className="h-8 w-8 p-0">
+													<MoreHorizontal className="h-5 w-5" />
+												</Button>
+											</DropdownMenuTrigger>
 
-								{/* Actions */}
-								<TableCell className="pr-8 text-right">
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<Button variant="ghost" className="h-8 w-8 p-0">
-												<MoreHorizontal className="h-5 w-5" />
-											</Button>
-										</DropdownMenuTrigger>
+											<DropdownMenuContent align="end" className="w-48">
+												<DropdownMenuItem
+													onClick={() => {
+														setSelectedQuestion(q);
+														setViewOpen(true);
+													}}
+													className="cursor-pointer"
+												>
+													<SquarePen className="mr-2 h-4 w-4" />
+													View Question
+												</DropdownMenuItem>
 
-										<DropdownMenuContent align="end">
-											<DropdownMenuItem
-												onClick={() => {
-													setSelectedQuestion(q);
-													setViewOpen(true);
-												}}
-											>
-												View Question
-											</DropdownMenuItem>
-
-											<DropdownMenuItem className="text-ab-pink-text">
-												Delete Question
-											</DropdownMenuItem>
-										</DropdownMenuContent>
-									</DropdownMenu>
-								</TableCell>
-							</TableRow>
-						))}
+												<AlertDialogBox
+													name={q.questionText.substring(0, 50)}
+													title="Delete Question?"
+													description="This question will be permanently deleted. Make sure no students have attempted it. This action cannot be undone."
+													onConfirm={() => handleDeleteQuestion(q.id)}
+													trigger={
+														<Button
+															variant="ghost"
+															className="w-full justify-start font-bold text-ab-pink-text hover:bg-ab-pink-bg/40 h-8 px-2"
+															disabled={deletingQuestionId === q.id}
+														>
+															<Trash2 className="mr-2 h-4 w-4" />
+															{handleFormBtnLoading(
+																deletingQuestionId === q.id,
+																'Delete',
+																'Deleting...'
+															)}
+														</Button>
+													}
+												/>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</TableCell>
+								</TableRow>
+							))
+						}
 					</TableBody>
 				</Table>
 			</div>

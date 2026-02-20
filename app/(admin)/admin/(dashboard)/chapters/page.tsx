@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, MoreHorizontal, BookPlus } from 'lucide-react';
+import { Search, MoreHorizontal, BookPlus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import ChapterFormSheet from '@/components/forms/ChapterFromSheet';
@@ -98,6 +98,11 @@ export default function AdminChaptersPage() {
 		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
 	};
 
+	const handleClearSearch = () => {
+		const params = new URLSearchParams(searchParams);
+		params.delete('search');
+		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+	};
 	const handleDeleteChapter = async (chapterId: string) => {
 		try {
 			const response = await fetch(`/api/admin/chapter/${chapterId}`, {
@@ -122,7 +127,7 @@ export default function AdminChaptersPage() {
 		}
 	};
 
-	if (loading && chapters.length === 0) {
+	if (loading) {
 		return (
 			<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary flex items-center justify-center min-h-150">
 				<Loader message="Loading chapters..." />
@@ -144,14 +149,23 @@ export default function AdminChaptersPage() {
 
 			{/* Filters & Create Button */}
 			<div className="flex justify-between items-center gap-4">
-				<div className="relative w-full max-w-sm">
+				<div className="relative w-full max-w-sm group">
 					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ab-text-secondary" />
 					<Input
 						placeholder="Search by title, code or course..."
-						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 focus-visible:ring-ab-primary/20"
-						defaultValue={searchQuery}
+						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 pr-10 focus-visible:ring-ab-primary/20"
+						value={searchQuery}
 						onChange={handleSearch}
 					/>
+					{searchQuery && (
+						<button
+							onClick={handleClearSearch}
+							className="absolute right-3 top-1/2 -translate-y-1/2 text-ab-text-secondary hover:text-ab-text-primary transition-colors"
+							aria-label="Clear search"
+						>
+							<X className="h-4 w-4" />
+						</button>
+					)}
 				</div>
 
 				<ChapterFormSheet

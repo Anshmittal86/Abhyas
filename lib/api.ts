@@ -89,3 +89,24 @@ export const fetchTests = async (): Promise<TestsListTypes[] | undefined> => {
 		throw error;
 	}
 };
+
+export const deleteQuestion = async (questionId: string): Promise<void> => {
+	try {
+		const res = await fetch(`/api/admin/question/${questionId}`, {
+			method: 'DELETE',
+			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+
+		const result = (await res.json()) as SuccessResponseTypes<null>;
+
+		if (!result.success) {
+			throw new Error(result.message || 'Failed to delete question');
+		}
+	} catch (error) {
+		console.error('deleteQuestion error:', error);
+		throw error;
+	}
+};

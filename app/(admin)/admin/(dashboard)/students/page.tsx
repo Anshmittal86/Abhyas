@@ -1,7 +1,8 @@
 'use client';
 // ✅
 import { useEffect, useState } from 'react';
-import { Search, MoreHorizontal, UserPlus2 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Search, MoreHorizontal, UserPlus2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -29,11 +30,13 @@ import { EmptyStudents } from '@/components/admin/students/EmptyStudent';
 import { fetchStudents } from '@/lib/api';
 
 export default function StudentsPage() {
+	const searchParams = useSearchParams();
 	const [viewOpen, setViewOpen] = useState(false);
 	const [students, setStudents] = useState<StudentsListTypes[]>([]);
+	const [filteredStudents, setFilteredStudents] = useState<StudentsListTypes[]>([]);
 	const [selectedId, setSelectedId] = useState<string | null>(null);
-
 	const [loading, setLoading] = useState(false);
+	const searchQuery = searchParams.get('search') || '';
 
 	const loadStudents = async () => {
 		setLoading(true);
@@ -71,6 +74,35 @@ export default function StudentsPage() {
 		}
 	};
 
+	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		const params = new URLSearchParams(searchParams);
+		if (value) {
+			params.set('search', value);
+		} else {
+			params.delete('search');
+		}
+		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+	};
+
+	const handleClearSearch = () => {
+		const params = new URLSearchParams(searchParams);
+		params.delete('search');
+		window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+	};
+
+	useEffect(() => {
+		const filtered = students.filter((student) => {
+			const searchLower = searchQuery.toLowerCase();
+			return (
+				student.name.toLowerCase().includes(searchLower) ||
+				student.email.toLowerCase().includes(searchLower) ||
+				student.provisionalNo.toLowerCase().includes(searchLower)
+			);
+		});
+		setFilteredStudents(filtered);
+	}, [searchQuery, students]);
+
 	return (
 		<div className="flex-1 space-y-8 p-8 pt-6 bg-ab-bg text-ab-text-primary">
 			{/* Header */}
@@ -84,13 +116,24 @@ export default function StudentsPage() {
 			</div>
 
 			{/* Filters */}
-			<div className="flex justify-between items-center gap-4">
-				<div className="relative w-full max-w-sm">
-					<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ab-text-secondary" />
+			<div className="flex w-full justify-between items-center gap-4">
+				<div className="relative w-full max-w-sm group">
+					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ab-text-secondary" />
 					<Input
 						placeholder="Search by name or ID..."
-						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 focus-visible:ring-ab-primary/20"
+						className="h-11 rounded-xl border-2 border-ab-border/80 pl-10 pr-10 focus-visible:ring-ab-primary/20"
+						value={searchQuery}
+						onChange={handleSearch}
 					/>
+					{searchQuery && (
+						<button
+							onClick={handleClearSearch}
+							className="absolute right-3 top-1/2 -translate-y-1/2 text-ab-text-secondary hover:text-ab-text-primary transition-colors"
+							aria-label="Clear search"
+						>
+							<X className="h-4 w-4" />
+						</button>
+					)}
 				</div>
 
 				<StudentFormSheet
@@ -139,14 +182,14 @@ export default function StudentsPage() {
 									<Loader size={30} showIcon message="Loading students..." />
 								</TableCell>
 							</TableRow>
-						: students.length === 0 ?
+						: filteredStudents.length === 0 ?
 							<TableRow>
 								<TableCell colSpan={5}>
 									<EmptyStudents />
 								</TableCell>
 							</TableRow>
-						:	Array.isArray(students) &&
-							students.map((student) => (
+						:	Array.isArray(filteredStudents) &&
+							filteredStudents.map((student) => (
 								<TableRow
 									key={student.id}
 									className="group transition-colors hover:bg-ab-primary/5"
