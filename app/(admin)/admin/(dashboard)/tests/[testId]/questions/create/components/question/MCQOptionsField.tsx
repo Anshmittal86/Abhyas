@@ -3,7 +3,8 @@
 import { UseFormReturn, useFieldArray } from 'react-hook-form';
 import FormField from '@/components/ui/FormField';
 import { CreateQuestionFormTypes } from '@/types';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 type Props = {
 	form: UseFormReturn<CreateQuestionFormTypes>;
@@ -14,6 +15,7 @@ export default function MCQOptionsField({ form }: Props) {
 		control: form.control,
 		name: 'options'
 	});
+	const [hasCorrectAnswer, setHasCorrectAnswer] = useState(false);
 
 	// ensure options exist ONLY once
 	useEffect(() => {
@@ -28,6 +30,13 @@ export default function MCQOptionsField({ form }: Props) {
 		}
 	}, []); // important: empty dependency
 
+	// Check if at least one correct answer is selected
+	useEffect(() => {
+		const options = form.watch('options');
+		const hasCorrect = Array.isArray(options) && options.some((opt) => opt?.isCorrect === true);
+		setHasCorrectAnswer(hasCorrect);
+	}, [form.watch('options'), form]);
+
 	const handleCorrectChange = (selectedIndex: number) => {
 		fields.forEach((field, index) => {
 			update(index, {
@@ -40,7 +49,15 @@ export default function MCQOptionsField({ form }: Props) {
 
 	return (
 		<div className="space-y-4">
-			<p className="text-xs font-black uppercase text-ab-text-secondary">Options</p>
+			<div className="flex items-center justify-between">
+				<p className="text-xs font-black uppercase text-ab-text-secondary">Options</p>
+				{!hasCorrectAnswer && (
+					<div className="flex items-center gap-1.5 text-xs text-red-500">
+						<AlertCircle className="h-3.5 w-3.5" />
+						<span>At least one correct answer required</span>
+					</div>
+				)}
+			</div>
 
 			{fields.map((field, index) => (
 				<div key={field.id} className="flex items-center gap-3">

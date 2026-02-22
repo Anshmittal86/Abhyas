@@ -3,7 +3,8 @@
 import { UseFormReturn } from 'react-hook-form';
 import { CreateQuestionFormTypes } from '@/types';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 type Props = {
 	form: UseFormReturn<CreateQuestionFormTypes>;
@@ -16,6 +17,13 @@ const OPTIONS = [
 
 export default function TrueFalseOptionsField({ form }: Props) {
 	const options = form.watch('options');
+	const [hasCorrectAnswer, setHasCorrectAnswer] = useState(false);
+
+	// Check if at least one correct answer is selected
+	useEffect(() => {
+		const hasCorrect = Array.isArray(options) && options.some((opt) => opt?.isCorrect === true);
+		setHasCorrectAnswer(hasCorrect);
+	}, [options]);
 
 	const handleSelect = (selectedIndex: number) => {
 		const updated = OPTIONS.map((opt, index) => ({
@@ -32,9 +40,17 @@ export default function TrueFalseOptionsField({ form }: Props) {
 
 	return (
 		<div className="space-y-4">
-			<p className="text-xs font-black uppercase tracking-widest text-ab-text-secondary">
-				Correct Answer
-			</p>
+			<div className="flex items-center justify-between">
+				<p className="text-xs font-black uppercase tracking-widest text-ab-text-secondary">
+					Correct Answer
+				</p>
+				{!hasCorrectAnswer && (
+					<div className="flex items-center gap-1.5 text-xs text-red-500">
+						<AlertCircle className="h-3.5 w-3.5" />
+						<span>Select the correct answer</span>
+					</div>
+				)}
+			</div>
 
 			<div className="grid grid-cols-2 gap-4">
 				{OPTIONS.map((opt, index) => {

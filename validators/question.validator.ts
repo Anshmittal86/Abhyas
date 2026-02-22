@@ -33,11 +33,23 @@ const mcqSchema = baseQuestionSchema.extend({
 		)
 		.min(2, 'At least 2 options required')
 		.max(6, 'Maximum 6 options allowed')
+		.refine(
+			(options) => options.some((opt) => opt.isCorrect === true),
+			'At least one option must be marked as correct'
+		)
 });
 
 const updateMcqSchema = baseUpdateQuestionSchema.extend({
 	questionType: z.literal('MCQ').optional(),
-	options: z.array(optionSchema).min(2).max(6).optional()
+	options: z
+		.array(optionSchema)
+		.min(2)
+		.max(6)
+		.optional()
+		.refine(
+			(options) => !options || options.some((opt) => opt.isCorrect === true),
+			'At least one option must be marked as correct'
+		)
 });
 
 const trueFalseSchema = baseQuestionSchema.extend({
@@ -51,11 +63,22 @@ const trueFalseSchema = baseQuestionSchema.extend({
 			})
 		)
 		.length(2, 'True/False must have exactly 2 options')
+		.refine(
+			(options) => options.some((opt) => opt.isCorrect === true),
+			'Either True or False must be marked as correct'
+		)
 });
 
 const updateTrueFalseSchema = baseUpdateQuestionSchema.extend({
 	questionType: z.literal('TRUE_FALSE').optional(),
-	options: z.array(optionSchema).length(2).optional()
+	options: z
+		.array(optionSchema)
+		.length(2)
+		.optional()
+		.refine(
+			(options) => !options || options.some((opt) => opt.isCorrect === true),
+			'Either True or False must be marked as correct'
+		)
 });
 
 const descriptiveSchema = baseQuestionSchema.extend({

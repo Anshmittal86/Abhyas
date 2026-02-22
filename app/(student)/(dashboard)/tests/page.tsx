@@ -1,9 +1,92 @@
+'use client';
+
 import { TestCard } from '@/components/dashboard/test-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-// ✅
+import { useEffect, useState } from 'react';
+import Loader from '@/components/common/Loader';
+
+interface TestData {
+	testId: string;
+	title: string;
+	chapterName: string;
+	courseName: string;
+	durationMinutes: number;
+	maxQuestions: number;
+	questionCount: number;
+	attempt: {
+		attemptId: string;
+		status: string;
+		score: number | null;
+		gainedMarks?: number;
+		startedAt: string;
+		submittedAt: string | null;
+		expiresAt: string;
+	} | null;
+	tab: 'AVAILABLE' | 'IN_PROGRESS' | 'COMPLETED';
+}
+
 export default function TestsPage() {
+	const [tests, setTests] = useState<TestData[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [searchQuery, setSearchQuery] = useState('');
+
+	useEffect(() => {
+		const fetchTests = async () => {
+			try {
+				const response = await fetch('/api/student/tests');
+				const result = await response.json();
+
+				if (result.success && result.data) {
+					setTests(result.data);
+				}
+			} catch (error) {
+				console.error('Failed to fetch tests:', error);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchTests();
+	}, []);
+
+	// Filter tests based on search query
+	const filteredTests = tests.filter(
+		(test) =>
+			test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			test.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			test.chapterName.toLowerCase().includes(searchQuery.toLowerCase())
+	);
+
+	// Organize tests by tab
+	const availableTests = filteredTests.filter((test) => test.tab === 'AVAILABLE');
+	const inProgressTests = filteredTests.filter((test) => test.tab === 'IN_PROGRESS');
+	const completedTests = filteredTests.filter((test) => test.tab === 'COMPLETED');
+
+	// Calculate time remaining
+	const calculateTimeRemaining = (expiresAt: string): string => {
+		const now = new Date().getTime();
+		const expires = new Date(expiresAt).getTime();
+		const diffMs = expires - now;
+
+		if (diffMs <= 0) return '0 mins';
+
+		const diffMins = Math.floor(diffMs / 60000);
+		if (diffMins < 60) return `${diffMins} mins`;
+
+		const diffHours = Math.floor(diffMins / 60);
+		return `${diffHours}h ${diffMins % 60}m`;
+	};
+
+	if (loading) {
+		return (
+			<main className="mx-auto flex w-full max-w-7xl items-center justify-center p-8 bg-ab-bg text-ab-text-primary">
+				<Loader />
+			</main>
+		);
+	}
+
 	return (
 		<main className="mx-auto w-full max-w-7xl space-y-8 p-8 bg-ab-bg text-ab-text-primary">
 			{/* Header & Search */}
@@ -18,6 +101,8 @@ export default function TestsPage() {
 					<Input
 						placeholder="Search tests..."
 						className="border-2 border-ab-border/80 pl-10 focus-visible:ring-ab-primary"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
 					/>
 				</div>
 			</div>
@@ -52,22 +137,24 @@ export default function TestsPage() {
 					value="available"
 					className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3"
 				>
-					<TestCard
-						title="HTML"
-						course="O Level"
-						unit="IT Tools"
-						maxMarks={100}
-						questions={100}
-						duration="60m"
-					/>
-					<TestCard
-						title="Python"
-						course="O Level"
-						unit="Programming"
-						maxMarks={100}
-						questions={50}
-						duration="45m"
-					/>
+					{availableTests.length > 0 ?
+						availableTests.map((test) => (
+							<TestCard
+								key={test.testId}
+								testId={test.testId}
+								title={test.title}
+								course={test.courseName}
+								unit={test.chapterName}
+								maxMarks={test.maxQuestions}
+								questions={test.questionCount}
+								duration={`${test.durationMinutes}m`}
+								status="not_started"
+							/>
+						))
+					:	<div className="col-span-full text-center text-ab-text-secondary">
+							No available tests found
+						</div>
+					}
 				</TabsContent>
 
 				{/* Ongoing */}
@@ -75,14 +162,29 @@ export default function TestsPage() {
 					value="ongoing"
 					className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3"
 				>
-					<TestCard
-						title="CSS Basics"
-						course="O Level"
-						unit="Web Design"
-						maxMarks={50}
-						status="in_progress"
-						timeRemaining="12 mins"
-					/>
+					{inProgressTests.length > 0 ?
+						inProgressTests.map((test) => {
+							const timeRemaining =
+								test.attempt ? calculateTimeRemaining(test.attempt.expiresAt) : '0 mins';
+
+							return (
+								<TestCard
+									key={test.testId}
+									testId={test.testId}
+									attemptId={test.attempt?.attemptId}
+									title={test.title}
+									course={test.courseName}
+									unit={test.chapterName}
+									maxMarks={test.maxQuestions}
+									status="in_progress"
+									timeRemaining={timeRemaining}
+								/>
+							);
+						})
+					:	<div className="col-span-full text-center text-ab-text-secondary">
+							No in-progress tests found
+						</div>
+					}
 				</TabsContent>
 
 				{/* Completed */}
@@ -90,14 +192,26 @@ export default function TestsPage() {
 					value="completed"
 					className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3"
 				>
-					<TestCard
-						title="Networking"
-						course="O Level"
-						unit="IT Tools"
-						maxMarks={100}
-						status="completed"
-						score="85"
-					/>
+					{completedTests.length > 0 ?
+						completedTests.map((test) => (
+							<TestCard
+								key={test.testId}
+								testId={test.testId}
+								attemptId={test.attempt?.attemptId}
+								title={test.title}
+								course={test.courseName}
+								unit={test.chapterName}
+								maxMarks={test.maxQuestions}
+								status="completed"
+								gainedMarks={test.attempt?.gainedMarks ?? 0}
+								score={test.attempt?.score?.toString() ?? '0'}
+								attemptDate={test.attempt?.submittedAt ?? undefined}
+							/>
+						))
+					:	<div className="col-span-full text-center text-ab-text-secondary">
+							No completed tests found
+						</div>
+					}
 				</TabsContent>
 			</Tabs>
 		</main>

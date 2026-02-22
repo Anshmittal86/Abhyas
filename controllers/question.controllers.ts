@@ -1,174 +1,164 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/src/db/client';
 
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
-import { handleApiError as handleError } from '@/utils/handle-error';
 import { logEvent } from '@/utils/log-event';
 import { requireRole } from '@/utils/auth-guard';
 
 import { createQuestionSchema, updateQuestionSchema } from '@/validators/question.validator';
+import { asyncHandler, asyncHandlerWithContext } from '@/utils/async-handler';
 
-export async function createTestQuestion(request: NextRequest) {
-	try {
-		// 🔐 Admin id from middleware
-		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
-		if (!adminId || role !== 'admin') {
-			throw new ApiError(401, 'Unauthorized access');
-		}
+export const createTestQuestion = asyncHandler('CreateTestQuestion', async (request) => {
+	// 🔐 Admin id from middleware
+	const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+	if (!adminId || role !== 'admin') {
+		throw new ApiError(401, 'Unauthorized access');
+	}
 
-		// 📦 Validate request body
-		const body = await request.json();
+	// 📦 Validate request body
+	const body = await request.json();
 
-		const parsedBody = createQuestionSchema.parse(body);
+	const parsedBody = createQuestionSchema.parse(body);
 
-		const { testId, questionText, questionType, explanation, marks } = parsedBody;
+	const { testId, questionText, questionType, explanation, marks } = parsedBody;
 
-		const options = 'options' in parsedBody ? parsedBody.options : undefined;
+	const options = 'options' in parsedBody ? parsedBody.options : undefined;
 
-		// ✅ Check test exists & belongs to admin
-		const test = await prisma.test.findFirst({
-			where: { id: testId, adminId }
+	// ✅ Check test exists & belongs to admin
+	const test = await prisma.test.findFirst({
+		where: { id: testId, adminId }
+	});
+
+	if (!test) {
+		throw new ApiError(404, 'Test not found or access denied');
+	}
+
+	// 🔒 Transaction: create question + options atomically
+
+	const result = await prisma.$transaction(async (tx) => {
+		const question = await tx.question.create({
+			data: {
+				testId,
+				adminId,
+				questionType,
+				questionText,
+				marks,
+				...(explanation !== undefined && { explanation })
+			}
 		});
 
-		if (!test) {
-			throw new ApiError(404, 'Test not found or access denied');
-		}
-
-		// 🔒 Transaction: create question + options atomically
-
-		const result = await prisma.$transaction(async (tx) => {
-			const question = await tx.question.create({
-				data: {
-					testId,
-					adminId,
-					questionType,
-					questionText,
-					marks,
-					...(explanation !== undefined && { explanation })
-				}
+		if (options && options.length > 0) {
+			await tx.questionOption.createMany({
+				data: options.map((opt) => ({
+					questionId: question.id,
+					optionText: opt.optionText,
+					isCorrect: opt.isCorrect,
+					orderIndex: opt.orderIndex
+				}))
 			});
-
-			if (options && options.length > 0) {
-				await tx.questionOption.createMany({
-					data: options.map((opt) => ({
-						questionId: question.id,
-						optionText: opt.optionText,
-						isCorrect: opt.isCorrect,
-						orderIndex: opt.orderIndex
-					}))
-				});
-			}
-
-			return question;
-		});
-
-		// 🧾 Audit log
-		logEvent('QuestionCreated', {
-			adminId,
-			testId,
-			questionId: result.id,
-			questionType
-		});
-
-		return NextResponse.json(
-			new ApiResponse(201, result, `${questionType} question created successfully`),
-			{
-				status: 201
-			}
-		);
-	} catch (error) {
-		return handleError('CreateTestQuestion', error);
-	}
-}
-
-export async function getTestQuestions(request: NextRequest) {
-	try {
-		// 🔐 Auth guard
-		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
-
-		if (!adminId || role !== 'admin') {
-			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		// 📋 Fetch questions with options
-		const questions = await prisma.question.findMany({
-			where: {
-				adminId
-			},
-			include: {
-				options: {
-					select: {
-						id: true,
-						optionText: true,
-						isCorrect: true,
-						orderIndex: true
-					},
-					orderBy: {
-						orderIndex: 'asc'
-					}
+		return question;
+	});
+
+	// 🧾 Audit log
+	logEvent('QuestionCreated', {
+		adminId,
+		testId,
+		questionId: result.id,
+		questionType
+	});
+
+	return NextResponse.json(
+		new ApiResponse(201, result, `${questionType} question created successfully`),
+		{
+			status: 201
+		}
+	);
+});
+
+export const getTestQuestions = asyncHandler('GetTestQuestions', async (request) => {
+	// 🔐 Auth guard
+	const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+
+	if (!adminId || role !== 'admin') {
+		throw new ApiError(401, 'Unauthorized access');
+	}
+
+	// 📋 Fetch questions with options
+	const questions = await prisma.question.findMany({
+		where: {
+			adminId
+		},
+		include: {
+			options: {
+				select: {
+					id: true,
+					optionText: true,
+					isCorrect: true,
+					orderIndex: true
 				},
-				test: {
-					select: {
-						id: true,
-						title: true
-					}
-				},
-				_count: {
-					select: {
-						answers: true
-					}
+				orderBy: {
+					orderIndex: 'asc'
 				}
 			},
-			orderBy: {
-				createdAt: 'asc'
-			}
-		});
-
-		// 📊 Format response
-		const formattedQuestions = questions.map((question) => ({
-			id: question.id,
-			questionText: question.questionText,
-			questionType: question.questionType,
-			explanation: question.explanation,
-			marks: question.marks,
-
-			options: question.options,
-
 			test: {
-				id: question.test.id,
-				title: question.test.title
+				select: {
+					id: true,
+					title: true
+				}
 			},
-
-			answerCount: question._count.answers,
-
-			createdAt: question.createdAt,
-			updatedAt: question.updatedAt
-		}));
-
-		return NextResponse.json(
-			new ApiResponse(200, formattedQuestions, 'Questions fetched successfully'),
-			{
-				status: 200
+			_count: {
+				select: {
+					answers: true
+				}
 			}
-		);
-	} catch (error) {
-		return handleError('GetTestQuestions', error);
-	}
-}
+		},
+		orderBy: {
+			createdAt: 'asc'
+		}
+	});
 
-export async function getTestQuestionById(
-	request: NextRequest,
-	{ params }: { params: Promise<{ questionId: string }> }
-) {
-	try {
+	// 📊 Format response
+	const formattedQuestions = questions.map((question) => ({
+		id: question.id,
+		questionText: question.questionText,
+		questionType: question.questionType,
+		explanation: question.explanation,
+		marks: question.marks,
+
+		options: question.options,
+
+		test: {
+			id: question.test.id,
+			title: question.test.title
+		},
+
+		answerCount: question._count.answers,
+
+		createdAt: question.createdAt,
+		updatedAt: question.updatedAt
+	}));
+
+	return NextResponse.json(
+		new ApiResponse(200, formattedQuestions, 'Questions fetched successfully'),
+		{
+			status: 200
+		}
+	);
+});
+
+export const getTestQuestionById = asyncHandlerWithContext(
+	'GetTestQuestionById',
+	async (request, context) => {
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
 		if (!adminId || role !== 'admin') {
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { questionId } = await params;
+		const { questionId } = await context.params;
 
 		if (!questionId) {
 			throw new ApiError(400, 'Question ID is required');
@@ -276,23 +266,19 @@ export async function getTestQuestionById(
 				status: 200
 			}
 		);
-	} catch (error) {
-		return handleError('GetTestQuestionById', error);
 	}
-}
+);
 
-export async function updateTestQuestion(
-	request: NextRequest,
-	{ params }: { params: Promise<{ questionId: string }> }
-) {
-	try {
+export const updateTestQuestion = asyncHandlerWithContext(
+	'UpdateTestQuestion',
+	async (request, context) => {
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
 		if (!adminId || role !== 'admin') {
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { questionId } = await params;
+		const { questionId } = await context.params;
 
 		if (!questionId) {
 			throw new ApiError(400, 'Question ID is required');
@@ -391,16 +377,12 @@ export async function updateTestQuestion(
 				status: 200
 			}
 		);
-	} catch (error) {
-		return handleError('UpdateTestQuestion', error);
 	}
-}
+);
 
-export async function deleteTestQuestion(
-	request: NextRequest,
-	{ params }: { params: Promise<{ questionId: string }> }
-) {
-	try {
+export const deleteTestQuestion = asyncHandlerWithContext(
+	'DeleteTestQuestion',
+	async (request, context) => {
 		// 🔐 Auth guard
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
@@ -408,7 +390,7 @@ export async function deleteTestQuestion(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { questionId } = await params;
+		const { questionId } = await context.params;
 
 		if (!questionId) {
 			throw new ApiError(400, 'Question ID is required');
@@ -460,7 +442,5 @@ export async function deleteTestQuestion(
 		return NextResponse.json(new ApiResponse(200, null, 'Question deleted successfully'), {
 			status: 200
 		});
-	} catch (error) {
-		return handleError('DeleteTestQuestion', error);
 	}
-}
+);

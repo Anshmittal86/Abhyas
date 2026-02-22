@@ -9,6 +9,8 @@ import { toast } from 'sonner';
 type TestStatus = 'not_started' | 'in_progress' | 'completed';
 
 interface TestCardProps {
+	testId: string;
+	attemptId?: string;
 	title: string;
 	course: string;
 	unit: string;
@@ -18,10 +20,14 @@ interface TestCardProps {
 	status?: TestStatus;
 	timeRemaining?: string;
 	score?: string;
+	gainedMarks?: number;
+	attemptDate?: string;
 	className?: string;
 }
 
 export function TestCard({
+	testId,
+	attemptId,
 	title,
 	course,
 	unit,
@@ -30,22 +36,68 @@ export function TestCard({
 	duration,
 	status = 'not_started',
 	timeRemaining,
-	score,
+	gainedMarks,
+	attemptDate,
 	className
 }: TestCardProps) {
 	const router = useRouter();
 
-	const handleStartTest = async (testId: string) => {
-		const res = await fetch(`/api/student/tests/${testId}/start`, {
-			method: 'POST'
-		});
-		const data = await res.json();
+	const handleStartTest = async () => {
+		try {
+			const res = await fetch(`/api/student/tests/${testId}/start`, {
+				method: 'POST'
+			});
+			const data = await res.json();
 
-		if (data.success) {
-			router.push(`/test/active/${data.data.attemptId}`);
-		} else {
-			toast.error(data.message);
+			if (data.success) {
+				router.push(`/test/active/${data.data.attemptId}`);
+			} else {
+				toast.error(data.message || 'Failed to start test');
+			}
+		} catch (error) {
+			toast.error('An error occurred while starting the test');
+			console.error(error);
 		}
+	};
+
+	const handleResumeTest = () => {
+		if (attemptId) {
+			router.push(`/test/active/${attemptId}`);
+		} else {
+			toast.error('No active attempt found');
+		}
+	};
+
+	const handleViewResult = () => {
+		router.push(`/results`);
+	};
+
+	const handleRetakeTest = async () => {
+		try {
+			const res = await fetch(`/api/student/tests/${testId}/start`, {
+				method: 'POST'
+			});
+			const data = await res.json();
+
+			if (data.success) {
+				router.push(`/test/active/${data.data.attemptId}`);
+			} else {
+				toast.error(data.message || 'Failed to retake test');
+			}
+		} catch (error) {
+			toast.error('An error occurred while retaking the test');
+			console.error(error);
+		}
+	};
+
+	const formatDate = (dateString?: string): string => {
+		if (!dateString) return '';
+		const date = new Date(dateString);
+		return date.toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		});
 	};
 
 	return (
@@ -112,12 +164,12 @@ export function TestCard({
 							<p className="text-ab-text-secondary">
 								Score:{' '}
 								<span className="text-xl font-bold text-ab-text-primary">
-									{score}/{maxMarks}
+									{gainedMarks ?? 0}/{maxMarks}
 								</span>
 							</p>
-							<p className="mt-2 flex items-center gap-1 text-lg font-bold text-ab-green-text capitalize">
+							<p className="mt-1 flex items-center gap-1 text-lg font-bold text-ab-green-text capitalize">
 								<CheckCircle2 className="size-3" />
-								Status: Completed
+								Completed {formatDate(attemptDate)}
 							</p>
 						</div>
 					</div>
@@ -127,16 +179,35 @@ export function TestCard({
 			{/* Actions */}
 			{status === 'not_started' ?
 				<Button
-					variant="outline"
 					onClick={handleStartTest}
 					className="w-full border-2 border-ab-border/80 bg-ab-surface py-5 text-lg font-black tracking-widest text-ab-text-primary transition-all hover:border-ab-primary/40 hover:bg-ab-primary/5 hover:text-ab-primary"
+					variant="outline"
 				>
-					START
+					START TEST
 				</Button>
 			: status === 'in_progress' ?
-				<Button className="w-full bg-ab-primary py-6 font-bold tracking-widest text-primary-foreground transition-all hover:bg-ab-primary/90">
+				<Button
+					onClick={handleResumeTest}
+					className="w-full bg-ab-primary py-6 font-bold tracking-widest text-primary-foreground transition-all hover:bg-ab-primary/90"
+				>
 					RESUME TEST
 				</Button>
+			: status === 'completed' ?
+				<div className="flex w-full gap-3">
+					<Button
+						onClick={handleViewResult}
+						className="flex-1 min-w-0 border-2 border-ab-border/80 bg-ab-surface py-5 text-ab-text-primary transition-all hover:border-ab-primary/40 hover:bg-ab-primary/5 hover:text-ab-primary font-semibold tracking-wide"
+						variant="outline"
+					>
+						View Result
+					</Button>
+					<Button
+						onClick={handleRetakeTest}
+						className="flex-1 min-w-0 bg-ab-primary py-5 text-primary-foreground transition-all hover:bg-ab-primary/90 font-semibold tracking-wide"
+					>
+						Retake Test
+					</Button>
+				</div>
 			:	null}
 		</div>
 	);

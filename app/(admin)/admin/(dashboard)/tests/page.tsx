@@ -27,6 +27,7 @@ import { SuccessResponseTypes } from '@/types';
 import CreateTestFormSheet from '@/components/forms/createTestFormSheet';
 import { EmptyTests } from '@/components/admin/tests/EmptyTests';
 import AlertDialogBox from '@/components/common/AlertDialogBox';
+import { useRouter } from 'next/navigation';
 
 export default function AdminTestsPage() {
 	const [viewOpen, setViewOpen] = useState(false);
@@ -37,6 +38,7 @@ export default function AdminTestsPage() {
 	const [loading, setLoading] = useState(true);
 	const searchParams = useSearchParams();
 	const searchQuery = searchParams.get('search') || '';
+	const router = useRouter();
 
 	// Fetch tests on mount
 	useEffect(() => {
@@ -250,7 +252,19 @@ export default function AdminTestsPage() {
 										</TableCell>
 
 										<TableCell className="text-center font-black">
-											{test.questionCount} / {test.totalQuestions}
+											<div className="flex items-center justify-center gap-3">
+												<span>
+													{test.questionCount} / {test.maxQuestions}
+												</span>
+
+												<Button
+													size="sm"
+													onClick={() => router.push(`/admin/tests/${test.id}/questions/create`)}
+													className="h-7 px-3 text-xs font-bold bg-ab-primary hover:bg-ab-primary/90"
+												>
+													Add
+												</Button>
+											</div>
 										</TableCell>
 
 										<TableCell className="pr-8 text-right">
@@ -268,6 +282,14 @@ export default function AdminTestsPage() {
 													align="end"
 													className="rounded-xl border-2 border-ab-border/80 bg-ab-bg"
 												>
+													<DropdownMenuItem
+														className="cursor-pointer font-bold flex justify-center"
+														onClick={() => {
+															router.push(`/admin/tests/${test.id}/questions/create`);
+														}}
+													>
+														Create Questions
+													</DropdownMenuItem>
 													<DropdownMenuItem
 														className="cursor-pointer font-bold flex justify-center"
 														onClick={() => {

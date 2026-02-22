@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import ms from 'ms';
 import { generateAccessToken, generateRefreshToken, verifyJwt } from '@/utils/tokens';
+import { AuthUser, EnsureUserResult } from '@/types';
 
 function isPublic(pathname: string) {
 	return (
@@ -79,17 +80,6 @@ export async function proxy(request: NextRequest) {
 	return response;
 }
 
-type AuthUser = {
-	id: string;
-	role: 'admin' | 'student';
-	provisionalNo?: string;
-};
-
-type EnsureUserResult = {
-	user: AuthUser | null;
-	responseWithCookies: NextResponse | null;
-};
-
 async function ensureUser(
 	accessToken: string | undefined,
 	refreshToken: string | undefined
@@ -114,7 +104,7 @@ async function ensureUser(
 			const user: AuthUser = {
 				id: decoded.id,
 				role: decoded.role,
-				provisionalNo: (decoded as any).provisionalNo
+				provisionalNo: decoded.provisionalNo
 			};
 
 			const newAccessToken = generateAccessToken(user.id, user.role, user.provisionalNo);

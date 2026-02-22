@@ -1,79 +1,128 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
-import { handleApiError as handleError } from '@/utils/handle-error';
 import { prisma } from '@/src/db/client';
 import { requireRole } from '@/utils/auth-guard';
+import { asyncHandler } from '@/utils/async-handler';
 
-export async function showAvailableTest(request: NextRequest) {
-	try {
-		const { userId: studentId, userRole: role } = requireRole(request, ['student']);
+export const getStudentTests = asyncHandler('GetStudentTests', async (request) => {
+	const { userId: studentId, userRole: role } = requireRole(request, ['student']);
 
-		// Auth: only student allowed
-		if (!studentId || role !== 'student') {
-			throw new ApiError(401, 'Unauthorized access');
+	if (!studentId || role !== 'student') {
+		throw new ApiError(401, 'Unauthorized: Student access required');
+	}
+
+	const enrollments = await prisma.enrollment.findMany({
+		where: {
+			studentId
+		},
+		select: {
+			courseId: true
 		}
+	});
 
-		// Find enrolled courses
-		const enrollments = await prisma.enrollment.findMany({
-			where: {
-				studentId
-			},
-			select: {
-				courseId: true
-			}
-		});
+	if (enrollments.length === 0) {
+		return NextResponse.json(
+			new ApiResponse(200, [], 'No enrolled courses found, hence no tests available')
+		);
+	}
 
-		if (enrollments.length === 0) {
-			return NextResponse.json(new ApiResponse(200, [], 'No enrolled courses found'));
-		}
+	const courseIds = enrollments.map((e) => e.courseId);
 
-		const courseIds = enrollments.map((e) => e.courseId);
-
-		// Fetch tests linked to chapters of enrolled courses
-		const tests = await prisma.test.findMany({
-			where: {
-				chapter: {
-					courseId: {
-						in: courseIds
-					}
+	const tests = await prisma.test.findMany({
+		where: {
+			chapter: {
+				courseId: {
+					in: courseIds
 				}
-			},
-			select: {
-				id: true,
-				title: true,
-				durationMinutes: true,
-				totalQuestions: true,
-				chapter: {
-					select: {
-						title: true,
-						course: {
-							select: {
-								title: true
-							}
+			}
+		},
+		include: {
+			chapter: {
+				select: {
+					title: true,
+					course: {
+						select: {
+							title: true
 						}
 					}
 				}
 			},
-			orderBy: {
-				createdAt: 'desc'
-			}
-		});
 
-		// Shape response for frontend
-		const formattedTests = tests.map((test) => ({
-			id: test.id,
+			questions: {
+				select: {
+					_count: {
+						select: {
+							options: true
+						}
+					}
+				}
+			},
+
+			attempts: {
+				where: {
+					studentId
+				},
+				orderBy: {
+					startedAt: 'desc'
+				},
+				select: {
+					id: true,
+					status: true,
+					score: true,
+					startedAt: true,
+					submittedAt: true,
+					expiresAt: true
+				}
+			}
+		}
+	});
+
+	// Shape response for frontend
+	const formatted = tests.map((test) => {
+		const latestAttempt = test.attempts[0] ?? null;
+
+		let tab = 'AVAILABLE';
+
+		if (latestAttempt) {
+			if (latestAttempt.status === 'IN_PROGRESS') {
+				tab = 'IN_PROGRESS';
+			} else if (latestAttempt.status === 'COMPLETED' || latestAttempt.status === 'SUBMITTED') {
+				tab = 'COMPLETED';
+			}
+		}
+
+		// Calculate gained marks from percentage score
+		const gainedMarks =
+			latestAttempt && latestAttempt.score ?
+				Math.round((latestAttempt.score / 100) * test.maxQuestions)
+			:	0;
+
+		return {
+			testId: test.id,
 			title: test.title,
 			chapterName: test.chapter.title,
 			courseName: test.chapter.course.title,
 			durationMinutes: test.durationMinutes,
-			totalQuestions: test.totalQuestions
-		}));
+			maxQuestions: test.maxQuestions,
+			questionCount: test.questions.length,
 
-		return NextResponse.json(
-			new ApiResponse(200, formattedTests, 'Available tests fetched successfully')
-		);
-	} catch (error) {
-		return handleError('ShowAvailableTest', error);
-	}
-}
+			attempt:
+				latestAttempt ?
+					{
+						attemptId: latestAttempt.id,
+						status: latestAttempt.status,
+						score: latestAttempt.score,
+						gainedMarks,
+						startedAt: latestAttempt.startedAt,
+						submittedAt: latestAttempt.submittedAt,
+						expiresAt: latestAttempt.expiresAt
+					}
+				:	null,
+
+			tab
+		};
+	});
+
+	return NextResponse.json(new ApiResponse(200, formatted, 'Tests retrieved successfully'));
+});

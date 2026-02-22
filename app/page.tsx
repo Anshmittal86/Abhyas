@@ -35,7 +35,7 @@ export default function LandingPage() {
 						</p>
 
 						<div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-							<Link href="/login">
+							<Link href="/dashboard">
 								<Button
 									size="lg"
 									className="group h-14 cursor-pointer rounded-2xl bg-ab-primary px-10 text-lg font-black text-primary-foreground shadow-xl shadow-ab-primary/25 transition-all active:scale-95 hover:bg-ab-primary/90"

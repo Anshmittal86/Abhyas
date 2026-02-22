@@ -8,9 +8,13 @@ import {
 	EmptyTitle
 } from '@/components/ui/empty';
 import { HelpCircle } from 'lucide-react';
-import CreateQuestionFormSheet from '@/components/forms/CreateQuestionFormSheet';
+// import CreateQuestionFormSheet from '@/components/forms/CreateQuestionFormSheet';
 
-export function EmptyQuestions() {
+type EmptyQuestionsProps = {
+	onSuccess?: () => void;
+};
+
+export function EmptyQuestions({ onSuccess }: EmptyQuestionsProps) {
 	return (
 		<Empty className="bg-ab-surface text-ab-text-primary border border-ab-border rounded-2xl h-full">
 			<EmptyHeader>
@@ -29,16 +33,12 @@ export function EmptyQuestions() {
 			</EmptyHeader>
 
 			<EmptyContent className="flex-row justify-center gap-2">
-				<CreateQuestionFormSheet
-					trigger={
-						<Button
-							variant="outline"
-							className={`py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer `}
-						>
-							Create Question
-						</Button>
-					}
-				/>
+				<Button
+					variant="outline"
+					className={`py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer `}
+				>
+					Create Question
+				</Button>
 			</EmptyContent>
 		</Empty>
 	);

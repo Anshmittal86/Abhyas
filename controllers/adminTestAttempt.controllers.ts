@@ -1,107 +1,101 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/src/db/client';
 
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
-import { handleApiError as handleError } from '@/utils/handle-error';
 import { logEvent } from '@/utils/log-event';
 import { requireRole } from '@/utils/auth-guard';
+import { asyncHandler, asyncHandlerWithContext } from '@/utils/async-handler';
 
 // 📋 ADMIN APIs - Test Attempts Management
 
-export async function getTestAttempts(request: NextRequest) {
-	try {
-		// 🔐 Admin authorization
-		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
+export const getTestAttempts = asyncHandler('GetTestAttempts', async (request) => {
+	// 🔐 Admin authorization
+	const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
-		if (!adminId || role !== 'admin') {
-			throw new ApiError(401, 'Unauthorized access');
-		}
+	if (!adminId || role !== 'admin') {
+		throw new ApiError(401, 'Unauthorized access');
+	}
 
-		// 📊 Fetch all test attempts with detailed information
-		const testAttempts = await prisma.testAttempt.findMany({
-			select: {
-				id: true,
-				studentId: true,
-				testId: true,
-				startedAt: true,
-				submittedAt: true,
-				score: true,
-				student: {
-					select: {
-						id: true,
-						provisionalNo: true,
-						name: true,
-						email: true
-					}
-				},
-				test: {
-					select: {
-						id: true,
-						title: true,
-						totalQuestions: true,
-						durationMinutes: true,
-						chapter: {
-							select: {
-								id: true,
-								code: true,
-								title: true,
-								course: {
-									select: {
-										id: true,
-										title: true
-									}
+	// 📊 Fetch all test attempts with detailed information
+	const testAttempts = await prisma.testAttempt.findMany({
+		select: {
+			id: true,
+			studentId: true,
+			testId: true,
+			startedAt: true,
+			submittedAt: true,
+			score: true,
+			student: {
+				select: {
+					id: true,
+					provisionalNo: true,
+					name: true,
+					email: true
+				}
+			},
+			test: {
+				select: {
+					id: true,
+					title: true,
+					maxQuestions: true,
+					durationMinutes: true,
+					chapter: {
+						select: {
+							id: true,
+							code: true,
+							title: true,
+							course: {
+								select: {
+									id: true,
+									title: true
 								}
 							}
 						}
 					}
-				},
-				_count: {
-					select: {
-						answers: true
-					}
 				}
 			},
-			orderBy: {
-				startedAt: 'desc'
+			_count: {
+				select: {
+					answers: true
+				}
 			}
-		});
+		},
+		orderBy: {
+			startedAt: 'desc'
+		}
+	});
 
-		// 📈 Format response with calculated fields
-		const formattedAttempts = testAttempts.map((attempt) => ({
-			id: attempt.id,
-			studentId: attempt.studentId,
-			testId: attempt.testId,
-			student: attempt.student,
-			test: {
-				id: attempt.test.id,
-				title: attempt.test.title,
-				totalQuestions: attempt.test.totalQuestions,
-				durationMinutes: attempt.test.durationMinutes,
-				chapter: attempt.test.chapter
-			},
-			startedAt: attempt.startedAt,
-			submittedAt: attempt.submittedAt,
-			score: attempt.score,
-			status: attempt.submittedAt ? 'submitted' : 'pending',
-			answeredQuestions: attempt._count.answers,
-			totalQuestions: attempt.test.totalQuestions
-		}));
+	// 📈 Format response with calculated fields
+	const formattedAttempts = testAttempts.map((attempt) => ({
+		id: attempt.id,
+		studentId: attempt.studentId,
+		testId: attempt.testId,
+		student: attempt.student,
+		test: {
+			id: attempt.test.id,
+			title: attempt.test.title,
+			maxQuestions: attempt.test.maxQuestions,
+			durationMinutes: attempt.test.durationMinutes,
+			chapter: attempt.test.chapter
+		},
+		startedAt: attempt.startedAt,
+		submittedAt: attempt.submittedAt,
+		score: attempt.score,
+		status: attempt.submittedAt ? 'submitted' : 'pending',
+		answeredQuestions: attempt._count.answers,
+		maxQuestions: attempt.test.maxQuestions
+	}));
 
-		return NextResponse.json(
-			new ApiResponse(200, formattedAttempts, 'Test attempts fetched successfully'),
-			{ status: 200 }
-		);
-	} catch (error) {
-		return handleError('GetTestAttempts', error);
-	}
-}
+	return NextResponse.json(
+		new ApiResponse(200, formattedAttempts, 'Test attempts fetched successfully'),
+		{ status: 200 }
+	);
+});
 
-export async function getTestAttemptById(
-	request: NextRequest,
-	{ params }: { params: Promise<{ attemptId: string }> }
-) {
-	try {
+export const getTestAttemptById = asyncHandlerWithContext(
+	'GetTestAttemptById',
+	async (request, context) => {
 		// 🔐 Admin authorization
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
@@ -109,7 +103,7 @@ export async function getTestAttemptById(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { attemptId } = await params;
+		const { attemptId } = await context.params;
 
 		if (!attemptId) {
 			throw new ApiError(400, 'Attempt ID is required');
@@ -138,7 +132,7 @@ export async function getTestAttemptById(
 					select: {
 						id: true,
 						title: true,
-						totalQuestions: true,
+						maxQuestions: true,
 						durationMinutes: true,
 						chapter: {
 							select: {
@@ -159,18 +153,22 @@ export async function getTestAttemptById(
 					select: {
 						id: true,
 						questionId: true,
-						selectedOption: true,
+						selectedOptionId: true,
 						isCorrect: true,
 						answeredAt: true,
 						question: {
 							select: {
 								id: true,
 								questionText: true,
-								optionA: true,
-								optionB: true,
-								optionC: true,
-								optionD: true,
-								correctOption: true
+								questionType: true,
+								options: {
+									select: {
+										id: true,
+										optionText: true,
+										isCorrect: true,
+										orderIndex: true
+									}
+								}
 							}
 						}
 					},
@@ -208,10 +206,10 @@ export async function getTestAttemptById(
 					score: attempt.score,
 					status: attempt.submittedAt ? 'submitted' : 'pending',
 					statistics: {
-						totalQuestions: attempt.test.totalQuestions,
+						maxQuestions: attempt.test.maxQuestions,
 						totalAnswered,
 						correctAnswers,
-						skippedQuestions: attempt.test.totalQuestions - totalAnswered,
+						skippedQuestions: attempt.test.maxQuestions - totalAnswered,
 						accuracy: totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0,
 						timeTakenMinutes
 					},
@@ -221,16 +219,12 @@ export async function getTestAttemptById(
 			),
 			{ status: 200 }
 		);
-	} catch (error) {
-		return handleError('GetTestAttemptById', error);
 	}
-}
+);
 
-export async function deleteTestAttempt(
-	request: NextRequest,
-	{ params }: { params: Promise<{ attemptId: string }> }
-) {
-	try {
+export const deleteTestAttempt = asyncHandlerWithContext(
+	'DeleteTestAttempt',
+	async (request, context) => {
 		// 🔐 Admin authorization
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
@@ -238,7 +232,7 @@ export async function deleteTestAttempt(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { attemptId } = await params;
+		const { attemptId } = await context.params;
 
 		if (!attemptId) {
 			throw new ApiError(400, 'Attempt ID is required');
@@ -287,18 +281,14 @@ export async function deleteTestAttempt(
 		return NextResponse.json(new ApiResponse(200, null, 'Test attempt deleted successfully'), {
 			status: 200
 		});
-	} catch (error) {
-		return handleError('DeleteTestAttempt', error);
 	}
-}
+);
 
 // 📊 ADMIN APIs - Student Results
 
-export async function getStudentResults(
-	request: NextRequest,
-	{ params }: { params: Promise<{ studentId: string }> }
-) {
-	try {
+export const getStudentResults = asyncHandlerWithContext(
+	'GetStudentResults',
+	async (request, context) => {
 		// 🔐 Admin authorization
 		const { userId: adminId, userRole: role } = requireRole(request, ['admin']);
 
@@ -306,7 +296,7 @@ export async function getStudentResults(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { studentId } = await params;
+		const { studentId } = await context.params;
 
 		if (!studentId) {
 			throw new ApiError(400, 'Student ID is required');
@@ -341,7 +331,7 @@ export async function getStudentResults(
 					select: {
 						id: true,
 						title: true,
-						totalQuestions: true,
+						maxQuestions: true,
 						durationMinutes: true,
 						chapter: {
 							select: {
@@ -457,7 +447,7 @@ export async function getStudentResults(
 						score: a.score,
 						status: a.submittedAt ? 'submitted' : 'pending',
 						answeredQuestions: a._count.answers,
-						totalQuestions: a.test.totalQuestions,
+						maxQuestions: a.test.maxQuestions,
 						accuracy:
 							a._count.answers > 0 ?
 								Math.round(
@@ -471,7 +461,5 @@ export async function getStudentResults(
 			),
 			{ status: 200 }
 		);
-	} catch (error) {
-		return handleError('GetStudentResults', error);
 	}
-}
+);

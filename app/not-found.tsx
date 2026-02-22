@@ -1,10 +1,45 @@
-// app/not-found.tsx
-// ✅
-import Link from 'next/link';
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { FileQuestion, Home } from 'lucide-react';
+import { FileQuestion, Home, Mail } from 'lucide-react';
 
 export default function NotFound() {
+	const router = useRouter();
+	const [isLoading, setIsLoading] = useState(false);
+
+	const handleDashboardClick = async () => {
+		setIsLoading(true);
+		try {
+			// Fetch user info to determine role
+			const response = await fetch('/api/auth/me', {
+				method: 'GET',
+				credentials: 'include'
+			});
+
+			if (response.ok) {
+				const data = await response.json();
+				const dashboardUrl = data.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+				router.push(dashboardUrl);
+			} else {
+				// If not authenticated, redirect to login or public dashboard
+				router.push('/dashboard');
+			}
+		} catch (error) {
+			console.error('Error fetching user info:', error);
+			// Fallback to student dashboard
+			router.push('/dashboard');
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleContactSupport = () => {
+		window.location.href =
+			'mailto:hello@techmastersedu.in?subject=Support Request&body=Hi,\n\nI need help with...';
+	};
+
 	return (
 		<div className="flex h-screen w-full flex-col items-center justify-center bg-ab-bg p-4 text-center text-ab-text-primary">
 			<div className="relative mb-6">
@@ -25,21 +60,22 @@ export default function NotFound() {
 
 			<div className="mt-8 flex flex-col gap-3 sm:flex-row">
 				<Button
-					asChild
+					onClick={handleDashboardClick}
+					disabled={isLoading}
 					size="lg"
-					className="bg-ab-primary px-8 font-bold text-primary-foreground shadow-lg shadow-ab-primary/30 hover:bg-ab-primary/90"
+					className="bg-ab-primary px-8 font-bold text-primary-foreground shadow-lg shadow-ab-primary/30 hover:bg-ab-primary/90 disabled:opacity-50"
 				>
-					<Link href="/dashboard">
-						<Home className="mr-2 size-5" />
-						BACK TO DASHBOARD
-					</Link>
+					<Home className="mr-2 size-5" />
+					{isLoading ? 'LOADING...' : 'BACK TO DASHBOARD'}
 				</Button>
 
 				<Button
+					onClick={handleContactSupport}
 					variant="outline"
 					size="lg"
 					className="border-ab-border bg-ab-surface font-bold text-ab-text-primary shadow-sm hover:bg-ab-primary-soft/10"
 				>
+					<Mail className="mr-2 size-5" />
 					CONTACT SUPPORT
 				</Button>
 			</div>

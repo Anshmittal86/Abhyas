@@ -2,7 +2,7 @@ import { CoursesListTypes } from '@/types/courses';
 import { StudentsListTypes } from '@/types/student';
 import { SuccessResponseTypes } from '@/types/api';
 import { ChaptersListTypes } from '@/types/chapters';
-import { TestsListTypes } from '@/types';
+import { TestQuestionProgress, TestsListTypes } from '@/types';
 
 export const fetchStudents = async (): Promise<StudentsListTypes[] | undefined> => {
 	try {
@@ -109,4 +109,19 @@ export const deleteQuestion = async (questionId: string): Promise<void> => {
 		console.error('deleteQuestion error:', error);
 		throw error;
 	}
+};
+
+export const getTestQuestionProgress = async (testId: string): Promise<TestQuestionProgress> => {
+	const res = await fetch(`/api/admin/test/${testId}/progress`, {
+		credentials: 'include',
+		cache: 'no-store'
+	});
+
+	const result = await res.json();
+
+	if (!result.success) {
+		throw new Error(result.message);
+	}
+
+	return result.data;
 };

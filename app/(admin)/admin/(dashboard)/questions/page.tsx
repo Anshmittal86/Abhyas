@@ -21,17 +21,20 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import CreateQuestionFormSheet from '@/components/forms/CreateQuestionFormSheet';
+// import CreateQuestionFormSheet from '@/components/forms/CreateQuestionFormSheet';
 import AlertDialogBox from '@/components/common/AlertDialogBox';
 import Loader from '@/components/common/Loader';
 import { EmptyQuestions } from '@/components/admin/questions/EmptyQuestions';
 import { QuestionListTypes, SuccessResponseTypes } from '@/types';
 import { deleteQuestion } from '@/lib/api';
 import { handleFormBtnLoading } from '@/components/common/HandleFormLoading';
+import { useRouter } from 'next/navigation';
 
 export default function AdminQuestionsPage() {
 	const searchParams = useSearchParams();
 	const searchQuery = searchParams.get('search') || '';
+
+	const router = useRouter();
 
 	const [viewOpen, setViewOpen] = useState(false);
 	const [questions, setQuestions] = useState<QuestionListTypes[]>([]);
@@ -169,14 +172,13 @@ export default function AdminQuestionsPage() {
 					)}
 				</div>
 
-				<CreateQuestionFormSheet
-					trigger={
-						<Button className="py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer">
-							<SquarePen className="mr-2 h-5 w-5" />
-							Create Question
-						</Button>
-					}
-				/>
+				<Button
+					className="py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer"
+					onClick={() => router.push('/admin/tests')}
+				>
+					<SquarePen className="mr-2 h-5 w-5" />
+					Create Question
+				</Button>
 			</div>
 
 			{/* Table */}
@@ -206,7 +208,7 @@ export default function AdminQuestionsPage() {
 						{filteredQuestions.length === 0 ?
 							<TableRow>
 								<TableCell colSpan={5}>
-									<EmptyQuestions />
+									<EmptyQuestions onSuccess={fetchQuestions} />
 								</TableCell>
 							</TableRow>
 						:	filteredQuestions.map((q) => (

@@ -31,7 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { MENU_DATA } from '@/lib/menu-items';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface AppSidebarProps {
 	userRole: 'student' | 'admin';
@@ -43,8 +43,34 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 	const { theme, setTheme } = useTheme();
 	const router = useRouter();
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const [detectedRole, setDetectedRole] = useState<'admin' | 'student' | null>(null);
+	const [detectedProvisional, setDetectedProvisional] = useState<string | null>(null);
 
-	const navItems = MENU_DATA[userRole] || [];
+	// detect user from server-side cookie via API
+	useEffect(() => {
+		let mounted = true;
+		const load = async () => {
+			try {
+				const res = await fetch('/api/auth/me', { credentials: 'include' });
+				if (!res.ok) return;
+				const json = await res.json();
+				if (!mounted) return;
+				if (json.role === 'admin') setDetectedRole('admin');
+				if (json.role === 'student') setDetectedRole('student');
+				if (json.provisionalNo) setDetectedProvisional(json.provisionalNo as string);
+			} catch {
+				// ignore — fallback to prop
+			}
+		};
+		load();
+		return () => {
+			mounted = false;
+		};
+	}, []);
+
+	// prefer detected role; fall back to incoming prop
+	const effectiveRole = detectedRole || userRole;
+	const navItems = MENU_DATA[effectiveRole] || [];
 
 	return (
 		<Sidebar collapsible="icon" className="bg-ab-bg">

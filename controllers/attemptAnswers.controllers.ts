@@ -1,19 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/src/db/client';
 
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
-import { handleApiError as handleError } from '@/utils/handle-error';
 import { logEvent } from '@/utils/log-event';
 
 import { saveAttemptAnswerSchema } from '@/validators/attemptAnswer.validator';
 import { requireRole } from '@/utils/auth-guard';
+import { asyncHandlerWithContext } from '@/utils/async-handler';
 
-export async function saveAttemptAnswer(
-	request: NextRequest,
-	context: { params: Promise<{ attemptId: string }> }
-) {
-	try {
+export const saveAttemptAnswer = asyncHandlerWithContext(
+	'SaveAttemptAnswer',
+	async (request, context) => {
 		// 🔐 Student identity from middleware
 		const { userId: studentId, userRole: role } = requireRole(request, ['student']);
 
@@ -59,8 +57,7 @@ export async function saveAttemptAnswer(
 				testId: attempt.testId
 			},
 			select: {
-				id: true,
-				correctOption: true
+				id: true
 			}
 		});
 
@@ -77,13 +74,13 @@ export async function saveAttemptAnswer(
 				}
 			},
 			update: {
-				selectedOption: selectedOption ?? null,
+				selectedOptionId: selectedOption ?? null,
 				answeredAt: new Date()
 			},
 			create: {
 				attemptId,
 				questionId,
-				selectedOption: selectedOption ?? null,
+				selectedOptionId: selectedOption ?? null,
 				answeredAt: new Date()
 			}
 		});
@@ -96,7 +93,5 @@ export async function saveAttemptAnswer(
 		});
 
 		return NextResponse.json(new ApiResponse(200, answer, 'Answer saved'), { status: 200 });
-	} catch (error) {
-		return handleError('SaveAttemptAnswer', error);
 	}
-}
+);

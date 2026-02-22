@@ -4,3 +4,6 @@ export * from './courses';
 export * from './chapters';
 export * from './tests';
 export * from './questions';
+export * from './quiz';
+export * from './attempts';
+export * from './auth';

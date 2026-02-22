@@ -202,7 +202,7 @@ model Test {
   id              String   @id @default(uuid())
   title           String
   durationMinutes Int
-  totalQuestions  Int
+  maxQuestions  Int
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

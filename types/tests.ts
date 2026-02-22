@@ -5,7 +5,7 @@ export interface TestsListTypes {
 	id: string;
 	title: string;
 	durationMinutes: number;
-	totalQuestions: number;
+	maxQuestions: number;
 	questionCount: number;
 	attemptCount: number;
 	chapter: {
@@ -60,6 +60,16 @@ interface TestQuestionPreviewTypes {
 	id: string;
 	questionText: string;
 	questionType: 'MCQ' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'LONG_ANSWER' | 'CODE';
+}
+
+export interface TestQuestionProgress {
+	testId: string;
+	title: string;
+	maxQuestions: number;
+	questionCount: number;
+	remainingQuestions: number;
+	progressPercentage: number;
+	isCompleted: boolean;
 }
 
 export type CreateTestType = z.infer<typeof createTestSchema>;

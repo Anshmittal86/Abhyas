@@ -28,7 +28,7 @@ type FormValues = {
 	chapterId: string;
 	title: string;
 	durationMinutes: number;
-	totalQuestions: number;
+	maxQuestions: number;
 };
 
 type Props = {
@@ -48,7 +48,7 @@ export default function CreateTestFormSheet({ open, onOpenChange, onSuccess, tri
 			chapterId: '',
 			title: '',
 			durationMinutes: 5,
-			totalQuestions: 10
+			maxQuestions: 10
 		}
 	});
 
@@ -81,7 +81,7 @@ export default function CreateTestFormSheet({ open, onOpenChange, onSuccess, tri
 	}, [open, isOpen]);
 
 	const handleSubmit = async (data: FormValues) => {
-		if (!data.chapterId || !data.title || !data.durationMinutes || !data.totalQuestions) {
+		if (!data.chapterId || !data.title || !data.durationMinutes || !data.maxQuestions) {
 			toast.error('Please fill all fields');
 			return;
 		}
@@ -183,7 +183,7 @@ export default function CreateTestFormSheet({ open, onOpenChange, onSuccess, tri
 
 						<FormField
 							control={form.control}
-							name="totalQuestions"
+							name="maxQuestions"
 							label="Max Questions"
 							type="text"
 							placeholder="10"

@@ -180,7 +180,7 @@ export const TestScalarFieldEnum = {
   id: 'id',
   title: 'title',
   durationMinutes: 'durationMinutes',
-  totalQuestions: 'totalQuestions',
+  maxQuestions: 'maxQuestions',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   chapterId: 'chapterId',

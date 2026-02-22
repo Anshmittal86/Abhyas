@@ -1,3 +1,3 @@
-import { getAllStudentResults } from '@/controllers/student-controllers/results.controllers';
+import { getStudentAllResults } from '@/controllers/student-controllers/results.controllers';
 
-export { getAllStudentResults as GET };
+export { getStudentAllResults as GET };

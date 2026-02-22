@@ -1,19 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/src/db/client';
 
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
-import { handleApiError as handleError } from '@/utils/handle-error';
+import { asyncHandlerWithContext } from '@/utils/async-handler';
 import { logEvent } from '@/utils/log-event';
 import { requireRole } from '@/utils/auth-guard';
-
-type FinalizeAttemptResult = {
-	attemptId: string;
-	testId: string;
-	score: number;
-	totalQuestions: number;
-	correctAnswers: number;
-};
+import { FinalizeAttemptResult } from '@/types';
 
 export async function finalizeAttempt(params: {
 	studentId: string;
@@ -30,7 +23,11 @@ export async function finalizeAttempt(params: {
 		include: {
 			test: {
 				include: {
-					questions: true
+					questions: {
+						include: {
+							options: true
+						}
+					}
 				}
 			},
 			answers: true
@@ -51,14 +48,17 @@ export async function finalizeAttempt(params: {
 
 	// 🧮 Score calculation
 	let correctCount = 0;
-	const answerMap = new Map(answers.map((a) => [a.questionId, a.selectedOption]));
+	const answerMap = new Map(answers.map((a) => [a.questionId, a.selectedOptionId]));
 	const answerUpdates = [];
 
 	for (const question of questions) {
-		const selectedOption = answerMap.get(question.id);
-		if (!selectedOption) continue;
+		const selectedOptionId = answerMap.get(question.id);
+		if (!selectedOptionId) continue;
 
-		const isCorrect = selectedOption === question.correctOption;
+		// Check if the selected option is marked as correct
+		const isCorrect = question.options.some(
+			(opt) => opt.id === selectedOptionId && opt.isCorrect === true
+		);
 		if (isCorrect) correctCount++;
 
 		answerUpdates.push(
@@ -77,8 +77,8 @@ export async function finalizeAttempt(params: {
 	}
 
 	// 🔢 Calculate percentage score
-	const totalQuestions = questions.length;
-	const score = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
+	const maxQuestions = questions.length;
+	const score = maxQuestions > 0 ? Math.round((correctCount / maxQuestions) * 100) : 0;
 
 	// 💾 Persist all updates atomically
 	await prisma.$transaction([
@@ -97,16 +97,14 @@ export async function finalizeAttempt(params: {
 		attemptId: attempt.id,
 		testId: attempt.testId,
 		score,
-		totalQuestions,
+		maxQuestions,
 		correctAnswers: correctCount
 	};
 }
 
-export async function startTestAttempt(
-	request: NextRequest,
-	context: { params: Promise<{ testId: string }> }
-) {
-	try {
+export const startTestAttempt = asyncHandlerWithContext(
+	'StartTestAttempt',
+	async (request, context) => {
 		// 🔐 Student id from middleware
 		const { userId: studentId, userRole: role } = requireRole(request, ['student']);
 
@@ -132,14 +130,14 @@ export async function startTestAttempt(
 			throw new ApiError(404, 'Student not found or blocked');
 		}
 
-		// ✅ Check test exists (with totalQuestions for progress decisions)
+		// ✅ Check test exists (with maxQuestions for progress decisions)
 		const test = await prisma.test.findUnique({
 			where: { id: testId },
 			select: {
 				id: true,
 				title: true,
 				durationMinutes: true,
-				totalQuestions: true
+				maxQuestions: true
 			}
 		});
 
@@ -172,14 +170,12 @@ export async function startTestAttempt(
 		});
 
 		const now = new Date();
-		let resumeAttempt:
-			| {
-					id: string;
-					testId: string;
-					startedAt: Date;
-					expiresAt: Date;
-			  }
-			| null = null;
+		let resumeAttempt: {
+			id: string;
+			testId: string;
+			startedAt: Date;
+			expiresAt: Date;
+		} | null = null;
 
 		for (const attempt of pendingAttempts) {
 			// ⏱️ If time is up, auto-submit old attempt (for reporting) and don't resume it
@@ -189,10 +185,10 @@ export async function startTestAttempt(
 			}
 
 			const answeredCount = attempt._count.answers;
-			const totalQuestions = test.totalQuestions;
+			const maxQuestions = test.maxQuestions;
 
 			// ✅ All questions answered but not submitted → auto-submit, then don't resume
-			if (totalQuestions > 0 && answeredCount >= totalQuestions) {
+			if (maxQuestions > 0 && answeredCount >= maxQuestions) {
 				await finalizeAttempt({ studentId, attemptId: attempt.id });
 				continue;
 			}
@@ -250,22 +246,18 @@ export async function startTestAttempt(
 					testId: test.id,
 					startedAt: attempt.startedAt,
 					durationMinutes: test.durationMinutes,
-					totalQuestions: test.totalQuestions
+					maxQuestions: test.maxQuestions
 				},
 				'Test attempt started'
 			),
 			{ status: 201 }
 		);
-	} catch (error) {
-		return handleError('StartTestAttempt', error);
 	}
-}
+);
 
-export async function submitTestAttempt(
-	request: NextRequest,
-	context: { params: Promise<{ attemptId: string }> }
-) {
-	try {
+export const submitTestAttempt = asyncHandlerWithContext(
+	'SubmitTestAttempt',
+	async (request, context) => {
 		// 🔐 Student authorization
 		const { userId: studentId, userRole } = requireRole(request, ['student']);
 
@@ -283,14 +275,12 @@ export async function submitTestAttempt(
 					attemptId: result.attemptId,
 					testId: result.testId,
 					score: result.score,
-					totalQuestions: result.totalQuestions,
+					maxQuestions: result.maxQuestions,
 					correctAnswers: result.correctAnswers
 				},
 				'Test submitted successfully'
 			),
 			{ status: 200 }
 		);
-	} catch (error) {
-		return handleError('SubmitTestAttempt', error);
 	}
-}
+);
