@@ -276,7 +276,7 @@ export const createStudent = asyncHandler('CreateStudent', async (request) => {
 		return student;
 	});
 
-	const loginLink = `${process.env.FRONTEND_URL}/student-login?provisionalNo=${encodeURIComponent(newStudent.provisionalNo)}`;
+	const loginLink = `${process.env.FRONTEND_URL}/login?provisionalNo=${encodeURIComponent(newStudent.provisionalNo)}`;
 
 	const html = renderStudentEmail({
 		name: newStudent.name,
