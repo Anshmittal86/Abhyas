@@ -1,113 +1,143 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/src/db/client';
 import { requireRole } from '@/utils/auth-guard';
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
-import { handleApiError as handleError } from '@/utils/handle-error';
+import { asyncHandler, asyncHandlerWithContext } from '@/utils/async-handler';
 
 /**
  * Get all test results for the logged-in student
  */
-export async function getAllStudentResults(request: NextRequest) {
-	try {
-		// 🔐 Auth - Student only
-		const { userId: studentId, userRole: role } = requireRole(request, ['student']);
+export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (request) => {
+	// 🔐 Auth - Student only
+	const { userId: studentId, userRole: role } = requireRole(request, ['student']);
 
-		if (!studentId || role !== 'student') {
-			throw new ApiError(401, 'Unauthorized access');
-		}
+	if (!studentId || role !== 'student') {
+		throw new ApiError(401, 'Unauthorized access');
+	}
 
-		// 📋 Fetch all submitted test attempts for the student
-		const testAttempts = await prisma.testAttempt.findMany({
-			where: {
-				studentId,
-				submittedAt: { not: null },
-				status: 'SUBMITTED'
-			},
-			select: {
-				id: true,
-				testId: true,
-				startedAt: true,
-				submittedAt: true,
-				score: true,
-				test: {
-					select: {
-						id: true,
-						title: true,
-						totalQuestions: true,
-						durationMinutes: true,
-						chapter: {
-							select: {
-								id: true,
-								code: true,
-								title: true,
-								course: {
-									select: {
-										id: true,
-										title: true
-									}
+	// 📋 Fetch all submitted test attempts for the student
+	const testAttempts = await prisma.testAttempt.findMany({
+		where: {
+			studentId,
+			submittedAt: { not: null },
+			status: 'SUBMITTED'
+		},
+		select: {
+			id: true,
+			testId: true,
+			startedAt: true,
+			submittedAt: true,
+			score: true,
+			test: {
+				select: {
+					id: true,
+					title: true,
+					maxQuestions: true,
+					durationMinutes: true,
+					chapter: {
+						select: {
+							id: true,
+							code: true,
+							title: true,
+							course: {
+								select: {
+									id: true,
+									title: true
 								}
 							}
 						}
 					}
-				},
-				_count: {
-					select: {
-						answers: true
-					}
-				},
-				answers: {
-					select: {
-						isCorrect: true
-					}
 				}
 			},
-			orderBy: {
-				submittedAt: 'desc'
-			}
-		});
-
-		// 📊 Calculate overall statistics
-		const totalScore = testAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
-		const averageScore = testAttempts.length > 0 ? Math.round(totalScore / testAttempts.length) : 0;
-
-		// 📈 Format results by course
-		const resultsByCourse = await prisma.enrollment.findMany({
-			where: { studentId },
-			select: {
-				courseId: true,
-				course: {
-					select: {
-						id: true,
-						title: true
-					}
+			_count: {
+				select: {
+					answers: true
+				}
+			},
+			answers: {
+				select: {
+					isCorrect: true
 				}
 			}
-		});
+		},
+		orderBy: {
+			submittedAt: 'desc'
+		}
+	});
 
-		// 🔗 Map attempts to courses
-		const courseResults = resultsByCourse.map((enrollment) => {
-			const courseAttempts = testAttempts.filter(
-				(a) => a.test.chapter.course.id === enrollment.courseId
-			);
-			const courseScore = courseAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
-			const courseAverage =
-				courseAttempts.length > 0 ? Math.round(courseScore / courseAttempts.length) : 0;
+	// 📊 Calculate overall statistics
+	const totalScore = testAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
+	const averageScore = testAttempts.length > 0 ? Math.round(totalScore / testAttempts.length) : 0;
 
-			return {
-				courseId: enrollment.course.id,
-				courseTitle: enrollment.course.title,
-				totalTests: courseAttempts.length,
-				averageScore: courseAverage,
-				attempts: courseAttempts.map((a) => ({
+	// 📈 Format results by course
+	const resultsByCourse = await prisma.enrollment.findMany({
+		where: { studentId },
+		select: {
+			courseId: true,
+			course: {
+				select: {
+					id: true,
+					title: true
+				}
+			}
+		}
+	});
+
+	// 🔗 Map attempts to courses
+	const courseResults = resultsByCourse.map((enrollment) => {
+		const courseAttempts = testAttempts.filter(
+			(a) => a.test.chapter.course.id === enrollment.courseId
+		);
+		const courseScore = courseAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
+		const courseAverage =
+			courseAttempts.length > 0 ? Math.round(courseScore / courseAttempts.length) : 0;
+
+		return {
+			courseId: enrollment.course.id,
+			courseTitle: enrollment.course.title,
+			totalTests: courseAttempts.length,
+			averageScore: courseAverage,
+			attempts: courseAttempts.map((a) => ({
+				id: a.id,
+				testId: a.testId,
+				testTitle: a.test.title,
+				chapterTitle: a.test.chapter.title,
+				startedAt: a.startedAt,
+				submittedAt: a.submittedAt,
+				score: a.score,
+				maxQuestions: a.test.maxQuestions,
+				answeredQuestions: a._count.answers,
+				accuracy:
+					a._count.answers > 0 ?
+						Math.round(
+							(a.answers.filter((ans) => ans.isCorrect === true).length / a._count.answers) * 100
+						)
+					:	0
+			}))
+		};
+	});
+
+	return NextResponse.json(
+		new ApiResponse(
+			200,
+			{
+				summary: {
+					totalResults: testAttempts.length,
+					averageScore,
+					totalScore
+				},
+				courseResults,
+				allResults: testAttempts.map((a) => ({
 					id: a.id,
 					testId: a.testId,
 					testTitle: a.test.title,
-					chapterTitle: a.test.chapter.title,
+					courseName: a.test.chapter.course.title,
+					chapterName: a.test.chapter.title,
 					startedAt: a.startedAt,
 					submittedAt: a.submittedAt,
 					score: a.score,
-					totalQuestions: a.test.totalQuestions,
+					maxQuestions: a.test.maxQuestions,
 					answeredQuestions: a._count.answers,
 					accuracy:
 						a._count.answers > 0 ?
@@ -116,56 +146,19 @@ export async function getAllStudentResults(request: NextRequest) {
 							)
 						:	0
 				}))
-			};
-		});
-
-		return NextResponse.json(
-			new ApiResponse(
-				200,
-				{
-					summary: {
-						totalResults: testAttempts.length,
-						averageScore,
-						totalScore
-					},
-					courseResults,
-					allResults: testAttempts.map((a) => ({
-						id: a.id,
-						testId: a.testId,
-						testTitle: a.test.title,
-						courseName: a.test.chapter.course.title,
-						chapterName: a.test.chapter.title,
-						startedAt: a.startedAt,
-						submittedAt: a.submittedAt,
-						score: a.score,
-						totalQuestions: a.test.totalQuestions,
-						answeredQuestions: a._count.answers,
-						accuracy:
-							a._count.answers > 0 ?
-								Math.round(
-									(a.answers.filter((ans) => ans.isCorrect === true).length / a._count.answers) *
-										100
-								)
-							:	0
-					}))
-				},
-				'Test results fetched successfully'
-			),
-			{ status: 200 }
-		);
-	} catch (error) {
-		return handleError('GetAllStudentResults', error);
-	}
-}
+			},
+			'Test results fetched successfully'
+		),
+		{ status: 200 }
+	);
+});
 
 /**
  * Get specific test result for a test
  */
-export async function getStudentResultByTestId(
-	request: NextRequest,
-	{ params }: { params: Promise<{ testId: string }> }
-) {
-	try {
+export const getStudentResultByTestId = asyncHandlerWithContext(
+	'GetStudentResultByTestId',
+	async (request, context) => {
 		// 🔐 Auth - Student only
 		const { userId: studentId } = requireRole(request, ['student']);
 
@@ -173,7 +166,7 @@ export async function getStudentResultByTestId(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { testId } = await params;
+		const { testId } = await context.params;
 
 		if (!testId) {
 			throw new ApiError(400, 'Test ID is required');
@@ -185,7 +178,7 @@ export async function getStudentResultByTestId(
 			select: {
 				id: true,
 				title: true,
-				totalQuestions: true,
+				maxQuestions: true,
 				durationMinutes: true,
 				chapter: {
 					select: {
@@ -243,18 +236,22 @@ export async function getStudentResultByTestId(
 					select: {
 						id: true,
 						questionId: true,
-						selectedOption: true,
+						selectedOptionId: true,
 						isCorrect: true,
 						answeredAt: true,
 						question: {
 							select: {
 								id: true,
 								questionText: true,
-								optionA: true,
-								optionB: true,
-								optionC: true,
-								optionD: true,
-								correctOption: true
+								questionType: true,
+								options: {
+									select: {
+										id: true,
+										optionText: true,
+										isCorrect: true,
+										orderIndex: true
+									}
+								}
 							}
 						}
 					},
@@ -276,7 +273,7 @@ export async function getStudentResultByTestId(
 						test: {
 							id: test.id,
 							title: test.title,
-							totalQuestions: test.totalQuestions,
+							maxQuestions: test.maxQuestions,
 							durationMinutes: test.durationMinutes,
 							chapter: test.chapter,
 							course: test.chapter.course
@@ -312,7 +309,7 @@ export async function getStudentResultByTestId(
 					test: {
 						id: test.id,
 						title: test.title,
-						totalQuestions: test.totalQuestions,
+						maxQuestions: test.maxQuestions,
 						durationMinutes: test.durationMinutes,
 						chapter: test.chapter,
 						course: test.chapter.course
@@ -346,14 +343,14 @@ export async function getStudentResultByTestId(
 						answers: attempt.answers.map((answer) => ({
 							questionId: answer.questionId,
 							questionText: answer.question.questionText,
-							options: {
-								A: answer.question.optionA,
-								B: answer.question.optionB,
-								C: answer.question.optionC,
-								D: answer.question.optionD
-							},
-							selectedOption: answer.selectedOption,
-							correctOption: answer.question.correctOption,
+							questionType: answer.question.questionType,
+							options: answer.question.options.map((opt) => ({
+								id: opt.id,
+								text: opt.optionText,
+								isCorrect: opt.isCorrect,
+								orderIndex: opt.orderIndex
+							})),
+							selectedOptionId: answer.selectedOptionId,
 							isCorrect: answer.isCorrect,
 							answeredAt: answer.answeredAt
 						}))
@@ -363,7 +360,5 @@ export async function getStudentResultByTestId(
 			),
 			{ status: 200 }
 		);
-	} catch (error) {
-		return handleError('GetStudentResultByTestId', error);
 	}
-}
+);

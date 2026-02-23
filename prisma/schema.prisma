@@ -34,6 +34,14 @@ enum TestStatus {
   SUBMITTED
 }
 
+enum QuestionType {
+  MCQ
+  TRUE_FALSE
+  SHORT_ANSWER
+  LONG_ANSWER
+  CODE
+}
+
 
 /*
   Admin (owner of content)
@@ -80,7 +88,7 @@ model Student {
 
    provisionalNo String   @unique
    name          String
-   email         String   @unique
+   email         String   @unique 
    mobileNo      String?
 
    gender        Gender?
@@ -194,7 +202,7 @@ model Test {
   id              String   @id @default(uuid())
   title           String
   durationMinutes Int
-  totalQuestions  Int
+  maxQuestions  Int
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -218,11 +226,14 @@ model Test {
 model Question {
   id            String   @id @default(uuid())
   questionText  String
-  optionA       String
-  optionB       String
-  optionC       String
-  optionD       String
-  correctOption OptionChoice
+  questionType  QuestionType
+  explanation   String?
+  difficulty    Int? // future AI Analytics ke liye
+  marks         Int @default(1)
+
+  starterCode   String?
+  language      String?
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -232,10 +243,25 @@ model Question {
   test          Test  @relation(fields: [testId], references: [id], onDelete: Cascade)
   admin         Admin @relation(fields: [adminId], references: [id])
 
+  options       QuestionOption[]
   answers       AttemptAnswer[]
 
   @@index([testId])
   @@index([adminId])
+}
+
+
+model QuestionOption {
+  id String @id @default(uuid())
+  questionId String
+  optionText String
+  isCorrect  Boolean @default(false)
+  orderIndex Int
+
+  question  Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  attemptAnswers AttemptAnswer[]
+
+  @@index([questionId])
 }
 
 /*
@@ -271,14 +297,20 @@ model AttemptAnswer {
   attemptId       String
   questionId      String
 
-  selectedOption  OptionChoice?
-  isCorrect       Boolean?
-  answeredAt      DateTime @default(now())
+  selectedOptionId String?
+  textAnswer       String?
+  codeAnswer       String? 
+
+  isCorrect        Boolean?
+  marksAwarded     Int?
+  answeredAt       DateTime @default(now())
 
   attempt         TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
-  question        Question    @relation(fields: [questionId], references: [id])
+  question        Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption  QuestionOption? @relation(fields: [selectedOptionId], references: [id])
 
   @@unique([attemptId, questionId])
   @@index([questionId])
+  @@index([selectedOptionId])
 }
 

@@ -87,6 +87,11 @@ export type Test = Prisma.TestModel
  */
 export type Question = Prisma.QuestionModel
 /**
+ * Model QuestionOption
+ * 
+ */
+export type QuestionOption = Prisma.QuestionOptionModel
+/**
  * Model TestAttempt
  * TestAttempt = one attempt by a student on a test
  */

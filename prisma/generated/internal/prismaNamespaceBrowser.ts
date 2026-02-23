@@ -60,6 +60,7 @@ export const ModelName = {
   Chapter: 'Chapter',
   Test: 'Test',
   Question: 'Question',
+  QuestionOption: 'QuestionOption',
   TestAttempt: 'TestAttempt',
   AttemptAnswer: 'AttemptAnswer'
 } as const
@@ -179,7 +180,7 @@ export const TestScalarFieldEnum = {
   id: 'id',
   title: 'title',
   durationMinutes: 'durationMinutes',
-  totalQuestions: 'totalQuestions',
+  maxQuestions: 'maxQuestions',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   chapterId: 'chapterId',
@@ -192,11 +193,12 @@ export type TestScalarFieldEnum = (typeof TestScalarFieldEnum)[keyof typeof Test
 export const QuestionScalarFieldEnum = {
   id: 'id',
   questionText: 'questionText',
-  optionA: 'optionA',
-  optionB: 'optionB',
-  optionC: 'optionC',
-  optionD: 'optionD',
-  correctOption: 'correctOption',
+  questionType: 'questionType',
+  explanation: 'explanation',
+  difficulty: 'difficulty',
+  marks: 'marks',
+  starterCode: 'starterCode',
+  language: 'language',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   testId: 'testId',
@@ -204,6 +206,17 @@ export const QuestionScalarFieldEnum = {
 } as const
 
 export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+export const QuestionOptionScalarFieldEnum = {
+  id: 'id',
+  questionId: 'questionId',
+  optionText: 'optionText',
+  isCorrect: 'isCorrect',
+  orderIndex: 'orderIndex'
+} as const
+
+export type QuestionOptionScalarFieldEnum = (typeof QuestionOptionScalarFieldEnum)[keyof typeof QuestionOptionScalarFieldEnum]
 
 
 export const TestAttemptScalarFieldEnum = {
@@ -224,8 +237,11 @@ export const AttemptAnswerScalarFieldEnum = {
   id: 'id',
   attemptId: 'attemptId',
   questionId: 'questionId',
-  selectedOption: 'selectedOption',
+  selectedOptionId: 'selectedOptionId',
+  textAnswer: 'textAnswer',
+  codeAnswer: 'codeAnswer',
   isCorrect: 'isCorrect',
+  marksAwarded: 'marksAwarded',
   answeredAt: 'answeredAt'
 } as const
 

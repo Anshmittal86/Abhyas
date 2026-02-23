@@ -393,6 +393,7 @@ export const ModelName = {
   Chapter: 'Chapter',
   Test: 'Test',
   Question: 'Question',
+  QuestionOption: 'QuestionOption',
   TestAttempt: 'TestAttempt',
   AttemptAnswer: 'AttemptAnswer'
 } as const
@@ -410,7 +411,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "admin" | "adminLog" | "student" | "refreshToken" | "course" | "enrollment" | "chapter" | "test" | "question" | "testAttempt" | "attemptAnswer"
+    modelProps: "admin" | "adminLog" | "student" | "refreshToken" | "course" | "enrollment" | "chapter" | "test" | "question" | "questionOption" | "testAttempt" | "attemptAnswer"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1080,6 +1081,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    QuestionOption: {
+      payload: Prisma.$QuestionOptionPayload<ExtArgs>
+      fields: Prisma.QuestionOptionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.QuestionOptionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.QuestionOptionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>
+        }
+        findFirst: {
+          args: Prisma.QuestionOptionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.QuestionOptionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>
+        }
+        findMany: {
+          args: Prisma.QuestionOptionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>[]
+        }
+        create: {
+          args: Prisma.QuestionOptionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>
+        }
+        createMany: {
+          args: Prisma.QuestionOptionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.QuestionOptionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>[]
+        }
+        delete: {
+          args: Prisma.QuestionOptionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>
+        }
+        update: {
+          args: Prisma.QuestionOptionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>
+        }
+        deleteMany: {
+          args: Prisma.QuestionOptionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.QuestionOptionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.QuestionOptionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>[]
+        }
+        upsert: {
+          args: Prisma.QuestionOptionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$QuestionOptionPayload>
+        }
+        aggregate: {
+          args: Prisma.QuestionOptionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateQuestionOption>
+        }
+        groupBy: {
+          args: Prisma.QuestionOptionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuestionOptionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.QuestionOptionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.QuestionOptionCountAggregateOutputType> | number
+        }
+      }
+    }
     TestAttempt: {
       payload: Prisma.$TestAttemptPayload<ExtArgs>
       fields: Prisma.TestAttemptFieldRefs
@@ -1366,7 +1441,7 @@ export const TestScalarFieldEnum = {
   id: 'id',
   title: 'title',
   durationMinutes: 'durationMinutes',
-  totalQuestions: 'totalQuestions',
+  maxQuestions: 'maxQuestions',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   chapterId: 'chapterId',
@@ -1379,11 +1454,12 @@ export type TestScalarFieldEnum = (typeof TestScalarFieldEnum)[keyof typeof Test
 export const QuestionScalarFieldEnum = {
   id: 'id',
   questionText: 'questionText',
-  optionA: 'optionA',
-  optionB: 'optionB',
-  optionC: 'optionC',
-  optionD: 'optionD',
-  correctOption: 'correctOption',
+  questionType: 'questionType',
+  explanation: 'explanation',
+  difficulty: 'difficulty',
+  marks: 'marks',
+  starterCode: 'starterCode',
+  language: 'language',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   testId: 'testId',
@@ -1391,6 +1467,17 @@ export const QuestionScalarFieldEnum = {
 } as const
 
 export type QuestionScalarFieldEnum = (typeof QuestionScalarFieldEnum)[keyof typeof QuestionScalarFieldEnum]
+
+
+export const QuestionOptionScalarFieldEnum = {
+  id: 'id',
+  questionId: 'questionId',
+  optionText: 'optionText',
+  isCorrect: 'isCorrect',
+  orderIndex: 'orderIndex'
+} as const
+
+export type QuestionOptionScalarFieldEnum = (typeof QuestionOptionScalarFieldEnum)[keyof typeof QuestionOptionScalarFieldEnum]
 
 
 export const TestAttemptScalarFieldEnum = {
@@ -1411,8 +1498,11 @@ export const AttemptAnswerScalarFieldEnum = {
   id: 'id',
   attemptId: 'attemptId',
   questionId: 'questionId',
-  selectedOption: 'selectedOption',
+  selectedOptionId: 'selectedOptionId',
+  textAnswer: 'textAnswer',
+  codeAnswer: 'codeAnswer',
   isCorrect: 'isCorrect',
+  marksAwarded: 'marksAwarded',
   answeredAt: 'answeredAt'
 } as const
 
@@ -1527,16 +1617,16 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
- * Reference to a field of type 'OptionChoice'
+ * Reference to a field of type 'QuestionType'
  */
-export type EnumOptionChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OptionChoice'>
+export type EnumQuestionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionType'>
     
 
 
 /**
- * Reference to a field of type 'OptionChoice[]'
+ * Reference to a field of type 'QuestionType[]'
  */
-export type ListEnumOptionChoiceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'OptionChoice[]'>
+export type ListEnumQuestionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionType[]'>
     
 
 
@@ -1671,6 +1761,7 @@ export type GlobalOmitConfig = {
   chapter?: Prisma.ChapterOmit
   test?: Prisma.TestOmit
   question?: Prisma.QuestionOmit
+  questionOption?: Prisma.QuestionOptionOmit
   testAttempt?: Prisma.TestAttemptOmit
   attemptAnswer?: Prisma.AttemptAnswerOmit
 }

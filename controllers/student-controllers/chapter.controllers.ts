@@ -1,19 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/src/db/client';
 import { requireRole } from '@/utils/auth-guard';
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
-import { handleApiError as handleError } from '@/utils/handle-error';
+
+import { asyncHandlerWithContext } from '@/utils/async-handler';
 
 /**
  * Get student test history per chapter
  * GET /api/student/chapters/:chapterId/tests
  */
-export async function getChapterTests(
-	request: NextRequest,
-	{ params }: { params: Promise<{ chapterId: string }> }
-) {
-	try {
+export const getChapterTests = asyncHandlerWithContext(
+	'GetChapterTests',
+	async (request, context) => {
 		// 🔐 Auth - Student only
 		const { userId: studentId } = requireRole(request, ['student']);
 
@@ -21,7 +20,7 @@ export async function getChapterTests(
 			throw new ApiError(401, 'Unauthorized access');
 		}
 
-		const { chapterId } = await params;
+		const { chapterId } = await context.params;
 
 		if (!chapterId) {
 			throw new ApiError(400, 'Chapter ID is required');
@@ -67,7 +66,7 @@ export async function getChapterTests(
 			select: {
 				id: true,
 				title: true,
-				totalQuestions: true,
+				maxQuestions: true,
 				durationMinutes: true,
 				createdAt: true
 			},
@@ -119,15 +118,14 @@ export async function getChapterTests(
 			const averageScore =
 				submittedAttempts.length > 0 ?
 					Math.round(
-						submittedAttempts.reduce((sum, a) => sum + (a.score || 0), 0) /
-							submittedAttempts.length
+						submittedAttempts.reduce((sum, a) => sum + (a.score || 0), 0) / submittedAttempts.length
 					)
 				:	null;
 
 			return {
 				id: test.id,
 				title: test.title,
-				totalQuestions: test.totalQuestions,
+				maxQuestions: test.maxQuestions,
 				durationMinutes: test.durationMinutes,
 				createdAt: test.createdAt,
 				statistics: {
@@ -136,22 +134,25 @@ export async function getChapterTests(
 					pendingAttempts: testAttempts.length - submittedAttempts.length,
 					bestScore,
 					averageScore,
-					latestAttempt: latestAttempt ? {
-						id: latestAttempt.id,
-						startedAt: latestAttempt.startedAt,
-						submittedAt: latestAttempt.submittedAt,
-						score: latestAttempt.score,
-						status: latestAttempt.status,
-						answeredQuestions: latestAttempt._count.answers,
-						accuracy:
-							latestAttempt._count.answers > 0 ?
-								Math.round(
-									(latestAttempt.answers.filter((ans) => ans.isCorrect === true).length /
-										latestAttempt._count.answers) *
-										100
-								)
-							:	0
-					} : null
+					latestAttempt:
+						latestAttempt ?
+							{
+								id: latestAttempt.id,
+								startedAt: latestAttempt.startedAt,
+								submittedAt: latestAttempt.submittedAt,
+								score: latestAttempt.score,
+								status: latestAttempt.status,
+								answeredQuestions: latestAttempt._count.answers,
+								accuracy:
+									latestAttempt._count.answers > 0 ?
+										Math.round(
+											(latestAttempt.answers.filter((ans) => ans.isCorrect === true).length /
+												latestAttempt._count.answers) *
+												100
+										)
+									:	0
+							}
+						:	null
 				},
 				attempts: testAttempts.map((attempt) => ({
 					id: attempt.id,
@@ -193,7 +194,5 @@ export async function getChapterTests(
 			),
 			{ status: 200 }
 		);
-	} catch (error) {
-		return handleError('GetChapterTests', error);
 	}
-}
+);

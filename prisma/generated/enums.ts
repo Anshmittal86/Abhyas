@@ -43,3 +43,14 @@ export const TestStatus = {
 } as const
 
 export type TestStatus = (typeof TestStatus)[keyof typeof TestStatus]
+
+
+export const QuestionType = {
+  MCQ: 'MCQ',
+  TRUE_FALSE: 'TRUE_FALSE',
+  SHORT_ANSWER: 'SHORT_ANSWER',
+  LONG_ANSWER: 'LONG_ANSWER',
+  CODE: 'CODE'
+} as const
+
+export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType]

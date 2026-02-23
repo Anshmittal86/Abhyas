@@ -6,21 +6,24 @@ type UserRole = 'admin' | 'student';
 interface JwtPayload {
 	id: string;
 	role: UserRole;
+	provisionalNo?: string;
 }
 
-export function generateAccessToken(id: string, role: UserRole): string {
+export function generateAccessToken(id: string, role: UserRole, provisionalNo?: string): string {
 	const secret = process.env.ACCESS_TOKEN_SECRET || 'this_is_default_secret_access';
 	const expiresIn = process.env.ACCESS_TOKEN_EXPIRY || '1d';
 
 	const payload: JwtPayload = { id, role };
+	if (provisionalNo) payload.provisionalNo = provisionalNo;
 	return jwt.sign(payload, secret, { expiresIn } as SignOptions);
 }
 
-export function generateRefreshToken(id: string, role: UserRole): string {
+export function generateRefreshToken(id: string, role: UserRole, provisionalNo?: string): string {
 	const secret = process.env.REFRESH_TOKEN_SECRET || 'this_is_default_secret_refresh';
 	const expiresIn = process.env.REFRESH_TOKEN_EXPIRY || '7d';
 
 	const payload: JwtPayload = { id, role };
+	if (provisionalNo) payload.provisionalNo = provisionalNo;
 	return jwt.sign(payload, secret, { expiresIn } as SignOptions);
 }
 
