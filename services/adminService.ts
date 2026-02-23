@@ -1,7 +1,7 @@
 // Third-party packages
 import bcrypt from 'bcrypt';
 import ms from 'ms';
-import { prisma } from '@/src/db/client';
+import { prisma } from '@/lib/db/client';
 
 // Internal utils
 import { generateAccessToken, generateRefreshToken } from '../utils/tokens';

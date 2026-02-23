@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/src/db/client';
+import { prisma } from '@/lib/db/client';
 
 import { ApiError } from '@/utils/api-error';
 import { ApiResponse } from '@/utils/api-response';
@@ -137,7 +137,12 @@ export const startTestAttempt = asyncHandlerWithContext(
 				id: true,
 				title: true,
 				durationMinutes: true,
-				maxQuestions: true
+				maxQuestions: true,
+				chapter: {
+					select: {
+						courseId: true
+					}
+				}
 			}
 		});
 
@@ -146,7 +151,17 @@ export const startTestAttempt = asyncHandlerWithContext(
 		}
 
 		// 🔐 Security: Check if student is actually enrolled in this test's course
-		if (test.chapter.course.enrollments.length === 0) {
+		const courseId = test.chapter.courseId;
+		const enrollment = await prisma.enrollment.findUnique({
+			where: {
+				studentId_courseId: {
+					studentId,
+					courseId
+				}
+			}
+		});
+
+		if (!enrollment) {
 			throw new ApiError(403, 'You are not enrolled in the course for this test');
 		}
 
@@ -166,12 +181,6 @@ export const startTestAttempt = asyncHandlerWithContext(
 		});
 
 		const now = new Date();
-		let resumeAttempt: {
-			id: string;
-			testId: string;
-			startedAt: Date;
-			expiresAt: Date;
-		} | null = null;
 
 		for (const attempt of pendingAttempts) {
 			// ⏱️ Auto-submit if expired
@@ -198,7 +207,7 @@ export const startTestAttempt = asyncHandlerWithContext(
 						testId: test.id,
 						title: test.title,
 						expiresAt: attempt.expiresAt,
-						totalQuestions: test.totalQuestions
+						maxQuestions: test.maxQuestions
 					},
 					'Resuming existing attempt'
 				),

@@ -1,6 +1,6 @@
-import { ResponseTypes } from '@/types/api';
+import { SuccessResponseTypes } from '@/types/api';
 
-class ApiResponse<T> implements ResponseTypes<T> {
+class ApiResponse<T> implements SuccessResponseTypes<T> {
 	public success: boolean;
 
 	constructor(

@@ -1,4 +1,4 @@
-import { prisma } from '@/src/db/client.js';
+import { prisma } from '@/lib/db/client.js';
 import { ApiError } from '../utils/api-error.js';
 
 import bcrypt from 'bcrypt';

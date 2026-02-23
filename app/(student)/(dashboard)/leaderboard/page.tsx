@@ -1,7 +1,7 @@
 import { Rocket, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-// ✅
+
 export default function ComingSoon({ featureName = 'Leaderboard' }) {
 	return (
 		<div className="flex min-h-[70vh] w-full flex-col items-center justify-center p-6 bg-ab-bg text-ab-text-primary">

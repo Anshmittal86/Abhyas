@@ -1,6 +1,5 @@
 'use client';
-// ✅
-import React from 'react';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, ArrowRight, UserCheck, FileEdit, Zap, ShieldCheck } from 'lucide-react';
@@ -9,12 +8,12 @@ import { Header } from '@/components/landing/Header';
 export default function LandingPage() {
 	return (
 		<main className="min-h-screen bg-ab-bg text-ab-text-primary font-sans selection:bg-ab-primary selection:text-primary-foreground">
-			<div className="mx-auto max-w-[1280px]">
+			<div className="mx-auto max-w-7xl flex min-h-screen flex-col">
 				<Header />
 
 				{/* Hero Section */}
 				<section className="relative overflow-hidden pb-32 pt-24">
-					<div className="pointer-events-none absolute top-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-ab-primary/10 blur-[120px]" />
+					<div className="pointer-events-none absolute top-0 left-1/2 h-75 w-150 -translate-x-1/2 rounded-full bg-ab-primary/10 blur-[120px]" />
 
 					<div className="relative z-10 mx-auto max-w-7xl px-6 text-center">
 						<div className="mb-8 inline-flex items-center gap-2 rounded-xl border border-ab-border bg-ab-primary/5 px-4 py-2 animate-in fade-in slide-in-from-bottom-4 duration-500">

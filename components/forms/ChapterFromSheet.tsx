@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { CoursesListTypes } from '@/types';
+import { ChapterTypes, CoursesListTypes } from '@/types';
 import {
 	Select,
 	SelectContent,
@@ -28,7 +28,7 @@ type Props = {
 	mode: 'create' | 'update';
 	chapterId?: string;
 	courseId?: string; // Only for CREATE mode
-	defaultValues?: Partial<any>;
+	defaultValues?: Partial<ChapterTypes>;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	onSuccess?: () => void;

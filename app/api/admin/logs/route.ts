@@ -1,3 +1,3 @@
-import { getAdminLogs } from '@/controllers/adminLogs.controllers';
+import { getAdminLogs } from '@/controllers/admin.controllers';
 
 export { getAdminLogs as GET };

@@ -1,7 +1,5 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { toast } from 'sonner';
@@ -10,45 +8,49 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import FormField from '@/components/ui/FormField';
 import { handleFormBtnLoading } from '@/components/common/HandleFormLoading';
-import { Lock, Mail, ShieldCheck, ArrowLeft, LayoutDashboard } from 'lucide-react';
+import { GraduationCap, Shield, UserCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-const AdminLoginSchema = z.object({
-	email: z.email('Invalid email address').min(5, 'Email is too short'),
+const StudentLoginSchema = z.object({
+	provisionalNo: z.string().min(3, 'Provisional No must be at least 3 characters long'),
 	password: z.string().min(6, 'Password must be at least 6 characters long')
 });
 
-type AdminLoginInner = z.infer<typeof AdminLoginSchema>;
+type StudentLoginInner = z.infer<typeof StudentLoginSchema>;
 
-export default function AdminLoginInner() {
+const LoginContent = () => {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
+	const searchParams = useSearchParams();
+	const provisionalFromUrl = searchParams.get('provisionalNo');
 
-	const form = useForm<AdminLoginInner>({
-		resolver: zodResolver(AdminLoginSchema),
-		defaultValues: { email: '', password: '' }
+	const form = useForm<StudentLoginInner>({
+		resolver: zodResolver(StudentLoginSchema),
+		defaultValues: { provisionalNo: '', password: '' }
 	});
 
-	const onSubmit = async (data: AdminLoginInner) => {
+	useEffect(() => {
+		if (provisionalFromUrl) form.setValue('provisionalNo', provisionalFromUrl);
+	}, [provisionalFromUrl, form]);
+
+	const onSubmit = async (data: StudentLoginInner) => {
 		setLoading(true);
 		try {
-			const response = await fetch('/api/auth/admin/login', {
+			const response = await fetch('/api/auth/student/login', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(data),
 				credentials: 'include'
 			});
-
 			const result = await response.json();
-
 			if (response.ok && result.success) {
-				toast.success('Admin authenticated successfully!');
-				router.push('/admin/dashboard');
+				toast.success('Welcome back to Abyash!');
+				router.push('/dashboard');
 			} else {
-				toast.error(result.message || 'Access denied. Invalid admin credentials');
+				toast.error(result.message || 'Invalid credentials');
 			}
 		} catch {
-			toast.error('Connection error. Please try again later.');
+			toast.error('Network error, please try again.');
 		} finally {
 			setLoading(false);
 		}
@@ -71,23 +73,18 @@ export default function AdminLoginInner() {
 				</Link>
 			</div>
 
-			<div className="z-10 w-full max-w-110 animate-in fade-in slide-in-from-bottom-4 duration-500">
-				<div className="relative overflow-hidden rounded-[2.5rem] border border-ab-border bg-ab-surface p-10 shadow-2xl">
-					{/* Admin watermark */}
-					<div className="absolute right-0 top-0 p-6 opacity-[0.03]">
-						<ShieldCheck className="size-32 rotate-12 text-ab-primary" />
-					</div>
-
+			<div className="z-10 w-full max-w-110 animate-in fade-in zoom-in duration-500">
+				<div className="relative rounded-[2.5rem] border border-ab-border bg-ab-surface p-10 shadow-2xl">
 					{/* Header */}
 					<div className="mb-10 flex flex-col items-center text-center">
-						<div className="mb-5 rounded-2xl border border-ab-border/80 bg-ab-primary/10 p-3 shadow-lg">
-							<LayoutDashboard className="size-8 text-ab-primary" />
+						<div className="mb-5 rounded-2xl bg-ab-primary p-3 shadow-lg shadow-ab-primary/25">
+							<GraduationCap className="size-8 text-primary-foreground" />
 						</div>
 						<h1 className="mb-2 text-3xl font-black tracking-tight text-ab-text-primary">
-							Admin Portal
+							Student Login
 						</h1>
 						<p className="text-sm font-medium text-ab-text-secondary">
-							Management & Control Center
+							Access your Abyash dashboard
 						</p>
 					</div>
 
@@ -97,23 +94,22 @@ export default function AdminLoginInner() {
 								<div className="group relative">
 									<FormField
 										control={form.control}
-										name="email"
-										label="Admin Email"
-										placeholder="admin@abyash.com"
-										type="email"
+										name="provisionalNo"
+										label="Provisional ID"
+										placeholder="e.g. ST-101"
 									/>
-									<Mail className="absolute right-4 top-9.5 size-5 text-ab-text-secondary transition-colors group-focus-within:text-ab-primary" />
+									<UserCircle className="absolute right-4 top-9.5 size-5 text-ab-text-secondary transition-colors group-focus-within:text-ab-primary" />
 								</div>
 
 								<div className="group relative">
 									<FormField
 										control={form.control}
 										name="password"
-										label="Master Password"
+										label="Secret Password"
 										placeholder="••••••••"
 										type="password"
 									/>
-									<Lock className="absolute right-4 top-9.5 size-5 text-ab-text-secondary transition-colors group-focus-within:text-ab-primary" />
+									<Shield className="absolute right-4 top-9.5 size-5 text-ab-text-secondary transition-colors group-focus-within:text-ab-primary" />
 								</div>
 							</div>
 
@@ -121,27 +117,27 @@ export default function AdminLoginInner() {
 								<Button
 									type="submit"
 									disabled={loading}
-									className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-ab-primary text-lg font-black text-primary-foreground shadow-xl transition-all active:scale-95 hover:bg-ab-primary/90"
+									className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-ab-primary text-lg font-black text-primary-foreground shadow-xl shadow-ab-primary/25 transition-all active:scale-95 hover:bg-ab-primary/90"
 								>
-									{handleFormBtnLoading(loading, 'Secure Login', 'Authorizing Access...')}
+									{handleFormBtnLoading(loading, 'Sign In to Portal', 'Authenticating...')}
 								</Button>
 							</div>
 						</form>
 					</Form>
 
-					{/* Footer */}
 					<div className="mt-8 border-t border-ab-border/80 pt-6 text-center">
-						<div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-ab-text-secondary">
-							<ShieldCheck className="size-3 text-ab-green-text" />
-							<span>End-to-End Encrypted Session</span>
-						</div>
+						<p className="text-[11px] font-bold uppercase tracking-widest text-ab-text-secondary">
+							Forgotten your ID? Contact your Branch Admin
+						</p>
 					</div>
 				</div>
 
 				<p className="mt-8 text-center text-[10px] font-black uppercase tracking-[0.3em] text-ab-text-secondary">
-					Internal Use Only • Abyash v2.0
+					Powered by Tech Master Computer Institute
 				</p>
 			</div>
 		</div>
 	);
-}
+};
+
+export default LoginContent;

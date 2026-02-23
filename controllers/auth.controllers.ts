@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 // Third-party packages
 import { z } from 'zod';
 import ms from 'ms';
-import { prisma } from '@/src/db/client';
+import { prisma } from '@/lib/db/client';
 import bcrypt from 'bcrypt';
 
 // Internal utils
