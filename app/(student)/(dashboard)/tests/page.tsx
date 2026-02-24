@@ -17,7 +17,7 @@ interface TestData {
 	questionCount: number;
 	attempt: {
 		attemptId: string;
-		status: string;
+		status: 'IN_PROGRESS' | 'COMPLETED';
 		score: number | null;
 		gainedMarks?: number;
 		startedAt: string;
@@ -51,12 +51,17 @@ export default function TestsPage() {
 		fetchTests();
 	}, []);
 
+	const sortedTests = [...tests].sort((a, b) => {
+		const order: Record<TestData['tab'], number> = { IN_PROGRESS: 0, AVAILABLE: 1, COMPLETED: 2 };
+		return order[a.tab] - order[b.tab];
+	});
+
 	// Filter tests based on search query
-	const filteredTests = tests.filter(
+	const filteredTests = sortedTests.filter(
 		(test) =>
-			test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			test.courseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			test.chapterName.toLowerCase().includes(searchQuery.toLowerCase())
+			test.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			test.courseName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+			test.chapterName?.toLowerCase().includes(searchQuery.toLowerCase())
 	);
 
 	// Organize tests by tab
@@ -78,6 +83,11 @@ export default function TestsPage() {
 		const diffHours = Math.floor(diffMins / 60);
 		return `${diffHours}h ${diffMins % 60}m`;
 	};
+
+	const defaultTab =
+		inProgressTests.length > 0 ? 'ongoing'
+		: availableTests.length > 0 ? 'available'
+		: 'completed';
 
 	if (loading) {
 		return (
@@ -108,7 +118,8 @@ export default function TestsPage() {
 			</div>
 
 			{/* Tabs */}
-			<Tabs defaultValue="available" className="w-full">
+
+			<Tabs defaultValue={defaultTab} className="w-full">
 				<TabsList className="mb-8 bg-ab-border/20 p-1">
 					<TabsTrigger
 						value="available"
@@ -148,7 +159,7 @@ export default function TestsPage() {
 								maxMarks={test.maxQuestions}
 								questions={test.questionCount}
 								duration={`${test.durationMinutes}m`}
-								status="not_started"
+								status="NEW"
 							/>
 						))
 					:	<div className="col-span-full text-center text-ab-text-secondary">
@@ -164,20 +175,21 @@ export default function TestsPage() {
 				>
 					{inProgressTests.length > 0 ?
 						inProgressTests.map((test) => {
-							const timeRemaining =
-								test.attempt ? calculateTimeRemaining(test.attempt.expiresAt) : '0 mins';
+							if (!test.attempt) return null;
+
+							const timeRemaining = calculateTimeRemaining(test.attempt.expiresAt);
 
 							return (
 								<TestCard
 									key={test.testId}
 									testId={test.testId}
-									attemptId={test.attempt?.attemptId}
+									attemptId={test.attempt.attemptId}
 									title={test.title}
 									course={test.courseName}
 									unit={test.chapterName}
 									maxMarks={test.maxQuestions}
-									status="in_progress"
 									timeRemaining={timeRemaining}
+									status="IN_PROGRESS"
 								/>
 							);
 						})
@@ -193,21 +205,23 @@ export default function TestsPage() {
 					className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3"
 				>
 					{completedTests.length > 0 ?
-						completedTests.map((test) => (
-							<TestCard
-								key={test.testId}
-								testId={test.testId}
-								attemptId={test.attempt?.attemptId}
-								title={test.title}
-								course={test.courseName}
-								unit={test.chapterName}
-								maxMarks={test.maxQuestions}
-								status="completed"
-								gainedMarks={test.attempt?.gainedMarks ?? 0}
-								score={test.attempt?.score?.toString() ?? '0'}
-								attemptDate={test.attempt?.submittedAt ?? undefined}
-							/>
-						))
+						completedTests.map((test) => {
+							if (!test.attempt || !test.attempt.submittedAt) return null;
+							return (
+								<TestCard
+									key={test.testId}
+									testId={test.testId}
+									attemptId={test.attempt!.attemptId}
+									title={test.title}
+									course={test.courseName}
+									unit={test.chapterName}
+									maxMarks={test.maxQuestions}
+									status="COMPLETED"
+									gainedMarks={test.attempt?.gainedMarks ?? 0}
+									attemptDate={test.attempt?.submittedAt ?? undefined}
+								/>
+							);
+						})
 					:	<div className="col-span-full text-center text-ab-text-secondary">
 							No completed tests found
 						</div>
