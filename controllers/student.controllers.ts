@@ -127,19 +127,25 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 		}
 	}
 
-	const completedLatestAttempts = completedTests
-		.map((test) => latestAttemptByTestId.get(test.id))
-		.filter(Boolean);
+	// 🔢 Directly fetch completed attempts for average
+	const completedAttempts = await prisma.testAttempt.findMany({
+		where: {
+			studentId: userId,
+			status: 'COMPLETED',
+			score: { not: null }
+		},
+		select: {
+			score: true
+		}
+	});
 
-	const totalCompletedScore = completedLatestAttempts.reduce(
+	const totalCompletedScore = completedAttempts.reduce(
 		(total, attempt) => total + (attempt.score ?? 0),
 		0
 	);
 
 	const averageScore =
-		completedLatestAttempts.length > 0 ?
-			Math.round(totalCompletedScore / completedLatestAttempts.length)
-		:	0;
+		completedAttempts.length > 0 ? Math.round(totalCompletedScore / completedAttempts.length) : 0;
 
 	if (pendingTests.length > 0) {
 		const resumeTest = pendingTests[0];
