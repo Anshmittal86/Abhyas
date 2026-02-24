@@ -144,7 +144,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 		};
 	} else if (newTests.length > 0) {
 		const sortedNewTests = [...newTests].sort(
-			(a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
 		);
 
 		const startTest = sortedNewTests[0];

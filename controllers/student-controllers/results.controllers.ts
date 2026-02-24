@@ -21,7 +21,7 @@ export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (
 		where: {
 			studentId,
 			submittedAt: { not: null },
-			status: 'SUBMITTED'
+			status: 'COMPLETED'
 		},
 		select: {
 			id: true,
@@ -220,7 +220,7 @@ export const getStudentResultByTestId = asyncHandlerWithContext(
 				studentId,
 				testId,
 				submittedAt: { not: null },
-				status: 'SUBMITTED'
+				status: 'COMPLETED'
 			},
 			select: {
 				id: true,
