@@ -82,19 +82,21 @@ export const getStudentTests = asyncHandler('GetStudentTests', async (request) =
 	const formatted = tests.map((test) => {
 		const latestAttempt = test.attempts[0] ?? null;
 
-		let tab = 'AVAILABLE';
+		let tab: 'AVAILABLE' | 'IN_PROGRESS' | 'COMPLETED' = 'AVAILABLE';
 
-		if (latestAttempt.status === 'IN_PROGRESS') {
-			if (latestAttempt.expiresAt && new Date(latestAttempt.expiresAt) < new Date()) {
-				tab = 'COMPLETED';
-			} else {
-				tab = 'IN_PROGRESS';
-			}
+		if (latestAttempt?.status === 'IN_PROGRESS') {
+			const isExpired =
+				latestAttempt.expiresAt && new Date(latestAttempt.expiresAt).getTime() < Date.now();
+
+			tab = isExpired ? 'COMPLETED' : 'IN_PROGRESS';
 		}
 
-		// Calculate gained marks from percentage score
+		if (latestAttempt?.status === 'COMPLETED') {
+			tab = 'COMPLETED';
+		}
+
 		const gainedMarks =
-			latestAttempt && latestAttempt.score !== null ?
+			latestAttempt?.score !== null && latestAttempt?.score !== undefined ?
 				Math.round((latestAttempt.score / 100) * test.maxQuestions)
 			:	0;
 

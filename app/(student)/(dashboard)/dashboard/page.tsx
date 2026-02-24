@@ -74,7 +74,7 @@ export default function DashboardPage() {
 	if (loading) {
 		return (
 			<main className="mx-auto flex w-full max-w-7xl items-center justify-center p-8 bg-ab-bg text-ab-text-primary">
-				<Loader />
+				<Loader height="full" message="Loading dashboard data..." />
 			</main>
 		);
 	}
