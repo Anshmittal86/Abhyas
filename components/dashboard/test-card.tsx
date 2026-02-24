@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-type TestStatus = 'not_started' | 'in_progress' | 'completed';
+type TestStatus = 'NEW' | 'IN_PROGRESS' | 'COMPLETED';
 
 interface TestCardProps {
 	testId: string;
@@ -34,7 +34,7 @@ export function TestCard({
 	maxMarks,
 	questions,
 	duration,
-	status = 'not_started',
+	status = 'NEW',
 	timeRemaining,
 	gainedMarks,
 	attemptDate,
@@ -132,7 +132,7 @@ export function TestCard({
 
 			{/* Status Content */}
 			<div className="space-y-3 border-y border-dashed border-ab-border/80 py-2">
-				{status === 'not_started' && (
+				{status === 'NEW' && (
 					<div className="grid grid-cols-2 gap-2 text-sm">
 						<div className="flex items-center gap-2">
 							<ClipboardList className="size-4" />
@@ -147,7 +147,7 @@ export function TestCard({
 					</div>
 				)}
 
-				{status === 'in_progress' && (
+				{status === 'IN_PROGRESS' && (
 					<div className="space-y-2">
 						<div className="flex justify-between text-sm font-medium">
 							<span className="animate-pulse text-ab-primary">
@@ -158,7 +158,7 @@ export function TestCard({
 					</div>
 				)}
 
-				{status === 'completed' && (
+				{status === 'COMPLETED' && (
 					<div className="flex items-center justify-between">
 						<div className="text-sm">
 							<p className="text-ab-text-secondary">
@@ -177,7 +177,7 @@ export function TestCard({
 			</div>
 
 			{/* Actions */}
-			{status === 'not_started' ?
+			{status === 'NEW' ?
 				<Button
 					onClick={handleStartTest}
 					className="w-full border-2 border-ab-border/80 bg-ab-surface py-5 text-lg font-black tracking-widest text-ab-text-primary transition-all hover:border-ab-primary/40 hover:bg-ab-primary/5 hover:text-ab-primary"
@@ -185,14 +185,14 @@ export function TestCard({
 				>
 					START TEST
 				</Button>
-			: status === 'in_progress' ?
+			: status === 'IN_PROGRESS' ?
 				<Button
 					onClick={handleResumeTest}
 					className="w-full bg-ab-primary py-6 font-bold tracking-widest text-primary-foreground transition-all hover:bg-ab-primary/90"
 				>
 					RESUME TEST
 				</Button>
-			: status === 'completed' ?
+			: status === 'COMPLETED' ?
 				<div className="flex w-full gap-3">
 					<Button
 						onClick={handleViewResult}

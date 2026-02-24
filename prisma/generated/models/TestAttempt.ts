@@ -42,7 +42,7 @@ export type TestAttemptMinAggregateOutputType = {
   submittedAt: Date | null
   score: number | null
   expiresAt: Date | null
-  status: $Enums.TestStatus | null
+  status: $Enums.TestAttemptStatus | null
 }
 
 export type TestAttemptMaxAggregateOutputType = {
@@ -53,7 +53,7 @@ export type TestAttemptMaxAggregateOutputType = {
   submittedAt: Date | null
   score: number | null
   expiresAt: Date | null
-  status: $Enums.TestStatus | null
+  status: $Enums.TestAttemptStatus | null
 }
 
 export type TestAttemptCountAggregateOutputType = {
@@ -205,7 +205,7 @@ export type TestAttemptGroupByOutputType = {
   submittedAt: Date | null
   score: number | null
   expiresAt: Date
-  status: $Enums.TestStatus
+  status: $Enums.TestAttemptStatus
   _count: TestAttemptCountAggregateOutputType | null
   _avg: TestAttemptAvgAggregateOutputType | null
   _sum: TestAttemptSumAggregateOutputType | null
@@ -239,7 +239,7 @@ export type TestAttemptWhereInput = {
   submittedAt?: Prisma.DateTimeNullableFilter<"TestAttempt"> | Date | string | null
   score?: Prisma.IntNullableFilter<"TestAttempt"> | number | null
   expiresAt?: Prisma.DateTimeFilter<"TestAttempt"> | Date | string
-  status?: Prisma.EnumTestStatusFilter<"TestAttempt"> | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFilter<"TestAttempt"> | $Enums.TestAttemptStatus
   student?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
   test?: Prisma.XOR<Prisma.TestScalarRelationFilter, Prisma.TestWhereInput>
   answers?: Prisma.AttemptAnswerListRelationFilter
@@ -270,7 +270,7 @@ export type TestAttemptWhereUniqueInput = Prisma.AtLeast<{
   submittedAt?: Prisma.DateTimeNullableFilter<"TestAttempt"> | Date | string | null
   score?: Prisma.IntNullableFilter<"TestAttempt"> | number | null
   expiresAt?: Prisma.DateTimeFilter<"TestAttempt"> | Date | string
-  status?: Prisma.EnumTestStatusFilter<"TestAttempt"> | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFilter<"TestAttempt"> | $Enums.TestAttemptStatus
   student?: Prisma.XOR<Prisma.StudentScalarRelationFilter, Prisma.StudentWhereInput>
   test?: Prisma.XOR<Prisma.TestScalarRelationFilter, Prisma.TestWhereInput>
   answers?: Prisma.AttemptAnswerListRelationFilter
@@ -303,7 +303,7 @@ export type TestAttemptScalarWhereWithAggregatesInput = {
   submittedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"TestAttempt"> | Date | string | null
   score?: Prisma.IntNullableWithAggregatesFilter<"TestAttempt"> | number | null
   expiresAt?: Prisma.DateTimeWithAggregatesFilter<"TestAttempt"> | Date | string
-  status?: Prisma.EnumTestStatusWithAggregatesFilter<"TestAttempt"> | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusWithAggregatesFilter<"TestAttempt"> | $Enums.TestAttemptStatus
 }
 
 export type TestAttemptCreateInput = {
@@ -312,7 +312,7 @@ export type TestAttemptCreateInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
   student: Prisma.StudentCreateNestedOneWithoutTestAttemptsInput
   test: Prisma.TestCreateNestedOneWithoutAttemptsInput
   answers?: Prisma.AttemptAnswerCreateNestedManyWithoutAttemptInput
@@ -326,7 +326,7 @@ export type TestAttemptUncheckedCreateInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
   answers?: Prisma.AttemptAnswerUncheckedCreateNestedManyWithoutAttemptInput
 }
 
@@ -336,7 +336,7 @@ export type TestAttemptUpdateInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
   student?: Prisma.StudentUpdateOneRequiredWithoutTestAttemptsNestedInput
   test?: Prisma.TestUpdateOneRequiredWithoutAttemptsNestedInput
   answers?: Prisma.AttemptAnswerUpdateManyWithoutAttemptNestedInput
@@ -350,7 +350,7 @@ export type TestAttemptUncheckedUpdateInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
   answers?: Prisma.AttemptAnswerUncheckedUpdateManyWithoutAttemptNestedInput
 }
 
@@ -362,7 +362,7 @@ export type TestAttemptCreateManyInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
 }
 
 export type TestAttemptUpdateManyMutationInput = {
@@ -371,7 +371,7 @@ export type TestAttemptUpdateManyMutationInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
 }
 
 export type TestAttemptUncheckedUpdateManyInput = {
@@ -382,7 +382,7 @@ export type TestAttemptUncheckedUpdateManyInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
 }
 
 export type TestAttemptListRelationFilter = {
@@ -525,8 +525,8 @@ export type TestAttemptUncheckedUpdateManyWithoutTestNestedInput = {
   deleteMany?: Prisma.TestAttemptScalarWhereInput | Prisma.TestAttemptScalarWhereInput[]
 }
 
-export type EnumTestStatusFieldUpdateOperationsInput = {
-  set?: $Enums.TestStatus
+export type EnumTestAttemptStatusFieldUpdateOperationsInput = {
+  set?: $Enums.TestAttemptStatus
 }
 
 export type TestAttemptCreateNestedOneWithoutAnswersInput = {
@@ -549,7 +549,7 @@ export type TestAttemptCreateWithoutStudentInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
   test: Prisma.TestCreateNestedOneWithoutAttemptsInput
   answers?: Prisma.AttemptAnswerCreateNestedManyWithoutAttemptInput
 }
@@ -561,7 +561,7 @@ export type TestAttemptUncheckedCreateWithoutStudentInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
   answers?: Prisma.AttemptAnswerUncheckedCreateNestedManyWithoutAttemptInput
 }
 
@@ -602,7 +602,7 @@ export type TestAttemptScalarWhereInput = {
   submittedAt?: Prisma.DateTimeNullableFilter<"TestAttempt"> | Date | string | null
   score?: Prisma.IntNullableFilter<"TestAttempt"> | number | null
   expiresAt?: Prisma.DateTimeFilter<"TestAttempt"> | Date | string
-  status?: Prisma.EnumTestStatusFilter<"TestAttempt"> | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFilter<"TestAttempt"> | $Enums.TestAttemptStatus
 }
 
 export type TestAttemptCreateWithoutTestInput = {
@@ -611,7 +611,7 @@ export type TestAttemptCreateWithoutTestInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
   student: Prisma.StudentCreateNestedOneWithoutTestAttemptsInput
   answers?: Prisma.AttemptAnswerCreateNestedManyWithoutAttemptInput
 }
@@ -623,7 +623,7 @@ export type TestAttemptUncheckedCreateWithoutTestInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
   answers?: Prisma.AttemptAnswerUncheckedCreateNestedManyWithoutAttemptInput
 }
 
@@ -659,7 +659,7 @@ export type TestAttemptCreateWithoutAnswersInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
   student: Prisma.StudentCreateNestedOneWithoutTestAttemptsInput
   test: Prisma.TestCreateNestedOneWithoutAttemptsInput
 }
@@ -672,7 +672,7 @@ export type TestAttemptUncheckedCreateWithoutAnswersInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
 }
 
 export type TestAttemptCreateOrConnectWithoutAnswersInput = {
@@ -697,7 +697,7 @@ export type TestAttemptUpdateWithoutAnswersInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
   student?: Prisma.StudentUpdateOneRequiredWithoutTestAttemptsNestedInput
   test?: Prisma.TestUpdateOneRequiredWithoutAttemptsNestedInput
 }
@@ -710,7 +710,7 @@ export type TestAttemptUncheckedUpdateWithoutAnswersInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
 }
 
 export type TestAttemptCreateManyStudentInput = {
@@ -720,7 +720,7 @@ export type TestAttemptCreateManyStudentInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
 }
 
 export type TestAttemptUpdateWithoutStudentInput = {
@@ -729,7 +729,7 @@ export type TestAttemptUpdateWithoutStudentInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
   test?: Prisma.TestUpdateOneRequiredWithoutAttemptsNestedInput
   answers?: Prisma.AttemptAnswerUpdateManyWithoutAttemptNestedInput
 }
@@ -741,7 +741,7 @@ export type TestAttemptUncheckedUpdateWithoutStudentInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
   answers?: Prisma.AttemptAnswerUncheckedUpdateManyWithoutAttemptNestedInput
 }
 
@@ -752,7 +752,7 @@ export type TestAttemptUncheckedUpdateManyWithoutStudentInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
 }
 
 export type TestAttemptCreateManyTestInput = {
@@ -762,7 +762,7 @@ export type TestAttemptCreateManyTestInput = {
   submittedAt?: Date | string | null
   score?: number | null
   expiresAt: Date | string
-  status?: $Enums.TestStatus
+  status?: $Enums.TestAttemptStatus
 }
 
 export type TestAttemptUpdateWithoutTestInput = {
@@ -771,7 +771,7 @@ export type TestAttemptUpdateWithoutTestInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
   student?: Prisma.StudentUpdateOneRequiredWithoutTestAttemptsNestedInput
   answers?: Prisma.AttemptAnswerUpdateManyWithoutAttemptNestedInput
 }
@@ -783,7 +783,7 @@ export type TestAttemptUncheckedUpdateWithoutTestInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
   answers?: Prisma.AttemptAnswerUncheckedUpdateManyWithoutAttemptNestedInput
 }
 
@@ -794,7 +794,7 @@ export type TestAttemptUncheckedUpdateManyWithoutTestInput = {
   submittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   score?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expiresAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  status?: Prisma.EnumTestStatusFieldUpdateOperationsInput | $Enums.TestStatus
+  status?: Prisma.EnumTestAttemptStatusFieldUpdateOperationsInput | $Enums.TestAttemptStatus
 }
 
 
@@ -911,7 +911,7 @@ export type $TestAttemptPayload<ExtArgs extends runtime.Types.Extensions.Interna
     submittedAt: Date | null
     score: number | null
     expiresAt: Date
-    status: $Enums.TestStatus
+    status: $Enums.TestAttemptStatus
   }, ExtArgs["result"]["testAttempt"]>
   composites: {}
 }
@@ -1345,7 +1345,7 @@ export interface TestAttemptFieldRefs {
   readonly submittedAt: Prisma.FieldRef<"TestAttempt", 'DateTime'>
   readonly score: Prisma.FieldRef<"TestAttempt", 'Int'>
   readonly expiresAt: Prisma.FieldRef<"TestAttempt", 'DateTime'>
-  readonly status: Prisma.FieldRef<"TestAttempt", 'TestStatus'>
+  readonly status: Prisma.FieldRef<"TestAttempt", 'TestAttemptStatus'>
 }
     
 

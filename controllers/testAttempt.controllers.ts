@@ -80,7 +80,7 @@ export async function finalizeAttempt(params: {
 	const maxQuestions = questions.length;
 	const score = maxQuestions > 0 ? Math.round((correctCount / maxQuestions) * 100) : 0;
 
-	// 💾 Persist all updates atomically
+	// 💾 Persist all updates automatically
 	await prisma.$transaction([
 		...answerUpdates,
 		prisma.testAttempt.update({
@@ -88,7 +88,7 @@ export async function finalizeAttempt(params: {
 			data: {
 				score,
 				submittedAt: new Date(),
-				status: 'SUBMITTED'
+				status: 'COMPLETED'
 			}
 		})
 	]);

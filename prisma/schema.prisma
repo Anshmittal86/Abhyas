@@ -28,10 +28,9 @@ enum UserRole {
   student
 }
 
-enum TestStatus {
+enum TestAttemptStatus {
   IN_PROGRESS
   COMPLETED
-  SUBMITTED
 }
 
 enum QuestionType {
@@ -276,7 +275,7 @@ model TestAttempt {
   submittedAt   DateTime?
   score         Int?
   expiresAt     DateTime
-  status        TestStatus @default(IN_PROGRESS)
+  status        TestAttemptStatus @default(IN_PROGRESS)
 
   student       Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   test          Test    @relation(fields: [testId], references: [id], onDelete: Cascade)

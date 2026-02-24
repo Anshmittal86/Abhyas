@@ -27,6 +27,9 @@ interface DashboardData {
 		testId: string;
 		title: string;
 		durationMinutes: number;
+		attemptId?: string;
+		courseTitle: string;
+		chapterTitle: string;
 	} | null;
 	recentActivity: {
 		testId: string;
@@ -112,26 +115,30 @@ export default function DashboardPage() {
 
 			{/* Stat Badges */}
 			<div className="flex flex-wrap gap-3">
-				<StatBadge 
-					value={stats.completedTests.toString()} 
-					label="Tests Completed" 
-					variant="green" 
+				<StatBadge
+					value={stats.completedTests.toString()}
+					label="Tests Completed"
+					variant="green"
 				/>
 			</div>
 
 			{/* Next Action - Pending Tests */}
 			{nextAction && (
 				<section>
-					<h3 className="mb-4 text-xl font-semibold">Next Test</h3>
+					<h3 className="mb-4 text-xl font-semibold">
+						{nextAction.type === 'RESUME_TEST' ? 'Resume Test' : 'Start Test'}
+					</h3>
 					<div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
 						<TestCard
 							testId={nextAction.testId}
+							attemptId={nextAction.attemptId}
 							title={nextAction.title}
-							course="Course"
-							unit="Chapter"
-							maxMarks={100}
-							questions={10}
+							course={nextAction.courseTitle}
+							unit={nextAction.chapterTitle}
+							maxMarks={100} // Placeholder, replace with actual marks if available
+							questions={10} // Placeholder, replace with actual question count if available
 							duration={`${nextAction.durationMinutes}m`}
+							status={nextAction.type === 'RESUME_TEST' ? 'IN_PROGRESS' : 'NEW'}
 						/>
 					</div>
 				</section>
@@ -146,37 +153,20 @@ export default function DashboardPage() {
 							testId={recentActivity.testId}
 							title="Last Attempted Test"
 							course="Course"
-							maxMarks={100}
+							maxMarks={100} // Placeholder, replace with actual marks if available
+							questions={10} // Placeholder, replace with actual question count if available
+							duration={`30m`} // Placeholder, replace with actual duration if available
 							unit="Chapter"
-							status="completed"
-							score={recentActivity.score?.toString() ?? '0'}
+							status="COMPLETED"
+							gainedMarks={recentActivity.score ?? 0}
+							attemptDate={recentActivity.submittedAt}
 						/>
-					</div>
-				)}
-
-				{stats.pendingTests > 0 && (
-					<div>
-						<h3 className="mb-4 text-xl font-semibold">Pending Tests</h3>
-						<div className="space-y-3">
-							<div className="flex items-center justify-between rounded-xl border border-ab-border/80 p-4">
-								<div>
-									<p className="text-xs text-ab-text-secondary">Awaiting</p>
-									<p className="font-medium text-ab-text-primary">
-										{stats.pendingTests} test{stats.pendingTests !== 1 ? 's' : ''} remaining
-									</p>
-								</div>
-
-								<Button variant="outline" size="sm">
-									START
-								</Button>
-							</div>
-						</div>
 					</div>
 				)}
 			</section>
 
 			{/* Empty State */}
-			{stats.completedTests === 0 && (
+			{stats.totalTests === 0 && (
 				<div className="mt-12 flex justify-center">
 					<div className="w-full max-w-md rounded-2xl border border-dashed border-ab-border/80 p-12 text-center">
 						<p className="italic text-ab-text-secondary">No tests attempted yet</p>

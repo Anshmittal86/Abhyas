@@ -26,6 +26,7 @@ export const getTestAttempts = asyncHandler('GetTestAttempts', async (request) =
 			startedAt: true,
 			submittedAt: true,
 			score: true,
+			status: true,
 			student: {
 				select: {
 					id: true,
@@ -82,7 +83,7 @@ export const getTestAttempts = asyncHandler('GetTestAttempts', async (request) =
 		startedAt: attempt.startedAt,
 		submittedAt: attempt.submittedAt,
 		score: attempt.score,
-		status: attempt.submittedAt ? 'submitted' : 'pending',
+		status: attempt.status,
 		answeredQuestions: attempt._count.answers,
 		maxQuestions: attempt.test.maxQuestions
 	}));
@@ -119,6 +120,7 @@ export const getTestAttemptById = asyncHandlerWithContext(
 				startedAt: true,
 				submittedAt: true,
 				score: true,
+				status: true,
 				student: {
 					select: {
 						id: true,
@@ -204,7 +206,7 @@ export const getTestAttemptById = asyncHandlerWithContext(
 					startedAt: attempt.startedAt,
 					submittedAt: attempt.submittedAt,
 					score: attempt.score,
-					status: attempt.submittedAt ? 'submitted' : 'pending',
+					status: attempt.status,
 					statistics: {
 						maxQuestions: attempt.test.maxQuestions,
 						totalAnswered,
@@ -327,6 +329,7 @@ export const getStudentResults = asyncHandlerWithContext(
 				startedAt: true,
 				submittedAt: true,
 				score: true,
+				status: true,
 				test: {
 					select: {
 						id: true,
@@ -365,10 +368,13 @@ export const getStudentResults = asyncHandlerWithContext(
 		});
 
 		// 📊 Calculate overall statistics
-		const submittedAttempts = testAttempts.filter((a) => a.submittedAt !== null);
-		const totalScore = submittedAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
+		const completedAttempts = testAttempts.filter((attempt) => attempt.status === 'COMPLETED');
+		const totalScore = completedAttempts.reduce(
+			(totalScore, attempt) => totalScore + (attempt.score || 0),
+			0
+		);
 		const averageScore =
-			submittedAttempts.length > 0 ? Math.round(totalScore / submittedAttempts.length) : 0;
+			completedAttempts.length > 0 ? Math.round(totalScore / completedAttempts.length) : 0;
 
 		// 📈 Format detailed results by course
 		const resultsByCourse = await prisma.enrollment.findMany({
@@ -399,27 +405,39 @@ export const getStudentResults = asyncHandlerWithContext(
 
 		// 🔗 Map attempts to courses
 		const courseResults = resultsByCourse.map((enrollment) => {
-			const courseTests = enrollment.course.chapters.flatMap((ch) => ch.tests.map((t) => t.id));
-			const courseAttempts = testAttempts.filter((a) => courseTests.includes(a.testId));
-			const courseSubmitted = courseAttempts.filter((a) => a.submittedAt !== null);
+			const courseAllTest = enrollment.course.chapters.flatMap((chapter) =>
+				chapter.tests.map((test) => test.id)
+			);
+			const courseTestAttempts = testAttempts.filter((attempt) =>
+				courseAllTest.includes(attempt.testId)
+			);
+			const courseAllCompletedTestAttempts = courseTestAttempts.filter(
+				(a) => a.status === 'COMPLETED'
+			);
 
-			const courseScore = courseSubmitted.reduce((sum, a) => sum + (a.score || 0), 0);
-			const courseAverage =
-				courseSubmitted.length > 0 ? Math.round(courseScore / courseSubmitted.length) : 0;
+			const courseAllTestTotalScore = courseAllCompletedTestAttempts.reduce(
+				(totalScore, attempt) => totalScore + (attempt.score || 0),
+				0
+			);
+
+			const courseAllTestTotalScoreAverage =
+				courseAllCompletedTestAttempts.length > 0 ?
+					Math.round(courseAllTestTotalScore / courseAllCompletedTestAttempts.length)
+				:	0;
 
 			return {
 				courseId: enrollment.course.id,
 				courseTitle: enrollment.course.title,
-				totalTests: courseTests.length,
-				attemptedTests: courseAttempts.length,
-				completedTests: courseSubmitted.length,
-				averageScore: courseAverage,
-				chapters: enrollment.course.chapters.map((ch) => ({
-					id: ch.id,
-					code: ch.code,
-					title: ch.title,
-					tests: ch.tests.length,
-					attempts: courseAttempts.filter((a) => (a.test.chapter.id === ch.id ? true : false))
+				totalTests: courseAllTest.length,
+				attemptedTests: courseTestAttempts.length,
+				completedTests: courseAllCompletedTestAttempts.length,
+				averageScore: courseAllTestTotalScoreAverage,
+				chapters: enrollment.course.chapters.map((chapter) => ({
+					id: chapter.id,
+					code: chapter.code,
+					title: chapter.title,
+					tests: chapter.tests.length,
+					attempts: courseTestAttempts.filter((attempt) => attempt.test.chapter.id === chapter.id)
 						.length
 				}))
 			};
@@ -432,26 +450,28 @@ export const getStudentResults = asyncHandlerWithContext(
 					student,
 					summary: {
 						totalAttempts: testAttempts.length,
-						completedAttempts: submittedAttempts.length,
-						pendingAttempts: testAttempts.length - submittedAttempts.length,
+						completedAttempts: completedAttempts.length,
+						pendingAttempts: testAttempts.filter((attempt) => attempt.status === 'IN_PROGRESS')
+							.length,
 						averageScore,
 						totalScore
 					},
 					courseResults,
-					recentAttempts: testAttempts.slice(0, 10).map((a) => ({
-						id: a.id,
-						testTitle: a.test.title,
-						courseName: a.test.chapter.course.title,
-						startedAt: a.startedAt,
-						submittedAt: a.submittedAt,
-						score: a.score,
-						status: a.submittedAt ? 'submitted' : 'pending',
-						answeredQuestions: a._count.answers,
-						maxQuestions: a.test.maxQuestions,
+					recentAttempts: testAttempts.slice(0, 10).map((attempt) => ({
+						id: attempt.id,
+						testTitle: attempt.test.title,
+						courseName: attempt.test.chapter.course.title,
+						startedAt: attempt.startedAt,
+						submittedAt: attempt.submittedAt,
+						score: attempt.score,
+						status: attempt.status,
+						answeredQuestions: attempt._count.answers,
+						maxQuestions: attempt.test.maxQuestions,
 						accuracy:
-							a._count.answers > 0 ?
+							attempt._count.answers > 0 ?
 								Math.round(
-									(a.answers.filter((ans) => ans.isCorrect === true).length / a._count.answers) *
+									(attempt.answers.filter((answer) => answer.isCorrect === true).length /
+										attempt._count.answers) *
 										100
 								)
 							:	0

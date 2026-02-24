@@ -36,13 +36,12 @@ export const UserRole = {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
 
 
-export const TestStatus = {
+export const TestAttemptStatus = {
   IN_PROGRESS: 'IN_PROGRESS',
-  COMPLETED: 'COMPLETED',
-  SUBMITTED: 'SUBMITTED'
+  COMPLETED: 'COMPLETED'
 } as const
 
-export type TestStatus = (typeof TestStatus)[keyof typeof TestStatus]
+export type TestAttemptStatus = (typeof TestAttemptStatus)[keyof typeof TestAttemptStatus]
 
 
 export const QuestionType = {

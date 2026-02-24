@@ -1631,16 +1631,16 @@ export type ListEnumQuestionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<
 
 
 /**
- * Reference to a field of type 'TestStatus'
+ * Reference to a field of type 'TestAttemptStatus'
  */
-export type EnumTestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestStatus'>
+export type EnumTestAttemptStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestAttemptStatus'>
     
 
 
 /**
- * Reference to a field of type 'TestStatus[]'
+ * Reference to a field of type 'TestAttemptStatus[]'
  */
-export type ListEnumTestStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestStatus[]'>
+export type ListEnumTestAttemptStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TestAttemptStatus[]'>
     
 
 

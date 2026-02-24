@@ -19,6 +19,10 @@ import { requireRole } from '@/utils/auth-guard';
 export const getStudentDashboard = asyncHandler('StudentDashboard', async (request) => {
 	// Get student ID from headers or auth context
 	const { userId } = requireRole(request, ['student']);
+	const completedTests = [];
+	const pendingTests = [];
+	const newTests = [];
+	let nextAction = null;
 
 	if (!userId) {
 		throw new ApiError(401, 'Unauthorized access');
@@ -86,34 +90,76 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 		orderBy: { startedAt: 'desc' }
 	});
 
-	const completedAttempts = attempts.filter((attempt) => attempt.status === 'COMPLETED');
+	// Map test ID to Each Attempt
+	const latestAttemptByTestId = new Map();
 
-	const completedTestIds = new Set(completedAttempts.map((attempt) => attempt.testId));
+	for (const attempt of attempts) {
+		if (!latestAttemptByTestId.has(attempt.testId)) {
+			latestAttemptByTestId.set(attempt.testId, attempt);
+		}
+	}
 
-	const pendingTests = allTests.filter((test) => !completedTestIds.has(test.id));
+	for (const test of allTests) {
+		const latestAttempt = latestAttemptByTestId.get(test.id);
 
-	const completedAttemptsTotalScore = completedAttempts.reduce((total, attempt) => {
-		return total + (attempt.score ?? 0);
-	}, 0);
+		if (!latestAttempt) {
+			newTests.push(test);
+			continue;
+		}
 
-	const totalCompletedAttempts = completedAttempts.length;
+		if (latestAttempt.status === 'IN_PROGRESS') {
+			pendingTests.push({ ...test, attempt: latestAttempt });
+		}
+
+		if (latestAttempt.status === 'COMPLETED') {
+			completedTests.push(test);
+		}
+	}
+
+	const completedLatestAttempts = completedTests
+		.map((test) => latestAttemptByTestId.get(test.id))
+		.filter(Boolean);
+
+	const totalCompletedScore = completedLatestAttempts.reduce(
+		(total, attempt) => total + (attempt.score ?? 0),
+		0
+	);
 
 	const averageScore =
-		totalCompletedAttempts > 0 ?
-			Math.round(completedAttemptsTotalScore / totalCompletedAttempts)
+		completedLatestAttempts.length > 0 ?
+			Math.round(totalCompletedScore / completedLatestAttempts.length)
 		:	0;
 
-	// next action = first pending test
-	const nextPendingTest =
-		pendingTests.sort(
-			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-		)[0] ?? null;
+	if (pendingTests.length > 0) {
+		const resumeTest = pendingTests[0];
 
-	// recent activity
-	const lastAttempt =
-		completedAttempts.sort(
-			(a, b) => new Date(b.submittedAt!).getTime() - new Date(a.submittedAt!).getTime()
-		)[0] ?? null;
+		nextAction = {
+			attemptId: resumeTest.attempt.id,
+			type: 'RESUME_TEST',
+			testId: resumeTest.id,
+			title: resumeTest.title,
+			durationMinutes: resumeTest.durationMinutes,
+			courseTitle: resumeTest.courseTitle,
+			chapterTitle: resumeTest.chapterTitle
+		};
+	} else if (newTests.length > 0) {
+		const sortedNewTests = [...newTests].sort(
+			(a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+		);
+
+		const startTest = sortedNewTests[0];
+
+		nextAction = {
+			type: 'START_TEST',
+			testId: startTest.id,
+			title: startTest.title,
+			durationMinutes: startTest.durationMinutes,
+			courseTitle: startTest.courseTitle,
+			chapterTitle: startTest.chapterTitle
+		};
+	}
+
+	const lastCompletedAttempt = attempts.find((attempt) => attempt.status === 'COMPLETED') ?? null;
 
 	const response = new ApiResponse(
 		200,
@@ -122,25 +168,17 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 			stats: {
 				enrolledCourses: enrollments.length,
 				totalTests: allTests.length,
-				completedTests: totalCompletedAttempts,
+				completedTests: completedTests.length,
 				pendingTests: pendingTests.length,
 				averageScore
 			},
-			nextAction:
-				nextPendingTest ?
-					{
-						type: 'TEST',
-						testId: nextPendingTest.id,
-						title: nextPendingTest.title,
-						durationMinutes: nextPendingTest.durationMinutes
-					}
-				:	null,
+			nextAction,
 			recentActivity:
-				lastAttempt ?
+				lastCompletedAttempt ?
 					{
-						testId: lastAttempt.testId,
-						score: lastAttempt.score,
-						submittedAt: lastAttempt.submittedAt
+						testId: lastCompletedAttempt.testId,
+						score: lastCompletedAttempt.score,
+						submittedAt: lastCompletedAttempt.submittedAt
 					}
 				:	null
 		},
