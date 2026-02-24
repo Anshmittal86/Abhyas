@@ -3,7 +3,6 @@
 import { StatCard } from '@/components/dashboard/stat-card';
 import { TestCard } from '@/components/dashboard/test-card';
 import { Moon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { StatBadge } from '@/components/dashboard/stat-badge';
 import Loader from '@/components/common/Loader';
 import { useEffect, useState } from 'react';
@@ -23,18 +22,29 @@ interface DashboardData {
 		averageScore: number;
 	};
 	nextAction: {
-		type: string;
+		type: 'RESUME_TEST' | 'START_TEST';
 		testId: string;
 		title: string;
 		durationMinutes: number;
+		questionCount: number;
+		maxQuestions: number;
 		attemptId?: string;
 		courseTitle: string;
 		chapterTitle: string;
 	} | null;
 	recentActivity: {
+		attemptId: string;
 		testId: string;
+		title: string;
+		durationMinutes: number;
+		maxQuestions: number;
+		questionCount: number;
+		courseTitle: string;
+		chapterTitle: string;
+		chapterCode: string;
 		score: number | null;
-		submittedAt: string;
+		submittedAt: string | null;
+		status: 'COMPLETED';
 	} | null;
 }
 
@@ -135,9 +145,9 @@ export default function DashboardPage() {
 							title={nextAction.title}
 							course={nextAction.courseTitle}
 							unit={nextAction.chapterTitle}
-							maxMarks={100} // Placeholder, replace with actual marks if available
-							questions={10} // Placeholder, replace with actual question count if available
-							duration={`${nextAction.durationMinutes}m`}
+							maxMarks={nextAction.maxQuestions ?? 0}
+							questions={nextAction.questionCount ?? 0}
+							duration={`${nextAction.durationMinutes ?? 0}m`}
 							status={nextAction.type === 'RESUME_TEST' ? 'IN_PROGRESS' : 'NEW'}
 						/>
 					</div>
@@ -146,29 +156,30 @@ export default function DashboardPage() {
 
 			{/* Recent Activity */}
 			<section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+				<h3 className="mb-4 text-xl font-semibold">Recent Activity</h3>
 				{recentActivity && (
 					<div>
-						<h3 className="mb-4 text-xl font-semibold">Recent Activity</h3>
 						<TestCard
 							testId={recentActivity.testId}
-							title="Last Attempted Test"
-							course="Course"
-							maxMarks={100} // Placeholder, replace with actual marks if available
-							questions={10} // Placeholder, replace with actual question count if available
-							duration={`30m`} // Placeholder, replace with actual duration if available
-							unit="Chapter"
+							attemptId={recentActivity.attemptId}
+							title={recentActivity.title}
+							course={recentActivity.courseTitle}
+							unit={recentActivity.chapterTitle}
+							maxMarks={recentActivity.maxQuestions}
+							questions={recentActivity.questionCount}
+							duration={`${recentActivity.durationMinutes}m`}
 							status="COMPLETED"
 							gainedMarks={recentActivity.score ?? 0}
-							attemptDate={recentActivity.submittedAt}
+							attemptDate={recentActivity.submittedAt ?? undefined}
 						/>
 					</div>
 				)}
 			</section>
 
 			{/* Empty State */}
-			{stats.totalTests === 0 && (
+			{!recentActivity && (
 				<div className="mt-12 flex justify-center">
-					<div className="w-full max-w-md rounded-2xl border border-dashed border-ab-border/80 p-12 text-center">
+					<div className="w-full max-w-md rounded-2xl border border-dashed border-ab-border/90 p-12 text-center">
 						<p className="italic text-ab-text-secondary">No tests attempted yet</p>
 					</div>
 				</div>

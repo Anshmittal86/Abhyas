@@ -62,6 +62,12 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 									id: true,
 									title: true,
 									durationMinutes: true,
+									maxQuestions: true,
+									_count: {
+										select: {
+											questions: true
+										}
+									},
 									createdAt: true
 								}
 							}
@@ -76,7 +82,12 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 	const allTests = enrollments.flatMap((enrollment) =>
 		enrollment.course.chapters.flatMap((chapter) =>
 			chapter.tests.map((test) => ({
-				...test,
+				id: test.id,
+				title: test.title,
+				durationMinutes: test.durationMinutes,
+				maxQuestions: test.maxQuestions,
+				questionCount: test._count.questions,
+				createdAt: test.createdAt,
 				courseTitle: enrollment.course.title,
 				chapterTitle: chapter.title,
 				chapterCode: chapter.code
@@ -139,6 +150,8 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 			testId: resumeTest.id,
 			title: resumeTest.title,
 			durationMinutes: resumeTest.durationMinutes,
+			questionCount: resumeTest.questionCount,
+			maxQuestions: resumeTest.maxQuestions,
 			courseTitle: resumeTest.courseTitle,
 			chapterTitle: resumeTest.chapterTitle
 		};
@@ -154,12 +167,44 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 			testId: startTest.id,
 			title: startTest.title,
 			durationMinutes: startTest.durationMinutes,
+			questionCount: startTest.questionCount,
+			maxQuestions: startTest.maxQuestions,
 			courseTitle: startTest.courseTitle,
 			chapterTitle: startTest.chapterTitle
 		};
 	}
 
-	const lastCompletedAttempt = attempts.find((attempt) => attempt.status === 'COMPLETED') ?? null;
+	const lastCompletedAttempt = await prisma.testAttempt.findFirst({
+		where: {
+			studentId: userId,
+			status: 'COMPLETED'
+		},
+		orderBy: {
+			submittedAt: 'desc'
+		},
+		include: {
+			test: {
+				select: {
+					id: true,
+					title: true,
+					durationMinutes: true,
+					maxQuestions: true,
+					_count: {
+						select: { questions: true }
+					},
+					chapter: {
+						select: {
+							title: true,
+							code: true,
+							course: {
+								select: { title: true }
+							}
+						}
+					}
+				}
+			}
+		}
+	});
 
 	const response = new ApiResponse(
 		200,
@@ -176,9 +221,18 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 			recentActivity:
 				lastCompletedAttempt ?
 					{
-						testId: lastCompletedAttempt.testId,
+						attemptId: lastCompletedAttempt.id,
+						testId: lastCompletedAttempt.test.id,
+						title: lastCompletedAttempt.test.title,
+						durationMinutes: lastCompletedAttempt.test.durationMinutes,
+						maxQuestions: lastCompletedAttempt.test.maxQuestions,
+						questionCount: lastCompletedAttempt.test._count.questions,
+						courseTitle: lastCompletedAttempt.test.chapter.course.title,
+						chapterTitle: lastCompletedAttempt.test.chapter.title,
+						chapterCode: lastCompletedAttempt.test.chapter.code,
 						score: lastCompletedAttempt.score,
-						submittedAt: lastCompletedAttempt.submittedAt
+						submittedAt: lastCompletedAttempt.submittedAt,
+						status: lastCompletedAttempt.status
 					}
 				:	null
 		},

@@ -46,52 +46,62 @@ export async function finalizeAttempt(params: {
 	const questions = attempt.test.questions;
 	const answers = attempt.answers;
 
+	// Map: questionId -> selectedOptionId
+	const answerMap = new Map<string, string | null>(
+		answers.map((a) => [a.questionId, a.selectedOptionId])
+	);
+
 	// 🧮 Score calculation
 	let correctCount = 0;
-	const answerMap = new Map(answers.map((a) => [a.questionId, a.selectedOptionId]));
-	const answerUpdates = [];
+
+	const updatesForCorrect: string[] = [];
 
 	for (const question of questions) {
 		const selectedOptionId = answerMap.get(question.id);
 		if (!selectedOptionId) continue;
 
-		// Check if the selected option is marked as correct
 		const isCorrect = question.options.some(
 			(opt) => opt.id === selectedOptionId && opt.isCorrect === true
 		);
-		if (isCorrect) correctCount++;
 
-		answerUpdates.push(
-			prisma.attemptAnswer.update({
-				where: {
-					attemptId_questionId: {
-						attemptId: attempt.id,
-						questionId: question.id
-					}
-				},
-				data: {
-					isCorrect
-				}
-			})
-		);
+		if (isCorrect) {
+			correctCount++;
+			updatesForCorrect.push(question.id);
+		}
 	}
 
-	// 🔢 Calculate percentage score
 	const maxQuestions = questions.length;
 	const score = maxQuestions > 0 ? Math.round((correctCount / maxQuestions) * 100) : 0;
 
-	// 💾 Persist all updates automatically
-	await prisma.$transaction([
-		...answerUpdates,
-		prisma.testAttempt.update({
-			where: { id: attempt.id },
+	// Optimized persistence
+	await prisma.$transaction(async (tx) => {
+		// Reset all answers to false in one query
+		await tx.attemptAnswer.updateMany({
+			where: { attemptId },
+			data: { isCorrect: false }
+		});
+
+		// Mark only correct ones true
+		if (updatesForCorrect.length > 0) {
+			await tx.attemptAnswer.updateMany({
+				where: {
+					attemptId,
+					questionId: { in: updatesForCorrect }
+				},
+				data: { isCorrect: true }
+			});
+		}
+
+		// Update attempt
+		await tx.testAttempt.update({
+			where: { id: attemptId },
 			data: {
 				score,
 				submittedAt: new Date(),
 				status: 'COMPLETED'
 			}
-		})
-	]);
+		});
+	});
 
 	return {
 		attemptId: attempt.id,

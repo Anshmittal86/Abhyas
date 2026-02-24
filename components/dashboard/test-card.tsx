@@ -153,7 +153,7 @@ export function TestCard({
 							<span className="animate-pulse text-ab-primary">
 								● Time Remaining: {timeRemaining}
 							</span>
-							<span className="text-ab-text-secondary">Status: In Progress</span>
+							<span className="text-ab-text-secondary">Status: {status}</span>
 						</div>
 					</div>
 				)}
@@ -167,9 +167,10 @@ export function TestCard({
 									{gainedMarks ?? 0}/{maxMarks}
 								</span>
 							</p>
-							<p className="mt-1 flex items-center gap-1 text-lg font-bold text-ab-green-text capitalize">
-								<CheckCircle2 className="size-3" />
-								Completed {formatDate(attemptDate)}
+
+							<p className="mt-1 flex items-center gap-1 text-sm text-ab-text-secondary">
+								Status: <CheckCircle2 className="size-3" />
+								Completed
 							</p>
 						</div>
 					</div>
