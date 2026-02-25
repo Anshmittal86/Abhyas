@@ -156,10 +156,10 @@ export default function DashboardPage() {
 			)}
 
 			{/* Recent Activity */}
-			<section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+			<section>
 				<h3 className="mb-4 text-xl font-semibold">Recent Activity</h3>
 				{recentActivity && (
-					<div>
+					<div className="rounded-lg border border-ab-border/50 bg-ab-bg/50 p-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
 						<TestCard
 							testId={recentActivity.testId}
 							attemptId={recentActivity.attemptId}

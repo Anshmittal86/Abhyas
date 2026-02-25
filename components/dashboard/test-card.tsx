@@ -1,10 +1,11 @@
 'use client';
-// ✅
+
 import { Button } from '@/components/ui/button';
-import { BookOpen, Bookmark, Clock, ClipboardList, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Bookmark, Clock, ClipboardList, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 type TestStatus = 'NEW' | 'IN_PROGRESS' | 'COMPLETED';
 
@@ -19,11 +20,39 @@ interface TestCardProps {
 	duration?: string;
 	status?: TestStatus;
 	timeRemaining?: string;
-	score?: string;
 	gainedMarks?: number;
 	attemptDate?: string;
 	className?: string;
 }
+
+const statusConfig: Record<
+	TestStatus,
+	{
+		label: string;
+		bg: string;
+		text: string;
+		icon: React.ReactNode;
+	}
+> = {
+	NEW: {
+		label: 'Ready to Start',
+		bg: 'bg-ab-blue-bg',
+		text: 'text-ab-blue-text',
+		icon: <Clock className="size-3.5" />
+	},
+	IN_PROGRESS: {
+		label: 'In Progress',
+		bg: 'bg-ab-purple-bg',
+		text: 'text-ab-purple-text',
+		icon: <Clock className="size-3.5 animate-pulse" />
+	},
+	COMPLETED: {
+		label: 'Completed',
+		bg: 'bg-ab-green-bg',
+		text: 'text-ab-green-text',
+		icon: <CheckCircle2 className="size-3.5" />
+	}
+};
 
 export function TestCard({
 	testId,
@@ -36,13 +65,26 @@ export function TestCard({
 	duration,
 	status = 'NEW',
 	timeRemaining,
-	gainedMarks,
+	gainedMarks = 0,
 	attemptDate,
 	className
 }: TestCardProps) {
 	const router = useRouter();
+	const [isLoading, setIsLoading] = useState(false);
 
-	const handleStartTest = async () => {
+	const percentage = maxMarks > 0 ? Math.round((gainedMarks / maxMarks) * 100) : 0;
+
+	const formatDate = (dateString?: string): string => {
+		if (!dateString) return '—';
+		return new Date(dateString).toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		});
+	};
+
+	const handleStartOrRetake = async () => {
+		setIsLoading(true);
 		try {
 			const res = await fetch(`/api/student/tests/${testId}/start`, {
 				method: 'POST'
@@ -57,6 +99,8 @@ export function TestCard({
 		} catch (error) {
 			toast.error('An error occurred while starting the test');
 			console.error(error);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -69,147 +113,178 @@ export function TestCard({
 	};
 
 	const handleViewResult = () => {
-		router.push(`/results`);
+		// TODO: Ideally pass attemptId → `/results/${attemptId}`
+		// for now keeping your original route
+		router.push('/results');
 	};
 
-	const handleRetakeTest = async () => {
-		try {
-			const res = await fetch(`/api/student/tests/${testId}/start`, {
-				method: 'POST'
-			});
-			const data = await res.json();
-
-			if (data.success) {
-				router.push(`/test/active/${data.data.attemptId}`);
-			} else {
-				toast.error(data.message || 'Failed to retake test');
-			}
-		} catch (error) {
-			toast.error('An error occurred while retaking the test');
-			console.error(error);
-		}
-	};
-
-	const formatDate = (dateString?: string): string => {
-		if (!dateString) return '';
-		const date = new Date(dateString);
-		return date.toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	};
+	const config = statusConfig[status];
 
 	return (
 		<div
 			className={cn(
-				'relative flex flex-col gap-5 rounded-2xl border border-ab-border/80 bg-ab-surface p-6 pt-8 shadow-sm transition-all hover:shadow-md',
+				'group relative flex flex-col gap-6 rounded-3xl border border-ab-border/80 bg-ab-surface p-6 pt-10 shadow-sm transition-all duration-300 hover:shadow-md focus-within:ring-2 focus-within:ring-ab-primary/30',
 				className
 			)}
 		>
-			{/* Max Marks Badge */}
-			<div className="absolute -top-3 right-6 rounded-full border-2 border-ab-bg bg-ab-primary px-4 py-1 text-[10px] font-bold uppercase tracking-tight text-primary-foreground shadow-sm">
-				Max Marks: {maxMarks}
+			{/* Status Badge - Top Left */}
+			<div
+				className={cn(
+					'absolute -top-3 left-6 flex items-center gap-1.5 rounded-full px-4 py-1 text-xs font-semibold tracking-tight',
+					config.bg,
+					config.text
+				)}
+			>
+				{config.icon}
+				{config.label}
+			</div>
+
+			{/* Max Marks Badge - Top Right */}
+			<div className="absolute -top-3 right-6 rounded-full border-2 border-ab-surface bg-ab-primary px-5 py-1.5 text-xs font-bold uppercase tracking-[0.5px] text-primary-foreground shadow">
+				MAX {maxMarks}
 			</div>
 
 			{/* Header */}
-			<div className="space-y-1">
-				<h3 className="text-2xl font-bold uppercase tracking-tight text-ab-text-primary">
+			<div className="space-y-2">
+				<h3 className="line-clamp-2 text-2xl font-bold tracking-tight text-ab-text-primary">
 					{title}
 				</h3>
 
-				<div className="flex items-center gap-4 text-ab-text-secondary">
+				<div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ab-text-secondary">
 					<div className="flex items-center gap-1.5">
 						<BookOpen className="size-4" />
-						<span className="text-sm font-medium">{course}</span>
+						<span className="font-medium">{course}</span>
 					</div>
 					<div className="flex items-center gap-1.5">
 						<Bookmark className="size-4 text-ab-primary" />
-						<span className="text-sm font-medium">{unit}</span>
+						<span className="font-medium">{unit}</span>
 					</div>
 				</div>
 			</div>
 
-			{/* Status Content */}
-			<div className="space-y-3 border-y border-dashed border-ab-border/80 py-2">
+			{/* Content Area */}
+			<div className="min-h-23 border-y border-dashed border-ab-border/80 py-4">
 				{status === 'NEW' && (
-					<div className="grid grid-cols-2 gap-2 text-sm">
+					<div className="grid grid-cols-2 gap-4 text-sm">
 						<div className="flex items-center gap-2">
-							<ClipboardList className="size-4" />
-							Questions:
-							<span className="font-bold">{questions}</span>
+							<ClipboardList className="size-4 text-ab-text-secondary" />
+							<span>Questions:</span>
+							<span className="font-semibold text-ab-text-primary">{questions}</span>
 						</div>
 						<div className="flex items-center gap-2">
-							<Clock className="size-4" />
-							Duration:
-							<span className="font-bold">{duration}</span>
+							<Clock className="size-4 text-ab-text-secondary" />
+							<span>Duration:</span>
+							<span className="font-semibold text-ab-text-primary">{duration}</span>
 						</div>
 					</div>
 				)}
 
 				{status === 'IN_PROGRESS' && (
-					<div className="space-y-2">
-						<div className="flex justify-between text-sm font-medium">
-							<span className="animate-pulse text-ab-primary">
-								● Time Remaining: {timeRemaining}
+					<div className="flex flex-col gap-1">
+						<div className="flex items-center justify-between">
+							<span className="text-sm font-medium text-ab-primary">Time Remaining</span>
+							<span className="font-mono text-xl font-bold tracking-tighter text-ab-text-primary">
+								{timeRemaining}
 							</span>
-							<span className="text-ab-text-secondary">Status: {status}</span>
+						</div>
+						<div className="h-1.5 w-full rounded-full bg-ab-border/50 overflow-hidden">
+							<div className="h-full w-3/4 bg-linear-to-r from-ab-primary to-ab-primary-soft rounded-full" />
 						</div>
 					</div>
 				)}
 
 				{status === 'COMPLETED' && (
 					<div className="flex items-center justify-between">
-						<div className="text-sm">
-							<p className="text-ab-text-secondary">
-								Score:{' '}
-								<span className="text-xl font-bold text-ab-text-primary">
-									{gainedMarks ?? 0}/{maxMarks}
-								</span>
-							</p>
+						<div>
+							<div className="text-4xl font-bold tabular-nums tracking-tighter text-ab-text-primary">
+								{gainedMarks}
+								<span className="text-xl text-ab-text-secondary">/{maxMarks}</span>
+							</div>
+							<div className="text-sm text-ab-text-secondary mt-0.5">
+								{percentage}% • Attempted {formatDate(attemptDate)}
+							</div>
+						</div>
 
-							<p className="mt-1 flex items-center gap-1 text-sm text-ab-text-secondary">
-								Status: <CheckCircle2 className="size-3" />
-								Completed
-							</p>
+						<div className="relative size-16">
+							<svg className="size-16 -rotate-90" viewBox="0 0 100 100">
+								<circle
+									cx="50"
+									cy="50"
+									r="42"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="10"
+									className="text-ab-border/30"
+								/>
+								<circle
+									cx="50"
+									cy="50"
+									r="42"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="10"
+									strokeDasharray={263}
+									strokeDashoffset={263 - (263 * percentage) / 100}
+									className="text-ab-green-text transition-all duration-500"
+								/>
+							</svg>
+							<div className="absolute inset-0 flex items-center justify-center">
+								<CheckCircle2 className="size-8 text-ab-green-text" />
+							</div>
 						</div>
 					</div>
 				)}
 			</div>
 
 			{/* Actions */}
-			{status === 'NEW' ?
+			{status === 'NEW' && (
 				<Button
-					onClick={handleStartTest}
-					className="w-full border-2 border-ab-border/80 bg-ab-surface py-5 text-lg font-black tracking-widest text-ab-text-primary transition-all hover:border-ab-primary/40 hover:bg-ab-primary/5 hover:text-ab-primary"
+					onClick={handleStartOrRetake}
+					disabled={isLoading}
+					className="h-14 w-full border-2 border-ab-border bg-ab-surface text-lg font-bold tracking-widest text-ab-text-primary hover:border-ab-primary hover:bg-ab-primary/5 hover:text-ab-primary active:scale-[0.985]"
 					variant="outline"
 				>
-					START TEST
+					{isLoading ?
+						<>
+							<Loader2 className="mr-2 size-5 animate-spin" />
+							STARTING...
+						</>
+					:	'START TEST'}
 				</Button>
-			: status === 'IN_PROGRESS' ?
+			)}
+
+			{status === 'IN_PROGRESS' && (
 				<Button
 					onClick={handleResumeTest}
-					className="w-full bg-ab-primary py-6 font-bold tracking-widest text-primary-foreground transition-all hover:bg-ab-primary/90"
+					className="h-14 w-full bg-ab-primary text-lg font-bold tracking-widest text-primary-foreground hover:bg-ab-primary/90 active:scale-[0.985]"
 				>
 					RESUME TEST
 				</Button>
-			: status === 'COMPLETED' ?
-				<div className="flex w-full gap-3">
+			)}
+
+			{status === 'COMPLETED' && (
+				<div className="flex flex-col sm:flex-row w-full gap-3 mt-2">
 					<Button
 						onClick={handleViewResult}
-						className="flex-1 min-w-0 border-2 border-ab-border/80 bg-ab-surface py-5 text-ab-text-primary transition-all hover:border-ab-primary/40 hover:bg-ab-primary/5 hover:text-ab-primary font-semibold tracking-wide"
 						variant="outline"
+						className="h-14 flex-1 border-2 border-ab-border bg-ab-surface text-base font-semibold tracking-wide text-ab-text-primary hover:border-ab-primary hover:bg-ab-primary/5 hover:text-ab-primary"
 					>
 						View Result
 					</Button>
 					<Button
-						onClick={handleRetakeTest}
-						className="flex-1 min-w-0 bg-ab-primary py-5 text-primary-foreground transition-all hover:bg-ab-primary/90 font-semibold tracking-wide"
+						onClick={handleStartOrRetake}
+						disabled={isLoading}
+						className="h-14 flex-1 bg-ab-primary text-base font-semibold tracking-wide text-primary-foreground hover:bg-ab-primary/90 active:scale-[0.985]"
 					>
-						Retake Test
+						{isLoading ?
+							<>
+								<Loader2 className="mr-2 size-5 animate-spin" />
+								RETAKING...
+							</>
+						:	'Retake Test'}
 					</Button>
 				</div>
-			:	null}
+			)}
 		</div>
 	);
 }
