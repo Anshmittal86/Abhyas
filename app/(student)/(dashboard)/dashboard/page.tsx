@@ -43,6 +43,7 @@ interface DashboardData {
 		chapterTitle: string;
 		chapterCode: string;
 		score: number | null;
+		gainedMarks: number;
 		submittedAt: string | null;
 		status: 'COMPLETED';
 	} | null;
@@ -169,7 +170,7 @@ export default function DashboardPage() {
 							questions={recentActivity.questionCount}
 							duration={`${recentActivity.durationMinutes}m`}
 							status="COMPLETED"
-							gainedMarks={recentActivity.score ?? 0}
+							gainedMarks={recentActivity.gainedMarks ?? 0}
 							attemptDate={recentActivity.submittedAt ?? undefined}
 						/>
 					</div>

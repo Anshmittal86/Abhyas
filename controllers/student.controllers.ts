@@ -212,6 +212,11 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 		}
 	});
 
+	const gainedMarks =
+		lastCompletedAttempt?.score !== null && lastCompletedAttempt?.score !== undefined ?
+			Math.round((lastCompletedAttempt.score / 100) * lastCompletedAttempt.test.maxQuestions)
+		:	0;
+
 	const response = new ApiResponse(
 		200,
 		{
@@ -237,6 +242,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 						chapterTitle: lastCompletedAttempt.test.chapter.title,
 						chapterCode: lastCompletedAttempt.test.chapter.code,
 						score: lastCompletedAttempt.score,
+						gainedMarks,
 						submittedAt: lastCompletedAttempt.submittedAt,
 						status: lastCompletedAttempt.status
 					}
