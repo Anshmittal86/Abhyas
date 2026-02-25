@@ -132,7 +132,7 @@ export function QuizResults({ result, questions, answers, onRetry }: QuizResults
 						</Button>
 
 						<Button
-							onClick={() => router.push('/student/results')}
+							onClick={() => router.push('/results')}
 							className="w-full gap-2 border border-ab-border text-ab-text-primary hover:bg-ab-primary/10"
 							variant="outline"
 						>
