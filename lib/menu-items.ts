@@ -26,10 +26,10 @@ interface MenuConfig {
 export const MENU_DATA: MenuConfig = {
 	student: [
 		{ title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
-		{ title: 'Courses', url: '/courses', icon: BookOpen },
+		// { title: 'Courses', url: '/courses', icon: BookOpen },
 		{ title: 'Tests', url: '/tests', icon: ClipboardCheck },
-		{ title: 'Results', url: '/results', icon: Trophy },
-		{ title: 'Leaderboard', url: '/leaderboard', icon: Trophy, isComingSoon: false }
+		{ title: 'Results', url: '/results', icon: Trophy }
+		// { title: 'Leaderboard', url: '/leaderboard', icon: Trophy, isComingSoon: false }
 	],
 	admin: [
 		{ title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
