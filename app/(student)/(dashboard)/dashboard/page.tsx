@@ -8,6 +8,7 @@ import Loader from '@/components/common/Loader';
 import { useEffect, useState } from 'react';
 import DashboardData from '@/types/student-dashboard-types';
 import { useTheme } from 'next-themes';
+import { apiFetch } from '@/lib/apiFetch';
 
 export default function DashboardPage() {
 	const [data, setData] = useState<DashboardData | null>(null);
@@ -19,9 +20,8 @@ export default function DashboardPage() {
 		const fetchDashboard = async () => {
 			try {
 				setLoading(true);
-				const response = await fetch('/api/student/dashboard', {
-					method: 'GET',
-					credentials: 'include'
+				const response = await apiFetch('/api/student/dashboard', {
+					method: 'GET'
 				});
 
 				const result = await response.json();

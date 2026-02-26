@@ -23,16 +23,16 @@ export default function StudentResultsPage() {
 		setHasError(false);
 
 		try {
-			const response = await apiFetch('/api/student/results');
+			const response = await apiFetch('/api/student/results', { method: 'GET' });
 			if (!response.ok) throw new Error(`API error: ${response.status}`);
 			const result = (await response.json()) as SuccessResponseTypes<AllTestResultsData>;
 			setData(result.data ?? null);
 		} catch (error) {
 			if (error instanceof Error && error.message === 'AUTH_EXPIRED') {
-				router.replace('/student-login');
+				router.replace('/login');
 				return;
 			}
-			console.error('Results fetch error:', error);
+			console.error('Results fetch error: ', error);
 			setHasError(true);
 		} finally {
 			setLoading(false);

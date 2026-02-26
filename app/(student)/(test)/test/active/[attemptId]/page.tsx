@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Play, Send } from 'lucide-react';
 import Loader from '@/components/common/Loader';
 import { toast } from 'sonner';
+import { apiFetch } from '@/lib/apiFetch';
 
 type QuizState = 'intro' | 'active' | 'results';
 
@@ -53,7 +54,7 @@ const TestPage = () => {
 				setLoading(true);
 				setError(null);
 
-				const response = await fetch(`/api/student/attempt/${attemptId}/all-questions`);
+				const response = await apiFetch(`/api/student/attempt/${attemptId}/all-questions`);
 				const result = await response.json();
 
 				if (!result.success) {
@@ -153,10 +154,14 @@ const TestPage = () => {
 			submitQuiz(elapsedSeconds);
 
 			// Send submission to backend
-			const submitResponse = await fetch(`/api/student/attempt/${attemptId}/submit`, {
+			const submitResponse = await apiFetch(`/api/student/attempt/${attemptId}/submit`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' }
 			});
+
+			if (!submitResponse.ok) {
+				throw Error(`Error Submit Tests: ${submitResponse.statusText}`);
+			}
 
 			const submitResult = await submitResponse.json();
 
@@ -194,7 +199,7 @@ const TestPage = () => {
 		// Auto-submit to backend
 		if (attemptId) {
 			try {
-				const submitResponse = await fetch(`/api/student/attempt/${attemptId}/submit`, {
+				const submitResponse = await apiFetch(`/api/student/attempt/${attemptId}/submit`, {
 					method: 'PUT',
 					headers: { 'Content-Type': 'application/json' }
 				});

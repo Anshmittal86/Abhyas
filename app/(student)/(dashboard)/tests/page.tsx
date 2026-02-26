@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Loader from '@/components/common/Loader';
+import { apiFetch } from '@/lib/apiFetch';
 
 interface TestData {
 	testId: string;
@@ -35,7 +36,14 @@ export default function TestsPage() {
 	useEffect(() => {
 		const fetchTests = async () => {
 			try {
-				const response = await fetch('/api/student/tests');
+				const response = await apiFetch('/api/student/tests', {
+					method: 'GET'
+				});
+
+				if (!response.ok) {
+					throw Error(`Error Fetching Tests: ${response.statusText}`);
+				}
+
 				const result = await response.json();
 
 				if (result.success && result.data) {
