@@ -37,7 +37,7 @@ export default function StudentResultsPage() {
 		} finally {
 			setLoading(false);
 		}
-	}, []);
+	}, [router]);
 
 	useEffect(() => {
 		void fetchResults();
