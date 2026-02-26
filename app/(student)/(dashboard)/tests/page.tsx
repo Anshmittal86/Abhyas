@@ -92,17 +92,17 @@ export default function TestsPage() {
 	if (loading) {
 		return (
 			<main className="mx-auto flex w-full max-w-7xl items-center justify-center p-8 bg-ab-bg text-ab-text-primary">
-				<Loader />
+				<Loader message="Loading Tests" />
 			</main>
 		);
 	}
 
 	return (
-		<main className="mx-auto w-full max-w-7xl space-y-8 p-8 bg-ab-bg text-ab-text-primary">
+		<main className="mx-auto w-full max-w-7xl space-y-8 px-8 bg-ab-bg text-ab-text-primary">
 			{/* Header & Search */}
 			<div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Tests</h1>
+					<h1 className="text-2xl font-bold tracking-tight">Tests</h1>
 					<p className="text-ab-text-secondary">Explore and attempt your subject-wise tests.</p>
 				</div>
 
@@ -144,10 +144,7 @@ export default function TestsPage() {
 				</TabsList>
 
 				{/* Available */}
-				<TabsContent
-					value="available"
-					className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-3"
-				>
+				<TabsContent value="available" className="grid grid-cols-1 gap-8 sm:grid-cols-2">
 					{availableTests.length > 0 ?
 						availableTests.map((test) => (
 							<TestCard
@@ -169,10 +166,7 @@ export default function TestsPage() {
 				</TabsContent>
 
 				{/* Ongoing */}
-				<TabsContent
-					value="ongoing"
-					className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3"
-				>
+				<TabsContent value="ongoing" className="grid grid-cols-1 gap-8 md:grid-cols-2">
 					{inProgressTests.length > 0 ?
 						inProgressTests.map((test) => {
 							if (!test.attempt) return null;
@@ -200,10 +194,7 @@ export default function TestsPage() {
 				</TabsContent>
 
 				{/* Completed */}
-				<TabsContent
-					value="completed"
-					className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3"
-				>
+				<TabsContent value="completed" className="grid grid-cols-1 gap-8 sm:grid-cols-2">
 					{completedTests.length > 0 ?
 						completedTests.map((test) => {
 							if (!test.attempt || !test.attempt.submittedAt) return null;

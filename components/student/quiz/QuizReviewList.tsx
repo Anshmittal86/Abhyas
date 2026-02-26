@@ -11,15 +11,25 @@ interface QuizReviewListProps {
 
 export function QuizReviewList({ questions, answers, onBack, onRetry }: QuizReviewListProps) {
 	return (
-		<div className="min-h-screen bg-background">
+		<div className="min-h-screen bg-ab-bg text-ab-text-primary">
 			{/* Header */}
-			<header className="sticky top-0 z-10 bg-card border-b px-4 py-3">
+			<header className="sticky top-0 z-10 bg-ab-surface border-b border-ab-border px-4 py-3">
 				<div className="max-w-2xl mx-auto flex items-center justify-between">
-					<Button variant="ghost" size="sm" onClick={onBack} className="gap-1">
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={onBack}
+						className="gap-1 border-ab-border text-ab-text-primary hover:bg-ab-primary/10"
+					>
 						<ArrowLeft className="h-4 w-4" />
 						Back to Results
 					</Button>
-					<Button size="sm" onClick={onRetry} className="gap-1">
+
+					<Button
+						size="sm"
+						onClick={onRetry}
+						className="gap-1 bg-ab-primary text-white hover:bg-ab-primary-soft font-semibold"
+					>
 						<RotateCcw className="h-4 w-4" />
 						Retry
 					</Button>
@@ -27,7 +37,7 @@ export function QuizReviewList({ questions, answers, onBack, onRetry }: QuizRevi
 			</header>
 
 			<main className="max-w-2xl mx-auto p-4 py-6 space-y-4">
-				<h2 className="text-lg font-bold text-foreground">Answer Review</h2>
+				<h2 className="text-lg font-black text-ab-text-primary">Answer Review</h2>
 
 				{questions.map((q, index) => {
 					const userAnswer = answers.get(q.id);
@@ -35,29 +45,40 @@ export function QuizReviewList({ questions, answers, onBack, onRetry }: QuizRevi
 					const isSkipped = !userAnswer;
 
 					return (
-						<div key={q.id} className="bg-card rounded-xl border shadow-sm overflow-hidden">
-							{/* Question header with status */}
+						<div
+							key={q.id}
+							className="bg-ab-surface rounded-xl border border-ab-border shadow-sm overflow-hidden"
+						>
+							{/* Question header */}
 							<div
-								className={`flex items-center gap-3 px-4 py-3 border-b ${
-									isSkipped ? 'bg-muted/50'
-									: isCorrect ? 'bg-quiz-correct/10'
-									: 'bg-quiz-incorrect/10'
-								}`}
+								className={`flex items-center gap-3 px-4 py-3 border-b border-ab-border
+							${
+								isSkipped ? 'bg-ab-border/30'
+								: isCorrect ? 'bg-ab-green-bg'
+								: 'bg-ab-pink-bg'
+							}
+						`}
 							>
 								{isSkipped ?
-									<MinusCircle className="h-5 w-5 text-muted-foreground shrink-0" />
+									<MinusCircle className="h-5 w-5 text-ab-text-secondary shrink-0" />
 								: isCorrect ?
-									<CheckCircle2 className="h-5 w-5 text-quiz-correct shrink-0" />
-								:	<XCircle className="h-5 w-5 text-quiz-incorrect shrink-0" />}
-								<span className="text-sm font-semibold text-foreground">Question {index + 1}</span>
-								<span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground ml-auto">
+									<CheckCircle2 className="h-5 w-5 text-ab-green-text shrink-0" />
+								:	<XCircle className="h-5 w-5 text-ab-pink-text shrink-0" />}
+
+								<span className="text-sm font-semibold text-ab-text-primary">
+									Question {index + 1}
+								</span>
+
+								<span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-ab-purple-bg text-ab-purple-text ml-auto">
 									{q.type === 'TRUE_FALSE' ? 'True / False' : 'MCQ'}
 								</span>
 							</div>
 
 							{/* Question text */}
 							<div className="px-4 pt-3 pb-2">
-								<p className="text-sm font-medium text-foreground leading-relaxed">{q.question}</p>
+								<p className="text-sm font-medium text-ab-text-primary leading-relaxed">
+									{q.question}
+								</p>
 							</div>
 
 							{/* Options */}
@@ -67,18 +88,18 @@ export function QuizReviewList({ questions, answers, onBack, onRetry }: QuizRevi
 									const isCorrectOption = q.correctAnswer === option.id;
 									const letter = String.fromCharCode(65 + i);
 
-									let borderClass = 'border-border';
+									let borderClass = 'border-ab-border';
 									let bgClass = '';
 									let iconEl = null;
 
 									if (isCorrectOption) {
-										borderClass = 'border-quiz-correct';
-										bgClass = 'bg-quiz-correct/8';
-										iconEl = <CheckCircle2 className="h-4 w-4 text-quiz-correct shrink-0" />;
+										borderClass = 'border-ab-green-text';
+										bgClass = 'bg-ab-green-bg';
+										iconEl = <CheckCircle2 className="h-4 w-4 text-ab-green-text shrink-0" />;
 									} else if (isUserChoice && !isCorrect) {
-										borderClass = 'border-quiz-incorrect';
-										bgClass = 'bg-quiz-incorrect/8';
-										iconEl = <XCircle className="h-4 w-4 text-quiz-incorrect shrink-0" />;
+										borderClass = 'border-ab-pink-text';
+										bgClass = 'bg-ab-pink-bg';
+										iconEl = <XCircle className="h-4 w-4 text-ab-pink-text shrink-0" />;
 									}
 
 									return (
@@ -87,19 +108,23 @@ export function QuizReviewList({ questions, answers, onBack, onRetry }: QuizRevi
 											className={`flex items-center gap-3 rounded-lg border-2 p-3 ${borderClass} ${bgClass}`}
 										>
 											<span
-												className={`shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-xs font-semibold ${
-													isCorrectOption ? 'bg-quiz-correct text-accent-foreground'
-													: isUserChoice && !isCorrect ?
-														'bg-quiz-incorrect text-destructive-foreground'
-													:	'bg-secondary text-secondary-foreground'
-												}`}
+												className={`shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-xs font-semibold
+											${
+												isCorrectOption ? 'bg-ab-green-text text-white'
+												: isUserChoice && !isCorrect ? 'bg-ab-pink-text text-white'
+												: 'bg-ab-border text-ab-text-secondary'
+											}
+										`}
 											>
 												{letter}
 											</span>
-											<span className="text-sm text-foreground flex-1">{option.text}</span>
+
+											<span className="text-sm text-ab-text-primary flex-1">{option.text}</span>
+
 											{iconEl}
+
 											{isUserChoice && (
-												<span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+												<span className="text-[10px] font-semibold uppercase tracking-wider text-ab-text-secondary">
 													Your answer
 												</span>
 											)}

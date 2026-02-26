@@ -1,5 +1,5 @@
 'use client';
-// ✅
+
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -34,43 +34,73 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 
 interface AppSidebarProps {
-	userRole: 'student' | 'admin';
+	userRole?: 'student' | 'admin';
 }
 
-export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
+interface UserData {
+	id?: string;
+	name?: string;
+	email?: string;
+	provisionalNo?: string;
+	role?: 'admin' | 'student';
+	avatarUrl?: string;
+}
+
+export function AppSidebar({ userRole = 'student' }: AppSidebarProps) {
 	const { isMobile } = useSidebar();
 	const pathname = usePathname();
 	const { theme, setTheme } = useTheme();
 	const router = useRouter();
-	const [isLoggingOut, setIsLoggingOut] = useState(false);
-	const [detectedRole, setDetectedRole] = useState<'admin' | 'student' | null>(null);
-	const [detectedProvisional, setDetectedProvisional] = useState<string | null>(null);
 
-	// detect user from server-side cookie via API
+	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const [user, setUser] = useState<UserData | null>(null);
+	const [loadingUser, setLoadingUser] = useState(true);
+
+	// Fetch real user data
 	useEffect(() => {
 		let mounted = true;
-		const load = async () => {
+
+		const loadUser = async () => {
 			try {
 				const res = await fetch('/api/auth/me', { credentials: 'include' });
-				if (!res.ok) return;
+				if (!res.ok) throw new Error('Unauthorized');
+
 				const json = await res.json();
 				if (!mounted) return;
-				if (json.role === 'admin') setDetectedRole('admin');
-				if (json.role === 'student') setDetectedRole('student');
-				if (json.provisionalNo) setDetectedProvisional(json.provisionalNo as string);
-			} catch {
-				// ignore — fallback to prop
+
+				setUser({
+					name: json.name,
+					email: json.email,
+					provisionalNo: json.provisionalNo,
+					role: json.role
+				});
+			} catch (err) {
+				console.warn('Failed to fetch user, using fallback');
+				setUser({ role: userRole });
+			} finally {
+				if (mounted) setLoadingUser(false);
 			}
 		};
-		load();
+
+		loadUser();
+
 		return () => {
 			mounted = false;
 		};
-	}, []);
+	}, [userRole]);
 
-	// prefer detected role; fall back to incoming prop
-	const effectiveRole = detectedRole || userRole;
+	const effectiveRole = user?.role || userRole;
 	const navItems = MENU_DATA[effectiveRole] || [];
+
+	const getInitials = (name?: string) => {
+		if (!name) return effectiveRole === 'admin' ? 'AD' : 'ST';
+		return name
+			.split(' ')
+			.map((n) => n[0])
+			.join('')
+			.toUpperCase()
+			.slice(0, 2);
+	};
 
 	return (
 		<Sidebar collapsible="icon" className="bg-ab-bg">
@@ -80,8 +110,11 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 					<div className="flex flex-col">
 						<span className="flex items-center gap-2 text-xl font-bold tracking-tight">
 							Abyash
-							{userRole === 'admin' && (
-								<span className="rounded bg-ab-primary px-1.5 py-0.5 text-[10px] font-black uppercase text-primary-foreground">
+							<span className="rounded-md text-sm bg-ab-primary border border-ab-border/80 px-4 py-1 text-white bg-ab-bg-primary/90 font-semibold">
+								Beta
+							</span>
+							{effectiveRole === 'admin' && (
+								<span className="rounded bg-ab-primary px-1.5 py-0.5 text-[10px] font-black uppercase text-primary-foreground bg-ab-bg-primary/90">
 									ADMIN
 								</span>
 							)}
@@ -139,6 +172,7 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 				</SidebarGroup>
 			</SidebarContent>
 
+			{/* ==================== SHIMMER FOOTER ==================== */}
 			<SidebarFooter className="overflow-hidden border-t border-dashed border-ab-border/80 px-2 py-4 bg-ab-bg">
 				<SidebarMenu>
 					<SidebarMenuItem>
@@ -147,94 +181,109 @@ export function AppSidebar({ userRole = 'admin' }: AppSidebarProps) {
 								<SidebarMenuButton
 									size="lg"
 									className="h-14 cursor-pointer rounded-2xl border-2 border-transparent data-[state=open]:bg-sidebar-accent hover:border-sidebar-border"
+									disabled={loadingUser}
 								>
-									<Avatar className="h-9 w-9 rounded-xl border border-ab-border/80">
-										<AvatarImage src="https://github.com/shadcn.png" alt="Ansh Mittal" />
-										<AvatarFallback className="rounded-xl bg-ab-primary/10 font-bold text-ab-primary">
-											AM
-										</AvatarFallback>
-									</Avatar>
+									{
+										loadingUser ?
+											// ✨ Shimmer Effect
+											<div className="flex w-full items-center gap-3">
+												<div className="h-9 w-9 rounded-xl bg-ab-border animate-pulse" />
+												<div className="flex-1 space-y-2">
+													<div className="h-4 w-28 rounded bg-ab-border animate-pulse" />
+													<div className="h-3 w-40 rounded bg-ab-border animate-pulse" />
+												</div>
+											</div>
+											// Real User Info
+										:	<>
+												<Avatar className="h-9 w-9 rounded-xl border border-ab-border/80">
+													<AvatarImage src={user?.avatarUrl} alt={user?.name || 'User'} />
+													<AvatarFallback className="rounded-xl bg-ab-primary/10 font-bold text-ab-primary">
+														{getInitials(user?.name)}
+													</AvatarFallback>
+												</Avatar>
 
-									<div className="ml-2 grid flex-1 text-left text-sm leading-tight">
-										<span className="truncate font-bold">Ansh Mittal</span>
-										<span className="truncate text-[10px] font-medium leading-none text-ab-text-secondary">
-											anshmit657@gmail.com
-										</span>
-									</div>
+												<div className="ml-2 grid flex-1 text-left text-sm leading-tight">
+													<span className="truncate font-bold">{user?.name || 'Student'}</span>
+													<span className="truncate text-[10px] font-medium leading-none text-ab-text-secondary">
+														{user?.email || 'user@abyash.com'}
+													</span>
+												</div>
 
-									<EllipsisVertical className="ml-auto size-4 opacity-50" />
+												<EllipsisVertical className="ml-auto size-4 opacity-50" />
+											</>
+
+									}
 								</SidebarMenuButton>
 							</DropdownMenuTrigger>
 
-							<DropdownMenuContent
-								className="w-64 rounded-2xl border-2 border-ab-border/80 p-2 shadow-xl bg-ab-bg"
-								side={isMobile ? 'bottom' : 'right'}
-								align="end"
-								sideOffset={12}
-							>
-								<DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest opacity-60">
-									Provisional No: ST001
-								</DropdownMenuLabel>
+							{/* Dropdown content remains same (only shows when loaded) */}
+							{!loadingUser && (
+								<DropdownMenuContent
+									className="w-64 rounded-2xl border-2 border-ab-border p-2 shadow-xl bg-ab-bg"
+									side={isMobile ? 'bottom' : 'right'}
+									align="end"
+									sideOffset={12}
+								>
+									<DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold uppercase tracking-widest opacity-60">
+										Provisional No: {user?.provisionalNo || '—'}
+									</DropdownMenuLabel>
 
-								<DropdownMenuSeparator className="bg-ab-border/80" />
+									<DropdownMenuSeparator className="bg-ab-border/80" />
 
-								<DropdownMenuGroup>
-									<DropdownMenuItem className="cursor-pointer rounded-lg py-2 font-medium">
-										My Profile
-									</DropdownMenuItem>
+									<DropdownMenuGroup>
+										<DropdownMenuItem className="cursor-pointer rounded-lg py-2 font-medium">
+											My Profile
+										</DropdownMenuItem>
+
+										<DropdownMenuItem
+											className="flex cursor-pointer justify-between rounded-lg py-2 font-medium"
+											onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+										>
+											<span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+											{theme === 'dark' ?
+												<Sun className="size-4" />
+											:	<Moon className="size-4" />}
+										</DropdownMenuItem>
+									</DropdownMenuGroup>
+
+									<DropdownMenuSeparator className="bg-ab-border/80" />
 
 									<DropdownMenuItem
-										className="flex cursor-pointer justify-between rounded-lg py-2 font-medium"
-										onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-									>
-										<span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-										{theme === 'dark' ?
-											<Sun className="size-4" />
-										:	<Moon className="size-4" />}
-									</DropdownMenuItem>
-								</DropdownMenuGroup>
-
-								<DropdownMenuSeparator className="bg-ab-border/80" />
-
-								<DropdownMenuItem
-									className="cursor-pointer rounded-lg py-2 font-bold text-destructive transition-colors focus:bg-destructive/10 focus:text-destructive"
-									onClick={async () => {
-										// logout flow: POST to API (cookies included) -> redirect to login
-										setIsLoggingOut(true);
-										try {
-											const res = await fetch('/api/auth/logout', {
-												method: 'POST',
-												credentials: 'include'
-											});
-											if (res.ok) {
-												const json = await res.json().catch(() => ({}));
-												toast.success(json?.message || 'Logged out');
-												// use Next.js router.replace to replace history and avoid back navigation
-												const loginPath = userRole === 'admin' ? '/admin/login' : '/login';
-												router.replace(loginPath);
-											} else {
-												const err = await res.json().catch(() => ({}));
-												toast.error(err?.message || 'Failed to logout');
+										className="cursor-pointer rounded-lg py-2 font-bold text-destructive transition-colors focus:bg-destructive/10 focus:text-destructive"
+										onClick={async () => {
+											setIsLoggingOut(true);
+											try {
+												const res = await fetch('/api/auth/logout', {
+													method: 'POST',
+													credentials: 'include'
+												});
+												if (res.ok) {
+													toast.success('Logged out successfully');
+													const loginPath = effectiveRole === 'admin' ? '/admin/login' : '/login';
+													router.replace(loginPath);
+												} else {
+													toast.error('Logout failed');
+												}
+											} catch (err) {
+												toast.error('Logout failed');
+											} finally {
+												setIsLoggingOut(false);
 											}
-										} catch (err) {
-											toast.error(err instanceof Error ? err.message : 'Logout failed');
-										} finally {
-											setIsLoggingOut(false);
+										}}
+									>
+										{isLoggingOut ?
+											<span className="flex items-center">
+												<LogOut className="mr-2 size-4 animate-spin" />
+												Logging out...
+											</span>
+										:	<>
+												<LogOut className="mr-2 size-4" />
+												Log out
+											</>
 										}
-									}}
-								>
-									{isLoggingOut ?
-										<span className="flex items-center">
-											<LogOut className="mr-2 size-4 animate-spin" />
-											Logging out...
-										</span>
-									:	<>
-											<LogOut className="mr-2 size-4" />
-											Log out
-										</>
-									}
-								</DropdownMenuItem>
-							</DropdownMenuContent>
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							)}
 						</DropdownMenu>
 					</SidebarMenuItem>
 				</SidebarMenu>

@@ -2,57 +2,18 @@
 
 import { StatCard } from '@/components/dashboard/stat-card';
 import { TestCard } from '@/components/dashboard/test-card';
-import { Moon } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { StatBadge } from '@/components/dashboard/stat-badge';
 import Loader from '@/components/common/Loader';
 import { useEffect, useState } from 'react';
-
-interface DashboardData {
-	student: {
-		id: string;
-		name: string;
-		email: string;
-		provisionalNo: string;
-	};
-	stats: {
-		enrolledCourses: number;
-		totalTests: number;
-		completedTests: number;
-		pendingTests: number;
-		averageScore: number;
-	};
-	nextAction: {
-		type: 'RESUME_TEST' | 'START_TEST';
-		testId: string;
-		title: string;
-		durationMinutes: number;
-		questionCount: number;
-		maxQuestions: number;
-		attemptId?: string;
-		courseTitle: string;
-		chapterTitle: string;
-	} | null;
-	recentActivity: {
-		attemptId: string;
-		testId: string;
-		title: string;
-		durationMinutes: number;
-		maxQuestions: number;
-		questionCount: number;
-		courseTitle: string;
-		chapterTitle: string;
-		chapterCode: string;
-		score: number | null;
-		gainedMarks: number;
-		submittedAt: string | null;
-		status: 'COMPLETED';
-	} | null;
-}
+import DashboardData from '@/types/student-dashboard-types';
+import { useTheme } from 'next-themes';
 
 export default function DashboardPage() {
 	const [data, setData] = useState<DashboardData | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const { theme, setTheme } = useTheme();
 
 	useEffect(() => {
 		const fetchDashboard = async () => {
@@ -85,7 +46,7 @@ export default function DashboardPage() {
 	if (loading) {
 		return (
 			<main className="mx-auto flex w-full max-w-7xl items-center justify-center p-8 bg-ab-bg text-ab-text-primary">
-				<Loader height="full" message="Loading dashboard data..." />
+				<Loader message="Loading Dashboard" />
 			</main>
 		);
 	}
@@ -103,16 +64,21 @@ export default function DashboardPage() {
 	const { stats, nextAction, recentActivity } = data;
 
 	return (
-		<main className="mx-auto w-full max-w-7xl space-y-8 bg-ab-bg p-8 text-ab-text-primary">
+		<main className="mx-auto w-full max-w-7xl space-y-6 bg-ab-bg px-8  text-ab-text-primary">
 			{/* Header */}
 			<div className="flex items-start justify-between">
 				<div>
-					<h1 className="text-3xl font-bold">Dashboard</h1>
+					<h1 className="text-2xl font-bold">Dashboard</h1>
 					<p className="text-ab-text-secondary">Overview of your preparation progress</p>
 				</div>
 
-				<button className="rounded-full border border-ab-border/80 p-2 transition hover:bg-ab-primary/10">
-					<Moon className="size-5 text-ab-text-secondary" />
+				<button
+					className="rounded-full border border-ab-border/80 p-2 transition hover:bg-ab-primary/10"
+					onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+				>
+					{theme === 'dark' ?
+						<Sun className="size-4 text-ab-text-secondary" />
+					:	<Moon className="size-4 text-ab-text-secondary" />}
 				</button>
 			</div>
 
@@ -136,9 +102,9 @@ export default function DashboardPage() {
 			{/* Next Action - Pending Tests */}
 			{nextAction && (
 				<section>
-					<h3 className="mb-4 text-xl font-semibold">
+					<h2 className="mb-4 text-xl font-semibold">
 						{nextAction.type === 'RESUME_TEST' ? 'Resume Test' : 'Start Test'}
-					</h3>
+					</h2>
 					<div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
 						<TestCard
 							testId={nextAction.testId}
@@ -157,7 +123,7 @@ export default function DashboardPage() {
 
 			{/* Recent Activity */}
 			<section>
-				<h3 className="mb-4 text-xl font-semibold">Recent Activity</h3>
+				<h2 className="mb-4 text-xl font-semibold">Recent Activity</h2>
 				{recentActivity && (
 					<div className="rounded-lg border border-ab-border/50 bg-ab-bg/50 p-4 grid grid-cols-1 gap-6 lg:grid-cols-2">
 						<TestCard

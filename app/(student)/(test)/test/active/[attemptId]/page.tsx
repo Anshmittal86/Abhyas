@@ -9,7 +9,7 @@ import { QuizQuestionCard } from '@/components/student/quiz/QuizQuestionCard';
 import { QuizNavigator } from '@/components/student/quiz/QuizNavigator';
 import { QuizResults } from '@/components/student/quiz/QuizResult';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Send, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Send } from 'lucide-react';
 import Loader from '@/components/common/Loader';
 import { toast } from 'sonner';
 
@@ -32,7 +32,7 @@ const TestPage = () => {
 	const router = useRouter();
 
 	// The URL param is named testId but contains attemptId (due to TestCard routing)
-	const attemptId = params.testId as string;
+	const attemptId = params.attemptId as string;
 
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);

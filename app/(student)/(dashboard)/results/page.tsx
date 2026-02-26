@@ -8,6 +8,7 @@ import ErrorState from '@/components/common/ErrorState';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { TestResultItem, AllTestResultsData, SuccessResponseTypes } from '@/types';
+import { StatCard } from '@/components/dashboard/stat-card';
 
 export default function StudentResultsPage() {
 	const router = useRouter();
@@ -64,12 +65,12 @@ export default function StudentResultsPage() {
 		});
 	}
 
-	if (loading) return <Loader size={35} message="Loading Results..." />;
+	if (loading) return <Loader size={35} message="Loading Results" />;
 	if (hasError) return <ErrorState onRetry={fetchResults} />;
 
 	if (!data || groupedByTest.size === 0) {
 		return (
-			<main className="flex-1 px-8 py-6 space-y-6 bg-ab-bg text-ab-text-primary">
+			<main className="flex-1 px-8 space-y-6 bg-ab-bg text-ab-text-primary">
 				<div className="space-y-1">
 					<h1 className="text-2xl font-black text-ab-text-primary">Results</h1>
 					<p className="text-sm font-medium text-ab-text-secondary">Track your test performance</p>
@@ -82,7 +83,7 @@ export default function StudentResultsPage() {
 
 					<Button
 						onClick={() => router.push('/tests')}
-						className="bg-ab-primary hover:bg-ab-primary-soft text-ab-text-primary font-bold"
+						className="bg-ab-primary hover:bg-ab-primary-soft text-white font-bold"
 					>
 						Take a Test
 					</Button>
@@ -94,11 +95,11 @@ export default function StudentResultsPage() {
 	const summary = data.summary;
 
 	return (
-		<main className="flex-1 px-8 py-6 space-y-6">
+		<main className="flex-1 px-8 space-y-6">
 			{/* Header */}
 			<div className="flex items-start justify-between gap-4">
 				<div className="space-y-1">
-					<h1 className="text-2xl font-semibold text-ab-text-primary">Results</h1>
+					<h1 className="text-3xl font-bold text-ab-text-primary">Results</h1>
 					<p className="text-sm text-ab-text-secondary">Track your test performance</p>
 				</div>
 
@@ -113,22 +114,13 @@ export default function StudentResultsPage() {
 
 			{/* Summary Stats */}
 			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-				<div className="bg-surface border border-default rounded-xl p-4">
-					<div className="text-sm text-ab-text-secondary">Total Tests Attempted</div>
-					<div className="text-2xl font-semibold text-ab-text-primary">{summary.totalResults}</div>
-				</div>
-				<div className="bg-surface border border-default rounded-xl p-4">
-					<div className="text-sm text-ab-text-secondary">Average Score</div>
-					<div className="text-2xl font-semibold text-ab-text-primary">{summary.averageScore}%</div>
-				</div>
-				<div className="bg-surface border border-default rounded-xl p-4">
-					<div className="text-sm text-ab-text-secondary">Total Score</div>
-					<div className="text-2xl font-semibold text-ab-text-primary">{summary.totalScore}</div>
-				</div>
+				<StatCard label="Total Tests Attempted" value={summary.totalResults} />
+				<StatCard label="Average Score" value={`${summary.averageScore}%`} />
+				<StatCard label="Total Score" value={summary.totalScore} />
 			</div>
 
 			{/* All Tests Section */}
-			<div className="bg-surface border border-default rounded-xl p-5 space-y-3">
+			<div className="bg-surface border border-dashed rounded-xl p-5 space-y-3">
 				<h2 className="text-lg font-semibold text-ab-text-primary">All Test Results</h2>
 
 				{groupedByTest.size === 0 ?
@@ -144,11 +136,14 @@ export default function StudentResultsPage() {
 							);
 
 							return (
-								<div key={testId} className="border border-default rounded-lg overflow-hidden">
+								<div
+									key={testId}
+									className="border border-default rounded-lg overflow-hidden bg-ab-surface"
+								>
 									{/* Test Header */}
 									<button
 										onClick={() => toggleTestExpand(testId)}
-										className="w-full px-4 py-3 flex items-center justify-between hover:bg-primary/5 transition"
+										className="w-full px-4 py-3 flex items-center justify-between transition"
 									>
 										<div className="flex-1 text-left space-y-1">
 											<div className="flex items-center gap-2">
@@ -225,12 +220,15 @@ export default function StudentResultsPage() {
 
 			{/* Course-wise Results Section (Optional) */}
 			{data.courseResults && data.courseResults.length > 0 && (
-				<div className="bg-surface border border-default rounded-xl p-5 space-y-3">
+				<div className="bg-surface border border-dashed rounded-xl p-5 space-y-3">
 					<h2 className="text-lg font-semibold text-ab-text-primary">Results by Course</h2>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
 						{data.courseResults.map((course) => (
-							<div key={course.courseId} className="border border-default rounded-lg p-4">
+							<div
+								key={course.courseId}
+								className="border border-default rounded-lg p-4 bg-ab-surface"
+							>
 								<h3 className="font-semibold text-ab-text-primary mb-3">{course.courseTitle}</h3>
 								<div className="space-y-2">
 									<div className="flex justify-between text-sm">
