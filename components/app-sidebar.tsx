@@ -110,11 +110,11 @@ export function AppSidebar({ userRole = 'student' }: AppSidebarProps) {
 					<div className="flex flex-col">
 						<span className="flex items-center gap-2 text-xl font-bold tracking-tight">
 							Abyash
-							<span className="rounded-md text-sm bg-ab-primary border border-ab-border/80 px-4 py-1 text-white bg-ab-bg-primary/90 font-semibold">
+							<span className="rounded-md text-[12px] bg-ab-primary border border-ab-border/80 px-1.5 py-0.5 text-white bg-ab-bg-primary/90 font-semibold tracking-normal">
 								Beta
 							</span>
 							{effectiveRole === 'admin' && (
-								<span className="rounded bg-ab-primary px-1.5 py-0.5 text-[10px] font-black uppercase text-primary-foreground bg-ab-bg-primary/90">
+								<span className="rounded bg-ab-primary px-1.5 py-0.5 text-[10px] font-black uppercase text-primary-foreground bg-ab-bg-primary/90 tracking-wide">
 									ADMIN
 								</span>
 							)}

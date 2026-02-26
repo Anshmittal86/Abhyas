@@ -3,6 +3,9 @@ import { StudentsListTypes } from '@/types/student';
 import { SuccessResponseTypes } from '@/types/api';
 import { ChaptersListTypes } from '@/types/chapters';
 import { TestQuestionProgress, TestsListTypes } from '@/types';
+import { AdminDashboardData } from '@/types/admin-dashboard-types';
+import { apiFetch } from './apiFetch';
+import { ApiError } from '@/utils/api-error';
 
 export const fetchStudents = async (): Promise<StudentsListTypes[] | undefined> => {
 	try {
@@ -112,12 +115,40 @@ export const deleteQuestion = async (questionId: string): Promise<void> => {
 };
 
 export const getTestQuestionProgress = async (testId: string): Promise<TestQuestionProgress> => {
-	const res = await fetch(`/api/admin/test/${testId}/progress`, {
+	const response = await fetch(`/api/admin/test/${testId}/progress`, {
 		credentials: 'include',
 		cache: 'no-store'
 	});
 
-	const result = await res.json();
+	if (!response.ok) {
+		throw Error(`Error Admin Dashboard: ${response.statusText}`);
+	}
+
+	const result = await response.json();
+
+	if (!result.success) {
+		throw new Error(result.message);
+	}
+
+	return result.data;
+};
+
+/*
+ *
+ * Admin Dashboard
+ *
+ */
+export const getAdminDashboardData = async (): Promise<AdminDashboardData | undefined> => {
+	const response = await apiFetch('/api/admin/dashboard', {
+		method: 'GET',
+		credentials: 'include'
+	});
+
+	if (!response.ok) {
+		throw Error(`Error Admin Dashboard: ${response.statusText}`);
+	}
+
+	const result = (await response.json()) as SuccessResponseTypes<AdminDashboardData>;
 
 	if (!result.success) {
 		throw new Error(result.message);

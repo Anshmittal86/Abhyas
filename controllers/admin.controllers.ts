@@ -10,13 +10,23 @@ export const getAdminDashboard = asyncHandler('GetAdminDashboard', async (reques
 	const { userId } = requireRole(request, ['admin']);
 
 	if (!userId) {
-		throw new ApiError(401, 'Unauthorized');
+		throw new ApiError(401, 'Unauthorized Access');
+	}
+
+	const admin = await prisma.admin.findUnique({
+		where: {
+			id: userId
+		}
+	});
+
+	if (!admin) {
+		throw new ApiError(404, 'Admin not found');
 	}
 
 	const todayStart = new Date();
 	todayStart.setHours(0, 0, 0, 0);
 
-	const [totalStudents, totalTests, maxQuestions, todayAttempts, recentAttempts] =
+	const [totalStudents, totalTests, totalQuestions, todayAttempts, recentAttempts] =
 		await Promise.all([
 			prisma.student.count(),
 			prisma.test.count({ where: { adminId: userId } }),
@@ -25,20 +35,21 @@ export const getAdminDashboard = asyncHandler('GetAdminDashboard', async (reques
 				where: { startedAt: { gte: todayStart } }
 			}),
 			prisma.testAttempt.findMany({
-				orderBy: { startedAt: 'desc' },
-				take: 5,
 				include: {
 					student: { select: { name: true } },
 					test: { select: { title: true } }
-				}
+				},
+				take: 4,
+				orderBy: { startedAt: 'desc' }
 			})
 		]);
 
-	const recentActivity = recentAttempts.map((attempt) => ({
+	const recentActivities = recentAttempts.map((attempt) => ({
 		studentName: attempt.student.name,
 		testTitle: attempt.test.title,
 		score: attempt.score,
-		status: attempt.status
+		status: attempt.status,
+		submittedAt: attempt.submittedAt
 	}));
 
 	return NextResponse.json(
@@ -48,10 +59,10 @@ export const getAdminDashboard = asyncHandler('GetAdminDashboard', async (reques
 				stats: {
 					totalStudents,
 					totalTests,
-					maxQuestions,
+					totalQuestions,
 					todayAttempts
 				},
-				recentActivity
+				recentActivities
 			},
 			'Admin dashboard data fetched'
 		)

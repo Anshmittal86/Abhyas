@@ -41,10 +41,7 @@ export function requireAuth(request: NextRequest) {
 	}
 
 	try {
-		const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as {
-			id: string;
-			role: 'admin' | 'student';
-		};
+		const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as JwtPayload;
 
 		return {
 			userId: payload.id,

@@ -1,124 +1,117 @@
 'use client';
-import {
-	Users,
-	FileText,
-	Database,
-	MousePointerClick,
-	UserPlus2,
-	TrendingUp,
-	ArrowUpRight
-} from 'lucide-react';
+
+import { FileText, Database, UserPlus2, ArrowUpRight, Sun, Moon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StudentFormSheet } from '@/components/forms/StudentFormSheet';
-// ✅
-const AdminDashboard = () => {
-	const stats = [
-		{
-			title: 'Total Students',
-			value: '1,500+',
-			icon: Users,
-			trend: '+10%',
-			bgColor: 'bg-ab-blue-bg',
-			textColor: 'text-ab-blue-text'
-		},
-		{
-			title: 'Tests Created',
-			value: '25',
-			icon: FileText,
-			trend: '-3%',
-			bgColor: 'bg-ab-primary/10',
-			textColor: 'text-ab-primary'
-		},
-		{
-			title: 'Total Questions',
-			value: '10,000+',
-			icon: Database,
-			trend: '+5%',
-			bgColor: 'bg-ab-purple-bg',
-			textColor: 'text-ab-purple-text'
-		},
-		{
-			title: "Today's Attempts",
-			value: '1,240',
-			icon: MousePointerClick,
-			trend: '+12%',
-			bgColor: 'bg-ab-green-bg',
-			textColor: 'text-ab-green-text'
-		}
-	];
+import { useEffect, useState } from 'react';
+import { getAdminDashboardData } from '@/lib/api';
+import { AdminDashboardData } from '@/types/admin-dashboard-types';
+import { toast } from 'sonner';
+import { StatCard } from '@/components/dashboard/stat-card';
+import Loader from '@/components/common/Loader';
+import { useTheme } from 'next-themes';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
-	const recentActivity = [
-		{
-			name: 'Rahul Sharma',
-			test: 'Physics Quiz 01',
-			score: '85%',
-			status: 'Passed',
-			pillBg: 'bg-ab-green-bg',
-			pillText: 'text-ab-green-text'
-		},
-		{
-			name: 'Anjali Gupta',
-			test: 'Maths Mock Test',
-			score: '92%',
-			status: 'Passed',
-			pillBg: 'bg-ab-green-bg',
-			pillText: 'text-ab-green-text'
-		},
-		{
-			name: 'Aryan Khan',
-			test: 'Chemistry Unit 1',
-			score: '45%',
-			status: 'Failed',
-			pillBg: 'bg-ab-pink-bg',
-			pillText: 'text-ab-pink-text'
-		},
-		{
-			name: 'Sana Verma',
-			test: 'Physics Quiz 01',
-			score: 'Pending',
-			status: 'Review',
-			pillBg: 'bg-ab-blue-bg',
-			pillText: 'text-ab-blue-text'
+dayjs.extend(relativeTime);
+
+type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+
+const AdminDashboard = () => {
+	const [dashboard, setDashboard] = useState<AdminDashboardData>();
+	const [loading, setloading] = useState(true);
+	const { theme, setTheme } = useTheme();
+
+	useEffect(() => {
+		async function loadDashboard() {
+			try {
+				const data = await getAdminDashboardData();
+
+				if (!data) {
+					throw Error('Error getting admin dashboard data');
+				}
+
+				setDashboard(data);
+			} catch (error) {
+				if (error instanceof Error) {
+					toast.error('Something is wrong');
+					console.error(`Admin Dashboard: ${error.message}`);
+				}
+
+				console.error(`Error Fetching Admin Dashboard`);
+			} finally {
+				setloading(false);
+			}
 		}
-	];
+		loadDashboard();
+	}, []);
+
+	function getPerformanceLabel(percentage: number): string {
+		if (percentage < 40) return 'Bad';
+		if (percentage < 60) return 'Average';
+		if (percentage < 80) return 'Good';
+		return 'Excellent';
+	}
+
+	const performanceBadgeMap: Record<string, BadgeVariant> = {
+		Bad: 'destructive',
+		Average: 'secondary',
+		Good: 'default',
+		Excellent: 'outline'
+	};
+
+	function getBadgeVariant(message: string): BadgeVariant {
+		return performanceBadgeMap[message] ?? 'outline';
+	}
+
+	function getRelativeDay(dateString: string): string {
+		const date = dayjs(dateString);
+		const now = dayjs();
+
+		const diffInDays = now.startOf('day').diff(date.startOf('day'), 'day');
+
+		if (diffInDays === 0) return 'Today';
+		if (diffInDays === 1) return 'Yesterday';
+
+		return `${diffInDays} days ago`;
+	}
+
+	if (loading) {
+		return <Loader message="Loading Dashboard" />;
+	}
 
 	return (
 		<div className="space-y-8 p-6">
-			<div>
-				<h1 className="text-3xl font-black tracking-tight text-ab-text-primary">Admin Dashboard</h1>
-				<p className="font-medium text-ab-text-secondary">System overview and key metrics</p>
+			<div className="flex justify-between items-center">
+				<div>
+					<h1 className="text-3xl font-black tracking-tight text-ab-text-primary">
+						Admin Dashboard
+					</h1>
+					<p className="font-medium text-ab-text-secondary">System overview and key metrics</p>
+				</div>
+
+				<button
+					className="rounded-full border border-ab-border/80 p-2 transition hover:bg-ab-primary/10"
+					onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+				>
+					{theme === 'dark' ?
+						<Sun className="size-4 text-ab-text-secondary" />
+					:	<Moon className="size-4 text-ab-text-secondary" />}
+				</button>
 			</div>
 
 			{/* Stats */}
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				{stats.map((stat) => (
-					<Card
-						key={stat.title}
-						className="rounded-2xl border-2 border-ab-border/80 shadow-sm transition-colors bg-ab-bg hover:border-ab-primary/20"
-					>
-						<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-							<CardTitle className="text-[11px] font-bold uppercase tracking-widest opacity-60">
-								{stat.title}
-							</CardTitle>
-							<div className={`rounded-xl p-2 ${stat.bgColor}`}>
-								<stat.icon className={`h-4 w-4 ${stat.textColor}`} />
-							</div>
-						</CardHeader>
-
-						<CardContent>
-							<div className="text-2xl font-black text-ab-text-primary">{stat.value}</div>
-							<div className="mt-2 flex items-center text-[11px] font-bold">
-								<span className={`${stat.textColor} flex items-center`}>
-									{stat.trend}
-									<TrendingUp className="ml-1 size-3" />
-								</span>
-								<span className="ml-2 text-ab-text-secondary opacity-70">since last month</span>
-							</div>
-						</CardContent>
-					</Card>
-				))}
+				{dashboard?.stats && (
+					<>
+						<StatCard label="Total Students" value={dashboard.stats.totalStudents} />
+						<StatCard label="Total Tests" value={dashboard.stats.totalTests} />
+						<StatCard label="Total Questions" value={dashboard.stats.totalQuestions} />
+						<StatCard label="Today's Attempts" value={dashboard.stats.todayAttempts} />
+					</>
+				)}
 			</div>
 
 			<div className="grid grid-cols-1 gap-6 md:grid-cols-7">
@@ -133,32 +126,33 @@ const AdminDashboard = () => {
 
 					<CardContent>
 						<div className="space-y-5">
-							{recentActivity.map((activity, index) => (
-								<div
-									key={index}
-									className="flex items-center justify-between border-b border-dashed border-ab-border/80 pb-4 last:border-0 last:pb-0"
-								>
-									<div className="flex items-center gap-3">
-										<div className={`h-8 w-1 rounded-full ${activity.pillBg}`} />
-										<div>
-											<p className="text-sm font-bold leading-none text-ab-text-primary">
-												{activity.name}
+							{dashboard?.recentActivities.map((activity, index) => {
+								const performance = getPerformanceLabel(activity.score);
+								const relativeDay = getRelativeDay(activity.submittedAt);
+								return (
+									<div
+										key={index}
+										className="flex items-center justify-between rounded-xl border border-ab-border/70 px-4 py-3"
+									>
+										<div className="flex flex-col">
+											<p className="text-sm font-bold text-ab-text-primary">
+												{activity.studentName}
 											</p>
-											<p className="text-xs font-medium text-ab-text-secondary">{activity.test}</p>
+											<p className="text-xs font-medium text-ab-text-secondary">
+												{activity.testTitle}
+											</p>
 										</div>
-									</div>
 
-									<div className="flex items-center gap-6">
-										<div className="text-sm font-black text-ab-text-primary">{activity.score}</div>
-										<Badge
-											variant="outline"
-											className={`${activity.pillBg} ${activity.pillText} rounded-lg border-none px-3 py-1 font-bold`}
-										>
-											{activity.status}
-										</Badge>
+										<div className="text-sm font-semibold text-ab-text-secondary">
+											{relativeDay}
+										</div>
+
+										<div className="text-sm font-black text-ab-text-primary">{activity.score}%</div>
+
+										<Badge variant={getBadgeVariant(performance)}>{performance}</Badge>
 									</div>
-								</div>
-							))}
+								);
+							})}
 						</div>
 
 						<Button
@@ -177,40 +171,39 @@ const AdminDashboard = () => {
 						<CardTitle className="text-xl font-bold">Quick Actions</CardTitle>
 					</CardHeader>
 
-					<CardContent className="space-y-4">
-						<StudentFormSheet
-							trigger={
-								<Button
-									variant="outline"
-									className={`py-4 px-5 bg-ab-primary hover:bg-ab-primary/90 text-primary-foreground font-bold text-md rounded-full shadow-lg shadow-ab-primary/20 transition-all active:scale-95 cursor-pointer `}
-								>
-									<UserPlus2 className="h-5 w-5" />
-									Create Student
-								</Button>
-							}
-						/>
+					<CardContent className="space-y-5">
+						<div className="grid grid-cols-2 gap-4">
+							{/* Add Student */}
+							<StudentFormSheet
+								trigger={
+									<div className="group cursor-pointer rounded-2xl border border-ab-border/70 bg-ab-primary/5 p-6 transition hover:bg-ab-primary/10 hover:shadow-md">
+										<div className="flex flex-col items-center justify-center gap-3 text-center">
+											<UserPlus2 className="h-6 w-6 text-ab-primary transition group-hover:scale-110" />
+											<p className="text-sm font-bold text-ab-text-primary">Add Student</p>
+										</div>
+									</div>
+								}
+							/>
 
-						<div className="group relative">
-							<Button
-								disabled
-								className="h-14 w-full rounded-2xl border-2 border-dashed border-ab-border/80 bg-ab-border/20 pl-6 text-left text-lg font-bold text-ab-text-secondary opacity-60"
-							>
-								Bulk Upload Questions
-							</Button>
-							<Badge className="absolute right-4 top-4 bg-ab-text-primary text-ab-bg px-1.5 py-0.5 text-[9px] font-black uppercase">
-								Coming Soon
-							</Badge>
+							{/* Create Test */}
+							<div className="group cursor-pointer rounded-2xl border border-ab-border/70 bg-ab-primary/5 p-6 transition hover:bg-ab-primary/10 hover:shadow-md">
+								<div className="flex flex-col items-center justify-center gap-3 text-center">
+									<FileText className="h-6 w-6 text-ab-primary transition group-hover:scale-110" />
+									<p className="text-sm font-bold text-ab-text-primary">Create New Test</p>
+								</div>
+							</div>
 						</div>
 
-						<div className="mt-4 rounded-2xl border border-ab-border/80 bg-ab-primary/5 p-5">
-							<h4 className="mb-2 text-[11px] font-black uppercase tracking-tighter text-ab-primary">
-								System Insight
-							</h4>
-							<p className="text-[13px] font-medium leading-relaxed text-ab-text-secondary">
-								You can now set{' '}
-								<span className="text-xs font-bold italic text-ab-primary">Negative Marking</span>{' '}
-								while creating new tests. Check the advanced settings.
-							</p>
+						{/* Upload Bulk */}
+						<div className="group relative cursor-pointer rounded-2xl border border-dashed border-ab-border/70 bg-ab-primary/5 p-8 transition hover:bg-ab-primary/10 hover:shadow-md">
+							<div className="flex flex-col items-center justify-center gap-4 text-center">
+								<Database className="h-7 w-7 text-ab-primary transition group-hover:-translate-y-1" />
+								<p className="text-base font-bold text-ab-text-primary">Upload Bulk Questions</p>
+							</div>
+
+							<Badge className="absolute right-4 top-4 text-[9px] font-bold uppercase">
+								Coming Soon
+							</Badge>
 						</div>
 					</CardContent>
 				</Card>
