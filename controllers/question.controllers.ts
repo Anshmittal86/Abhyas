@@ -6,7 +6,11 @@ import { ApiResponse } from '@/utils/api-response';
 import { logEvent } from '@/utils/log-event';
 import { requireRole } from '@/utils/auth-guard';
 
-import { createQuestionSchema, updateQuestionSchema } from '@/validators/question.validator';
+import {
+	bulkUploadSchema,
+	createQuestionSchema,
+	updateQuestionSchema
+} from '@/validators/question.validator';
 import { asyncHandler, asyncHandlerWithContext } from '@/utils/async-handler';
 
 export const createTestQuestion = asyncHandler('CreateTestQuestion', async (request) => {
@@ -58,6 +62,16 @@ export const createTestQuestion = asyncHandler('CreateTestQuestion', async (requ
 				}))
 			});
 		}
+
+		// Increment totalMarks
+		await tx.test.update({
+			where: { id: testId },
+			data: {
+				totalMarks: {
+					increment: marks
+				}
+			}
+		});
 
 		return question;
 	});
@@ -325,6 +339,8 @@ export const updateTestQuestion = asyncHandlerWithContext(
 
 		// transaction update
 		const updatedQuestion = await prisma.$transaction(async (tx) => {
+			const oldMarks = existingQuestion.marks ?? 0;
+
 			// update question
 			const question = await tx.question.update({
 				where: {
@@ -337,6 +353,19 @@ export const updateTestQuestion = asyncHandlerWithContext(
 					...(explanation !== undefined && { explanation })
 				}
 			});
+
+			if (marks !== undefined && marks !== oldMarks) {
+				const diff = marks - oldMarks;
+
+				await tx.test.update({
+					where: { id: existingQuestion.testId },
+					data: {
+						totalMarks: {
+							increment: diff
+						}
+					}
+				});
+			}
 
 			// update options if provided
 			if (options) {
@@ -406,6 +435,7 @@ export const deleteTestQuestion = asyncHandlerWithContext(
 				id: true,
 				testId: true,
 				questionType: true,
+				marks: true,
 				_count: {
 					select: {
 						answers: true
@@ -425,10 +455,19 @@ export const deleteTestQuestion = asyncHandlerWithContext(
 		}
 
 		// 🗑️ delete question (cascade deletes options and answers automatically)
-		await prisma.question.delete({
-			where: {
-				id: questionId
-			}
+		await prisma.$transaction(async (tx) => {
+			await tx.question.delete({
+				where: { id: questionId }
+			});
+
+			await tx.test.update({
+				where: { id: existingQuestion.testId },
+				data: {
+					totalMarks: {
+						decrement: existingQuestion.marks
+					}
+				}
+			});
 		});
 
 		// 🧾 audit log
@@ -444,3 +483,103 @@ export const deleteTestQuestion = asyncHandlerWithContext(
 		});
 	}
 );
+
+export const uploadBulkQuestion = asyncHandler('BulkUploadQuestions', async (request) => {
+	const { userId } = requireRole(request, ['admin']);
+
+	if (!userId) {
+		throw new ApiError(401, 'Unauthorized access');
+	}
+
+	const body = await request.json();
+	const parsed = bulkUploadSchema.safeParse(body);
+
+	if (!parsed.success) {
+		throw new ApiError(400, parsed.error.errors[0].message);
+	}
+
+	const { testId, questions } = parsed.data;
+
+	if (!testId || !Array.isArray(questions)) {
+		throw new ApiError(400, 'Invalid request body');
+	}
+
+	const test = await prisma.test.findFirst({
+		where: {
+			id: testId,
+			adminId: userId
+		},
+		select: {
+			id: true,
+			maxQuestions: true
+		}
+	});
+
+	if (!test) {
+		throw new ApiError(404, 'Test not found or access denied');
+	}
+
+	const existingCount = await prisma.question.count({
+		where: { testId }
+	});
+
+	const newTotal = existingCount + questions.length;
+
+	if (newTotal > test.maxQuestions) {
+		throw new ApiError(
+			400,
+			`Question limit exceeded. Allowed: ${test.maxQuestions}, Existing: ${existingCount}`
+		);
+	}
+
+	await prisma.$transaction(async (tx) => {
+		let totalAddedMarks = 0;
+		for (const q of questions) {
+			totalAddedMarks += q.marks;
+			const createdQuestion = await tx.question.create({
+				data: {
+					testId,
+					adminId: userId,
+					questionText: q.questionText,
+					questionType: q.questionType,
+					explanation: q.explanation,
+					difficulty: q.difficulty,
+					marks: q.marks
+				}
+			});
+
+			if ('options' in q && q.options) {
+				await tx.questionOption.createMany({
+					data: q.options.map((opt) => ({
+						questionId: createdQuestion.id,
+						optionText: opt.optionText,
+						isCorrect: opt.isCorrect,
+						orderIndex: opt.orderIndex
+					}))
+				});
+			}
+		}
+
+		// update total marks
+		await tx.test.update({
+			where: { id: testId },
+			data: {
+				totalMarks: {
+					increment: totalAddedMarks
+				}
+			}
+		});
+	});
+
+	return NextResponse.json(
+		new ApiResponse(
+			200,
+			{
+				inserted: questions.length,
+				totalNow: newTotal,
+				remaining: test.maxQuestions - newTotal
+			},
+			'Questions uploaded successfully'
+		)
+	);
+});

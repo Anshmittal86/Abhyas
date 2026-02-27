@@ -17,6 +17,7 @@ export default interface DashboardData {
 		testId: string;
 		title: string;
 		durationMinutes: number;
+		totalMarks: number;
 		questionCount: number;
 		maxQuestions: number;
 		attemptId?: string;
@@ -29,6 +30,7 @@ export default interface DashboardData {
 		title: string;
 		durationMinutes: number;
 		maxQuestions: number;
+		totalMarks: number;
 		questionCount: number;
 		courseTitle: string;
 		chapterTitle: string;

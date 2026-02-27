@@ -41,6 +41,12 @@ enum QuestionType {
   CODE
 }
 
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 
 /*
   Admin (owner of content)
@@ -201,7 +207,8 @@ model Test {
   id              String   @id @default(uuid())
   title           String
   durationMinutes Int
-  maxQuestions  Int
+  maxQuestions    Int
+  totalMarks      Int @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -227,7 +234,7 @@ model Question {
   questionText  String
   questionType  QuestionType
   explanation   String?
-  difficulty    Int? // future AI Analytics ke liye
+  difficulty    QuestionDifficulty? 
   marks         Int @default(1)
 
   starterCode   String?

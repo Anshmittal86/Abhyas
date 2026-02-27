@@ -27,12 +27,10 @@ export type AggregateQuestion = {
 }
 
 export type QuestionAvgAggregateOutputType = {
-  difficulty: number | null
   marks: number | null
 }
 
 export type QuestionSumAggregateOutputType = {
-  difficulty: number | null
   marks: number | null
 }
 
@@ -41,7 +39,7 @@ export type QuestionMinAggregateOutputType = {
   questionText: string | null
   questionType: $Enums.QuestionType | null
   explanation: string | null
-  difficulty: number | null
+  difficulty: $Enums.QuestionDifficulty | null
   marks: number | null
   starterCode: string | null
   language: string | null
@@ -56,7 +54,7 @@ export type QuestionMaxAggregateOutputType = {
   questionText: string | null
   questionType: $Enums.QuestionType | null
   explanation: string | null
-  difficulty: number | null
+  difficulty: $Enums.QuestionDifficulty | null
   marks: number | null
   starterCode: string | null
   language: string | null
@@ -84,12 +82,10 @@ export type QuestionCountAggregateOutputType = {
 
 
 export type QuestionAvgAggregateInputType = {
-  difficulty?: true
   marks?: true
 }
 
 export type QuestionSumAggregateInputType = {
-  difficulty?: true
   marks?: true
 }
 
@@ -230,7 +226,7 @@ export type QuestionGroupByOutputType = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation: string | null
-  difficulty: number | null
+  difficulty: $Enums.QuestionDifficulty | null
   marks: number
   starterCode: string | null
   language: string | null
@@ -268,7 +264,7 @@ export type QuestionWhereInput = {
   questionText?: Prisma.StringFilter<"Question"> | string
   questionType?: Prisma.EnumQuestionTypeFilter<"Question"> | $Enums.QuestionType
   explanation?: Prisma.StringNullableFilter<"Question"> | string | null
-  difficulty?: Prisma.IntNullableFilter<"Question"> | number | null
+  difficulty?: Prisma.EnumQuestionDifficultyNullableFilter<"Question"> | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFilter<"Question"> | number
   starterCode?: Prisma.StringNullableFilter<"Question"> | string | null
   language?: Prisma.StringNullableFilter<"Question"> | string | null
@@ -309,7 +305,7 @@ export type QuestionWhereUniqueInput = Prisma.AtLeast<{
   questionText?: Prisma.StringFilter<"Question"> | string
   questionType?: Prisma.EnumQuestionTypeFilter<"Question"> | $Enums.QuestionType
   explanation?: Prisma.StringNullableFilter<"Question"> | string | null
-  difficulty?: Prisma.IntNullableFilter<"Question"> | number | null
+  difficulty?: Prisma.EnumQuestionDifficultyNullableFilter<"Question"> | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFilter<"Question"> | number
   starterCode?: Prisma.StringNullableFilter<"Question"> | string | null
   language?: Prisma.StringNullableFilter<"Question"> | string | null
@@ -351,7 +347,7 @@ export type QuestionScalarWhereWithAggregatesInput = {
   questionText?: Prisma.StringWithAggregatesFilter<"Question"> | string
   questionType?: Prisma.EnumQuestionTypeWithAggregatesFilter<"Question"> | $Enums.QuestionType
   explanation?: Prisma.StringNullableWithAggregatesFilter<"Question"> | string | null
-  difficulty?: Prisma.IntNullableWithAggregatesFilter<"Question"> | number | null
+  difficulty?: Prisma.EnumQuestionDifficultyNullableWithAggregatesFilter<"Question"> | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntWithAggregatesFilter<"Question"> | number
   starterCode?: Prisma.StringNullableWithAggregatesFilter<"Question"> | string | null
   language?: Prisma.StringNullableWithAggregatesFilter<"Question"> | string | null
@@ -366,7 +362,7 @@ export type QuestionCreateInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -383,7 +379,7 @@ export type QuestionUncheckedCreateInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -400,7 +396,7 @@ export type QuestionUpdateInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -417,7 +413,7 @@ export type QuestionUncheckedUpdateInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -434,7 +430,7 @@ export type QuestionCreateManyInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -449,7 +445,7 @@ export type QuestionUpdateManyMutationInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -462,7 +458,7 @@ export type QuestionUncheckedUpdateManyInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -498,7 +494,6 @@ export type QuestionCountOrderByAggregateInput = {
 }
 
 export type QuestionAvgOrderByAggregateInput = {
-  difficulty?: Prisma.SortOrder
   marks?: Prisma.SortOrder
 }
 
@@ -533,7 +528,6 @@ export type QuestionMinOrderByAggregateInput = {
 }
 
 export type QuestionSumOrderByAggregateInput = {
-  difficulty?: Prisma.SortOrder
   marks?: Prisma.SortOrder
 }
 
@@ -630,12 +624,8 @@ export type EnumQuestionTypeFieldUpdateOperationsInput = {
   set?: $Enums.QuestionType
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
+export type NullableEnumQuestionDifficultyFieldUpdateOperationsInput = {
+  set?: $Enums.QuestionDifficulty | null
 }
 
 export type QuestionCreateNestedOneWithoutOptionsInput = {
@@ -671,7 +661,7 @@ export type QuestionCreateWithoutAdminInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -687,7 +677,7 @@ export type QuestionUncheckedCreateWithoutAdminInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -732,7 +722,7 @@ export type QuestionScalarWhereInput = {
   questionText?: Prisma.StringFilter<"Question"> | string
   questionType?: Prisma.EnumQuestionTypeFilter<"Question"> | $Enums.QuestionType
   explanation?: Prisma.StringNullableFilter<"Question"> | string | null
-  difficulty?: Prisma.IntNullableFilter<"Question"> | number | null
+  difficulty?: Prisma.EnumQuestionDifficultyNullableFilter<"Question"> | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFilter<"Question"> | number
   starterCode?: Prisma.StringNullableFilter<"Question"> | string | null
   language?: Prisma.StringNullableFilter<"Question"> | string | null
@@ -747,7 +737,7 @@ export type QuestionCreateWithoutTestInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -763,7 +753,7 @@ export type QuestionUncheckedCreateWithoutTestInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -805,7 +795,7 @@ export type QuestionCreateWithoutOptionsInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -821,7 +811,7 @@ export type QuestionUncheckedCreateWithoutOptionsInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -853,7 +843,7 @@ export type QuestionUpdateWithoutOptionsInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -869,7 +859,7 @@ export type QuestionUncheckedUpdateWithoutOptionsInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -885,7 +875,7 @@ export type QuestionCreateWithoutAnswersInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -901,7 +891,7 @@ export type QuestionUncheckedCreateWithoutAnswersInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -933,7 +923,7 @@ export type QuestionUpdateWithoutAnswersInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -949,7 +939,7 @@ export type QuestionUncheckedUpdateWithoutAnswersInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -965,7 +955,7 @@ export type QuestionCreateManyAdminInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -979,7 +969,7 @@ export type QuestionUpdateWithoutAdminInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -995,7 +985,7 @@ export type QuestionUncheckedUpdateWithoutAdminInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1011,7 +1001,7 @@ export type QuestionUncheckedUpdateManyWithoutAdminInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1025,7 +1015,7 @@ export type QuestionCreateManyTestInput = {
   questionText: string
   questionType: $Enums.QuestionType
   explanation?: string | null
-  difficulty?: number | null
+  difficulty?: $Enums.QuestionDifficulty | null
   marks?: number
   starterCode?: string | null
   language?: string | null
@@ -1039,7 +1029,7 @@ export type QuestionUpdateWithoutTestInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1055,7 +1045,7 @@ export type QuestionUncheckedUpdateWithoutTestInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1071,7 +1061,7 @@ export type QuestionUncheckedUpdateManyWithoutTestInput = {
   questionText?: Prisma.StringFieldUpdateOperationsInput | string
   questionType?: Prisma.EnumQuestionTypeFieldUpdateOperationsInput | $Enums.QuestionType
   explanation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  difficulty?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  difficulty?: Prisma.NullableEnumQuestionDifficultyFieldUpdateOperationsInput | $Enums.QuestionDifficulty | null
   marks?: Prisma.IntFieldUpdateOperationsInput | number
   starterCode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1219,7 +1209,7 @@ export type $QuestionPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     questionText: string
     questionType: $Enums.QuestionType
     explanation: string | null
-    difficulty: number | null
+    difficulty: $Enums.QuestionDifficulty | null
     marks: number
     starterCode: string | null
     language: string | null
@@ -1658,7 +1648,7 @@ export interface QuestionFieldRefs {
   readonly questionText: Prisma.FieldRef<"Question", 'String'>
   readonly questionType: Prisma.FieldRef<"Question", 'QuestionType'>
   readonly explanation: Prisma.FieldRef<"Question", 'String'>
-  readonly difficulty: Prisma.FieldRef<"Question", 'Int'>
+  readonly difficulty: Prisma.FieldRef<"Question", 'QuestionDifficulty'>
   readonly marks: Prisma.FieldRef<"Question", 'Int'>
   readonly starterCode: Prisma.FieldRef<"Question", 'String'>
   readonly language: Prisma.FieldRef<"Question", 'String'>

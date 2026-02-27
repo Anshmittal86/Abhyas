@@ -140,17 +140,17 @@ export function TestCard({
 			</div>
 
 			{/* Max Marks Badge - Top Right */}
-			<div className="absolute -top-3 right-6 rounded-full border-2 border-ab-surface bg-ab-primary px-5 py-1.5 text-xs font-bold uppercase tracking-[0.5px] text-primary-foreground shadow">
-				MAX {maxMarks}
+			<div className="absolute -top-3 right-6 rounded-full border-2 border-ab-surface bg-ab-primary px-5 py-1.5 text-xs font-bold capitalize tracking-[0.5px] text-primary-foreground shadow">
+				Max Marks {maxMarks}
 			</div>
 
 			{/* Header */}
 			<div className="space-y-2">
-				<h3 className="line-clamp-2 text-2xl font-bold tracking-tight text-ab-text-primary">
+				<h3 className="line-clamp-2 text-2xl capitalize font-bold tracking-tight text-ab-text-primary">
 					{title}
 				</h3>
 
-				<div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ab-text-secondary">
+				<div className="flex flex-wrap justify-between items-center gap-x-5 gap-y-1 text-sm text-ab-text-secondary">
 					<div className="flex items-center gap-1.5">
 						<BookOpen className="size-4" />
 						<span className="font-medium">{course}</span>

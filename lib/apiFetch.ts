@@ -36,7 +36,7 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
 				});
 
 				// Hard redirect to login (clears any client-side state)
-				window.location.href = '/login?reason=account-not-found';
+				window.location.href = '/login';
 
 				// Return early to prevent further execution
 				return response;
@@ -70,7 +70,7 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
 				credentials: 'include'
 			});
 
-			window.location.href = '/login?reason=session-expired';
+			window.location.href = '/login';
 			throw err;
 		}
 	}

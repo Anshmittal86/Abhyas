@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
-const baseQuestionSchema = z.object({
-	testId: z.uuid('Invalid test id'),
+const baseQuestionCoreSchema = z.object({
 	questionText: z.string().min(5, 'Question text is required'),
 	questionType: z.enum(['MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'LONG_ANSWER', 'CODE']),
 	explanation: z.string().optional(),
+	difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).default('EASY'),
 	marks: z.coerce.number().int().min(1).max(20).default(1)
+});
+
+const baseQuestionSchema = baseQuestionCoreSchema.extend({
+	testId: z.uuid('Invalid test id')
 });
 
 const optionSchema = z.object({
@@ -108,9 +112,26 @@ export const createQuestionSchema = z.discriminatedUnion('questionType', [
 	codeSchema
 ]);
 
+const bulkMcqSchema = mcqSchema.omit({ testId: true });
+const bulkTrueFalseSchema = trueFalseSchema.omit({ testId: true });
+const bulkDescriptiveSchema = descriptiveSchema.omit({ testId: true });
+const bulkCodeSchema = codeSchema.omit({ testId: true });
+
+const bulkQuestionSchema = z.discriminatedUnion('questionType', [
+	bulkMcqSchema,
+	bulkTrueFalseSchema,
+	bulkDescriptiveSchema,
+	bulkCodeSchema
+]);
+
 export const updateQuestionSchema = z.union([
 	updateMcqSchema,
 	updateTrueFalseSchema,
 	updateDescriptiveSchema,
 	updateCodeSchema
 ]);
+
+export const bulkUploadSchema = z.object({
+	testId: z.uuid('Invalid test id'),
+	questions: z.array(bulkQuestionSchema).min(1, 'At least one question required')
+});

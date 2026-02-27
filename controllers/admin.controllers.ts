@@ -26,14 +26,22 @@ export const getAdminDashboard = asyncHandler('GetAdminDashboard', async (reques
 	const todayStart = new Date();
 	todayStart.setHours(0, 0, 0, 0);
 
-	const [totalStudents, totalTests, totalQuestions, todayAttempts, recentAttempts] =
+	const [totalStudents, totalTests, totalQuestions, todayAttempts, recentAttempts, tests] =
 		await Promise.all([
 			prisma.student.count(),
-			prisma.test.count({ where: { adminId: userId } }),
-			prisma.question.count({ where: { adminId: userId } }),
+
+			prisma.test.count({
+				where: { adminId: userId }
+			}),
+
+			prisma.question.count({
+				where: { adminId: userId }
+			}),
+
 			prisma.testAttempt.count({
 				where: { startedAt: { gte: todayStart } }
 			}),
+
 			prisma.testAttempt.findMany({
 				include: {
 					student: { select: { name: true } },
@@ -41,6 +49,19 @@ export const getAdminDashboard = asyncHandler('GetAdminDashboard', async (reques
 				},
 				take: 4,
 				orderBy: { startedAt: 'desc' }
+			}),
+
+			prisma.test.findMany({
+				where: { adminId: userId },
+				select: {
+					id: true,
+					title: true,
+					maxQuestions: true,
+					_count: { select: { questions: true } }
+				},
+				orderBy: {
+					createdAt: 'desc'
+				}
 			})
 		]);
 
@@ -50,6 +71,13 @@ export const getAdminDashboard = asyncHandler('GetAdminDashboard', async (reques
 		score: attempt.score,
 		status: attempt.status,
 		submittedAt: attempt.submittedAt
+	}));
+
+	const testsWithQuestionCount = tests.map((test) => ({
+		id: test.id,
+		title: test.title,
+		maxQuestions: test.maxQuestions,
+		currentQuestionCount: test._count.questions
 	}));
 
 	return NextResponse.json(
@@ -62,7 +90,8 @@ export const getAdminDashboard = asyncHandler('GetAdminDashboard', async (reques
 					totalQuestions,
 					todayAttempts
 				},
-				recentActivities
+				recentActivities,
+				testsWithQuestionCount
 			},
 			'Admin dashboard data fetched'
 		)

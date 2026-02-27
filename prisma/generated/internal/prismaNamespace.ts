@@ -1442,6 +1442,7 @@ export const TestScalarFieldEnum = {
   title: 'title',
   durationMinutes: 'durationMinutes',
   maxQuestions: 'maxQuestions',
+  totalMarks: 'totalMarks',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   chapterId: 'chapterId',
@@ -1627,6 +1628,20 @@ export type EnumQuestionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
  * Reference to a field of type 'QuestionType[]'
  */
 export type ListEnumQuestionTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'QuestionDifficulty'
+ */
+export type EnumQuestionDifficultyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionDifficulty'>
+    
+
+
+/**
+ * Reference to a field of type 'QuestionDifficulty[]'
+ */
+export type ListEnumQuestionDifficultyFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QuestionDifficulty[]'>
     
 
 

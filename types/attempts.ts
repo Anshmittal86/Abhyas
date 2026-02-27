@@ -2,9 +2,12 @@
 export type FinalizeAttemptResult = {
 	attemptId: string;
 	testId: string;
-	score: number;
+	score: number; // percentage
+	totalMarks: number;
+	gainedMarks: number;
 	maxQuestions: number;
 	correctAnswers: number;
+	accuracy: number;
 };
 
 // Student results page
@@ -12,6 +15,7 @@ export type StudentResultPayload = {
 	test: {
 		id: string;
 		title: string;
+		totalMarks: number;
 		maxQuestions: number;
 		durationMinutes: number;
 		chapter: { title: string };
@@ -19,16 +23,20 @@ export type StudentResultPayload = {
 	};
 	statistics?: {
 		totalAttempts: number;
-		averageScore: number;
-		bestScore: number;
-		latestScore: number | null;
+		totalGainedMarks: number;
+		totalPossibleMarks: number;
+		averageMarks: number;
+		bestMarks: number;
+		latestScore: number | null; // percentage
 		latestAccuracy: number;
 		timeTakenMinutes: number | null;
 	};
 	attempts: Array<{
 		id: string;
 		submittedAt: string;
-		score: number | null;
+		score: number | null; // percentage
+		totalMarks: number;
+		gainedMarks: number;
 		answeredQuestions: number;
 		correctAnswers: number;
 		accuracy: number;
@@ -70,7 +78,9 @@ export type AnswerPayload = {
 // Submit response
 export type SubmitTestPayload = {
 	submitted: boolean;
-	score: number;
+	score: number; // percentage
+	totalMarks: number;
+	gainedMarks: number;
 	maxQuestions: number;
 	correctAnswers: number;
 	accuracy: number;
@@ -80,7 +90,9 @@ export type SubmitTestPayload = {
 export type AttemptResult = {
 	id: string;
 	submittedAt: string;
-	score: number | null;
+	score: number | null; // percentage
+	totalMarks: number;
+	gainedMarks: number;
 	answeredQuestions: number;
 	correctAnswers: number;
 	accuracy: number;
@@ -92,26 +104,32 @@ export type TestResultItem = {
 	testTitle: string;
 	courseName: string;
 	chapterName: string;
-	score: number | null;
+	score: number | null; // percentage
+	totalMarks: number;
 	maxQuestions: number;
+	gainedMarks: number;
 	answeredQuestions: number;
 	accuracy: number;
 	submittedAt: string;
-	attempts?: AttemptResult[];
 };
 
 export type AllTestResultsData = {
 	summary: {
 		totalResults: number;
-		averageScore: number;
-		totalScore: number;
+		totalGainedMarks: number;
+		totalPossibleMarks: number;
+		averageMarks: number;
+		overallPercentage: number;
 	};
 	allResults: TestResultItem[];
 	courseResults: Array<{
 		courseId: string;
 		courseTitle: string;
 		totalTests: number;
-		averageScore: number;
+		totalGainedMarks: number;
+		totalPossibleMarks: number;
+		averageMarks: number;
+		percentage: number;
 		attempts: TestResultItem[];
 	}>;
 };

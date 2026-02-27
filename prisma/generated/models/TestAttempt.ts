@@ -525,6 +525,14 @@ export type TestAttemptUncheckedUpdateManyWithoutTestNestedInput = {
   deleteMany?: Prisma.TestAttemptScalarWhereInput | Prisma.TestAttemptScalarWhereInput[]
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type EnumTestAttemptStatusFieldUpdateOperationsInput = {
   set?: $Enums.TestAttemptStatus
 }

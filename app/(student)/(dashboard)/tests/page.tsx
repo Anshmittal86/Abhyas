@@ -14,6 +14,7 @@ interface TestData {
 	chapterName: string;
 	courseName: string;
 	durationMinutes: number;
+	maxMarks: number;
 	maxQuestions: number;
 	questionCount: number;
 	attempt: {
@@ -161,7 +162,7 @@ export default function TestsPage() {
 								title={test.title}
 								course={test.courseName}
 								unit={test.chapterName}
-								maxMarks={test.maxQuestions}
+								maxMarks={test.maxMarks}
 								questions={test.questionCount}
 								duration={`${test.durationMinutes}m`}
 								status="NEW"
@@ -189,7 +190,7 @@ export default function TestsPage() {
 									title={test.title}
 									course={test.courseName}
 									unit={test.chapterName}
-									maxMarks={test.maxQuestions}
+									maxMarks={test.maxMarks}
 									timeRemaining={timeRemaining}
 									status="IN_PROGRESS"
 								/>
@@ -214,7 +215,7 @@ export default function TestsPage() {
 									title={test.title}
 									course={test.courseName}
 									unit={test.chapterName}
-									maxMarks={test.maxQuestions}
+									maxMarks={test.maxMarks}
 									status="COMPLETED"
 									gainedMarks={test.attempt?.gainedMarks ?? 0}
 									attemptDate={test.attempt?.submittedAt ?? undefined}

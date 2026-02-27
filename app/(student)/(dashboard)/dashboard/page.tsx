@@ -112,7 +112,7 @@ export default function DashboardPage() {
 							title={nextAction.title}
 							course={nextAction.courseTitle}
 							unit={nextAction.chapterTitle}
-							maxMarks={nextAction.maxQuestions ?? 0}
+							maxMarks={nextAction.totalMarks ?? 0}
 							questions={nextAction.questionCount ?? 0}
 							duration={`${nextAction.durationMinutes ?? 0}m`}
 							status={nextAction.type === 'RESUME_TEST' ? 'IN_PROGRESS' : 'NEW'}
@@ -132,7 +132,7 @@ export default function DashboardPage() {
 							title={recentActivity.title}
 							course={recentActivity.courseTitle}
 							unit={recentActivity.chapterTitle}
-							maxMarks={recentActivity.maxQuestions}
+							maxMarks={recentActivity.totalMarks}
 							questions={recentActivity.questionCount}
 							duration={`${recentActivity.durationMinutes}m`}
 							status="COMPLETED"

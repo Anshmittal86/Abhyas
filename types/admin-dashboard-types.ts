@@ -1,3 +1,5 @@
+import { BulkUploadTestDataTypes } from './questions';
+
 type AttemptStatus = 'COMPLETED' | 'IN_PROGRESS';
 
 interface AdminDashboardStats {
@@ -18,4 +20,5 @@ interface AdminRecentActivity {
 export interface AdminDashboardData {
 	stats: AdminDashboardStats;
 	recentActivities: AdminRecentActivity[];
+	testsWithQuestionCount: BulkUploadTestDataTypes[];
 }

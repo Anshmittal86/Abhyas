@@ -63,6 +63,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 									title: true,
 									durationMinutes: true,
 									maxQuestions: true,
+									totalMarks: true,
 									_count: {
 										select: {
 											questions: true
@@ -86,6 +87,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 				title: test.title,
 				durationMinutes: test.durationMinutes,
 				maxQuestions: test.maxQuestions,
+				totalMarks: test.totalMarks,
 				questionCount: test._count.questions,
 				createdAt: test.createdAt,
 				courseTitle: enrollment.course.title,
@@ -158,6 +160,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 			durationMinutes: resumeTest.durationMinutes,
 			questionCount: resumeTest.questionCount,
 			maxQuestions: resumeTest.maxQuestions,
+			totalMarks: resumeTest.totalMarks,
 			courseTitle: resumeTest.courseTitle,
 			chapterTitle: resumeTest.chapterTitle
 		};
@@ -175,6 +178,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 			durationMinutes: startTest.durationMinutes,
 			questionCount: startTest.questionCount,
 			maxQuestions: startTest.maxQuestions,
+			totalMarks: startTest.totalMarks,
 			courseTitle: startTest.courseTitle,
 			chapterTitle: startTest.chapterTitle
 		};
@@ -195,6 +199,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 					title: true,
 					durationMinutes: true,
 					maxQuestions: true,
+					totalMarks: true,
 					_count: {
 						select: { questions: true }
 					},
@@ -214,7 +219,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 
 	const gainedMarks =
 		lastCompletedAttempt?.score !== null && lastCompletedAttempt?.score !== undefined ?
-			Math.round((lastCompletedAttempt.score / 100) * lastCompletedAttempt.test.maxQuestions)
+			Math.round((lastCompletedAttempt.score / 100) * lastCompletedAttempt.test.totalMarks)
 		:	0;
 
 	const response = new ApiResponse(
@@ -237,6 +242,7 @@ export const getStudentDashboard = asyncHandler('StudentDashboard', async (reque
 						title: lastCompletedAttempt.test.title,
 						durationMinutes: lastCompletedAttempt.test.durationMinutes,
 						maxQuestions: lastCompletedAttempt.test.maxQuestions,
+						totalMarks: lastCompletedAttempt.test.totalMarks,
 						questionCount: lastCompletedAttempt.test._count.questions,
 						courseTitle: lastCompletedAttempt.test.chapter.course.title,
 						chapterTitle: lastCompletedAttempt.test.chapter.title,

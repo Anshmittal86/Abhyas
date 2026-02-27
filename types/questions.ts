@@ -6,6 +6,7 @@ export type QuestionListTypes = {
 	questionType: 'MCQ' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'LONG_ANSWER' | 'CODE';
 	explanation: string | null;
 	marks: number;
+	difficulty: 'EASY' | 'MEDIUM' | 'HARD';
 	options: QuestionOptionListTypes[];
 	test: {
 		id: string;
@@ -29,6 +30,7 @@ export type QuestionDetailsTypes = {
 	questionText: string;
 	questionType: 'MCQ' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'LONG_ANSWER' | 'CODE';
 	explanation: string | null;
+	difficulty: 'EASY' | 'MEDIUM' | 'HARD';
 	marks: number;
 	options: QuestionDetailsOptionTypes[];
 	test: QuestionDetailsTestTypes;
@@ -118,6 +120,13 @@ type CreateCodeQuestionFormTypes = BaseCreateQuestionFormTypes & {
 	starterCode?: string;
 	language?: string;
 };
+
+export interface BulkUploadTestDataTypes {
+	id: string;
+	title: string;
+	maxQuestions: number;
+	currentQuestionCount: number;
+}
 
 export type CreateQuestionFormTypes =
 	| CreateMCQQuestionFormTypes

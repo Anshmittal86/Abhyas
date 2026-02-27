@@ -2,6 +2,13 @@
 
 import { FileText, Database, UserPlus2, ArrowUpRight, Sun, Moon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StudentFormSheet } from '@/components/forms/StudentFormSheet';
@@ -14,6 +21,7 @@ import Loader from '@/components/common/Loader';
 import { useTheme } from 'next-themes';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { BulkUploadFlow } from '@/components/admin/questions/BulkUploadFlow';
 
 dayjs.extend(relativeTime);
 
@@ -34,6 +42,7 @@ const AdminDashboard = () => {
 				}
 
 				setDashboard(data);
+				console.log(dashboard);
 			} catch (error) {
 				if (error instanceof Error) {
 					toast.error('Something is wrong');
@@ -195,16 +204,26 @@ const AdminDashboard = () => {
 						</div>
 
 						{/* Upload Bulk */}
-						<div className="group relative cursor-pointer rounded-2xl border border-dashed border-ab-border/70 bg-ab-primary/5 p-8 transition hover:bg-ab-primary/10 hover:shadow-md">
-							<div className="flex flex-col items-center justify-center gap-4 text-center">
-								<Database className="h-7 w-7 text-ab-primary transition group-hover:-translate-y-1" />
-								<p className="text-base font-bold text-ab-text-primary">Upload Bulk Questions</p>
-							</div>
+						<Dialog>
+							<DialogTrigger asChild>
+								<div className="group cursor-pointer rounded-2xl border border-dashed border-ab-border/70 bg-ab-primary/5 p-8 transition hover:bg-ab-primary/10 hover:shadow-md">
+									<div className="flex flex-col items-center justify-center gap-4 text-center">
+										<Database className="h-7 w-7 text-ab-primary transition group-hover:-translate-y-1" />
+										<p className="text-base font-bold text-ab-text-primary">
+											Upload Bulk Questions
+										</p>
+									</div>
+								</div>
+							</DialogTrigger>
 
-							<Badge className="absolute right-4 top-4 text-[9px] font-bold uppercase">
-								Coming Soon
-							</Badge>
-						</div>
+							<DialogContent className="rounded-2xl max-w-lg">
+								<DialogHeader>
+									<DialogTitle>Bulk Upload Questions</DialogTitle>
+								</DialogHeader>
+
+								<BulkUploadFlow tests={dashboard?.testsWithQuestionCount ?? []} />
+							</DialogContent>
+						</Dialog>
 					</CardContent>
 				</Card>
 			</div>

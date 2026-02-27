@@ -33,6 +33,7 @@ export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (
 				select: {
 					id: true,
 					title: true,
+					totalMarks: true,
 					maxQuestions: true,
 					durationMinutes: true,
 					chapter: {
@@ -66,9 +67,22 @@ export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (
 		}
 	});
 
-	// 📊 Calculate overall statistics
-	const totalScore = testAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
-	const averageScore = testAttempts.length > 0 ? Math.round(totalScore / testAttempts.length) : 0;
+	// 📊 Calculate overall statistics based on MARKS not percentage
+	const totalGainedMarks = testAttempts.reduce((sum, a) => {
+		if (a.score === null) return sum;
+		const gained = Math.round((a.score / 100) * a.test.totalMarks);
+		return sum + gained;
+	}, 0);
+
+	const totalPossibleMarks = testAttempts.reduce((sum, a) => {
+		return sum + a.test.totalMarks;
+	}, 0);
+
+	const averageMarks =
+		testAttempts.length > 0 ? Math.round(totalGainedMarks / testAttempts.length) : 0;
+
+	const overallPercentage =
+		totalPossibleMarks > 0 ? Math.round((totalGainedMarks / totalPossibleMarks) * 100) : 0;
 
 	// 📈 Format results by course
 	const resultsByCourse = await prisma.enrollment.findMany({
@@ -89,15 +103,27 @@ export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (
 		const courseAttempts = testAttempts.filter(
 			(a) => a.test.chapter.course.id === enrollment.courseId
 		);
-		const courseScore = courseAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
-		const courseAverage =
-			courseAttempts.length > 0 ? Math.round(courseScore / courseAttempts.length) : 0;
+		const courseTotalGained = courseAttempts.reduce((sum, a) => {
+			if (a.score === null) return sum;
+			return sum + Math.round((a.score / 100) * a.test.totalMarks);
+		}, 0);
+
+		const courseTotalPossible = courseAttempts.reduce((sum, a) => sum + a.test.totalMarks, 0);
+
+		const courseAverageMarks =
+			courseAttempts.length > 0 ? Math.round(courseTotalGained / courseAttempts.length) : 0;
+
+		const coursePercentage =
+			courseTotalPossible > 0 ? Math.round((courseTotalGained / courseTotalPossible) * 100) : 0;
 
 		return {
 			courseId: enrollment.course.id,
 			courseTitle: enrollment.course.title,
 			totalTests: courseAttempts.length,
-			averageScore: courseAverage,
+			totalGainedMarks: courseTotalGained,
+			totalPossibleMarks: courseTotalPossible,
+			averageMarks: courseAverageMarks,
+			percentage: coursePercentage,
 			attempts: courseAttempts.map((a) => ({
 				id: a.id,
 				testId: a.testId,
@@ -106,7 +132,9 @@ export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (
 				startedAt: a.startedAt,
 				submittedAt: a.submittedAt,
 				score: a.score,
+				totalMarks: a.test.totalMarks,
 				maxQuestions: a.test.maxQuestions,
+				gainedMarks: a.score !== null ? Math.round((a.score / 100) * a.test.totalMarks) : 0,
 				answeredQuestions: a._count.answers,
 				accuracy:
 					a._count.answers > 0 ?
@@ -124,8 +152,10 @@ export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (
 			{
 				summary: {
 					totalResults: testAttempts.length,
-					averageScore,
-					totalScore
+					totalGainedMarks,
+					totalPossibleMarks,
+					averageMarks,
+					overallPercentage
 				},
 				courseResults,
 				allResults: testAttempts.map((a) => ({
@@ -137,7 +167,9 @@ export const getStudentAllResults = asyncHandler('GetAllStudentResults', async (
 					startedAt: a.startedAt,
 					submittedAt: a.submittedAt,
 					score: a.score,
+					totalMarks: a.test.totalMarks,
 					maxQuestions: a.test.maxQuestions,
+					gainedMarks: a.score !== null ? Math.round((a.score / 100) * a.test.totalMarks) : 0,
 					answeredQuestions: a._count.answers,
 					accuracy:
 						a._count.answers > 0 ?
@@ -178,6 +210,7 @@ export const getStudentResultByTestId = asyncHandlerWithContext(
 			select: {
 				id: true,
 				title: true,
+				totalMarks: true,
 				maxQuestions: true,
 				durationMinutes: true,
 				chapter: {
@@ -273,6 +306,7 @@ export const getStudentResultByTestId = asyncHandlerWithContext(
 						test: {
 							id: test.id,
 							title: test.title,
+							totalMarks: test.totalMarks,
 							maxQuestions: test.maxQuestions,
 							durationMinutes: test.durationMinutes,
 							chapter: test.chapter,
@@ -289,9 +323,16 @@ export const getStudentResultByTestId = asyncHandlerWithContext(
 
 		// 📊 Calculate statistics
 		const latestAttempt = attempts[0];
-		const totalScore = attempts.reduce((sum, a) => sum + (a.score || 0), 0);
-		const averageScore = attempts.length > 0 ? Math.round(totalScore / attempts.length) : 0;
-		const bestScore = Math.max(...attempts.map((a) => a.score || 0));
+		const totalGainedMarks = attempts.reduce((sum, a) => {
+			if (a.score === null) return sum;
+			return sum + Math.round((a.score / 100) * test.totalMarks);
+		}, 0);
+
+		const averageMarks = attempts.length > 0 ? Math.round(totalGainedMarks / attempts.length) : 0;
+
+		const bestMarks = Math.max(
+			...attempts.map((a) => (a.score !== null ? Math.round((a.score / 100) * test.totalMarks) : 0))
+		);
 		const correctAnswers = latestAttempt.answers.filter((a) => a.isCorrect === true).length;
 		const timeTakenMinutes =
 			latestAttempt.submittedAt ?
@@ -316,8 +357,10 @@ export const getStudentResultByTestId = asyncHandlerWithContext(
 					},
 					statistics: {
 						totalAttempts: attempts.length,
-						averageScore,
-						bestScore,
+						totalGainedMarks,
+						totalPossibleMarks: attempts.length * test.totalMarks,
+						averageMarks,
+						bestMarks,
 						latestScore: latestAttempt.score,
 						latestAccuracy:
 							latestAttempt._count.answers > 0 ?
@@ -330,6 +373,9 @@ export const getStudentResultByTestId = asyncHandlerWithContext(
 						startedAt: attempt.startedAt,
 						submittedAt: attempt.submittedAt,
 						score: attempt.score,
+						totalMarks: test.totalMarks,
+						gainedMarks:
+							attempt.score !== null ? Math.round((attempt.score / 100) * test.totalMarks) : 0,
 						answeredQuestions: attempt._count.answers,
 						correctAnswers: attempt.answers.filter((a) => a.isCorrect === true).length,
 						accuracy:

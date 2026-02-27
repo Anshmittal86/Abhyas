@@ -37,35 +37,30 @@ export const getStudentTests = asyncHandler('GetStudentTests', async (request) =
 				}
 			}
 		},
-		include: {
+
+		select: {
+			id: true,
+			title: true,
+			durationMinutes: true,
+			totalMarks: true,
+			maxQuestions: true,
 			chapter: {
 				select: {
 					title: true,
 					course: {
-						select: {
-							title: true
-						}
+						select: { title: true }
 					}
 				}
 			},
 
-			questions: {
+			_count: {
 				select: {
-					_count: {
-						select: {
-							options: true
-						}
-					}
+					questions: true
 				}
 			},
-
 			attempts: {
-				where: {
-					studentId
-				},
-				orderBy: {
-					startedAt: 'desc'
-				},
+				where: { studentId },
+				orderBy: { startedAt: 'desc' },
 				select: {
 					id: true,
 					status: true,
@@ -97,7 +92,7 @@ export const getStudentTests = asyncHandler('GetStudentTests', async (request) =
 
 		const gainedMarks =
 			latestAttempt?.score !== null && latestAttempt?.score !== undefined ?
-				Math.round((latestAttempt.score / 100) * test.maxQuestions)
+				Math.round((latestAttempt.score / 100) * test.totalMarks)
 			:	0;
 
 		return {
@@ -106,8 +101,9 @@ export const getStudentTests = asyncHandler('GetStudentTests', async (request) =
 			chapterName: test.chapter.title,
 			courseName: test.chapter.course.title,
 			durationMinutes: test.durationMinutes,
+			maxMarks: test.totalMarks,
 			maxQuestions: test.maxQuestions,
-			questionCount: test.questions.length,
+			questionCount: test._count.questions,
 
 			attempt:
 				latestAttempt ?

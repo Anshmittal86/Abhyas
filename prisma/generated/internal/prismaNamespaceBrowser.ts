@@ -181,6 +181,7 @@ export const TestScalarFieldEnum = {
   title: 'title',
   durationMinutes: 'durationMinutes',
   maxQuestions: 'maxQuestions',
+  totalMarks: 'totalMarks',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   chapterId: 'chapterId',

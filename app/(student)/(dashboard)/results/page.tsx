@@ -113,10 +113,14 @@ export default function StudentResultsPage() {
 			</div>
 
 			{/* Summary Stats */}
-			<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+			<div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
 				<StatCard label="Total Tests Attempted" value={summary.totalResults} />
-				<StatCard label="Average Score" value={`${summary.averageScore}%`} />
-				<StatCard label="Total Score" value={summary.totalScore} />
+				<StatCard
+					label="Total Marks"
+					value={`${summary.totalGainedMarks} / ${summary.totalPossibleMarks}`}
+				/>
+				<StatCard label="Average Marks" value={summary.averageMarks} />
+				<StatCard label="Overall Percentage" value={`${summary.overallPercentage}%`} />
 			</div>
 
 			{/* All Tests Section */}
@@ -130,9 +134,9 @@ export default function StudentResultsPage() {
 							const firstAttempt = attempts[0];
 							const latestAttempt = attempts[0]; // Already sorted by submittedAt desc
 							const isExpanded = expandedTests.has(testId);
-							const bestScore = Math.max(...attempts.map((a) => a.score || 0));
-							const avgScore = Math.round(
-								attempts.reduce((sum, a) => sum + (a.score || 0), 0) / attempts.length
+							const bestMarks = Math.max(...attempts.map((a) => a.gainedMarks));
+							const avgMarks = Math.round(
+								attempts.reduce((sum, a) => sum + a.gainedMarks, 0) / attempts.length
 							);
 
 							return (
@@ -147,7 +151,7 @@ export default function StudentResultsPage() {
 									>
 										<div className="flex-1 text-left space-y-1">
 											<div className="flex items-center gap-2">
-												<h3 className="font-semibold text-ab-text-primary">
+												<h3 className="font-semibold capitalize text-ab-text-primary">
 													{firstAttempt.testTitle}
 												</h3>
 												<span className="text-xs bg-ab-primary/90 text-white px-2 py-1 rounded">
@@ -163,19 +167,19 @@ export default function StudentResultsPage() {
 										<div className="flex items-center gap-6 mr-3">
 											<div className="text-right">
 												<div className="text-sm font-semibold text-ab-text-primary">
-													{latestAttempt.score}%
+													{latestAttempt.gainedMarks} / {latestAttempt.totalMarks}
 												</div>
 												<div className="text-xs text-ab-text-secondary">Latest</div>
 											</div>
 											<div className="text-right">
 												<div className="text-sm font-semibold text-ab-text-primary">
-													{bestScore}%
+													{bestMarks} / {latestAttempt.totalMarks}
 												</div>
 												<div className="text-xs text-ab-text-secondary">Best</div>
 											</div>
 											<div className="text-right">
 												<div className="text-sm font-semibold text-ab-text-primary">
-													{avgScore}%
+													{avgMarks} / {latestAttempt.totalMarks}
 												</div>
 												<div className="text-xs text-ab-text-secondary">Average</div>
 											</div>
@@ -197,7 +201,7 @@ export default function StudentResultsPage() {
 														</div>
 														<div className="flex items-center gap-4 text-sm">
 															<span className="text-ab-text-primary font-medium">
-																{attempt.score || 0}%
+																{attempt.gainedMarks} / {attempt.totalMarks}
 															</span>
 															<span className="text-ab-text-secondary">
 																Answered: {attempt.answeredQuestions}/{attempt.maxQuestions}
@@ -229,15 +233,34 @@ export default function StudentResultsPage() {
 								key={course.courseId}
 								className="border border-default rounded-lg p-4 bg-ab-surface"
 							>
-								<h3 className="font-semibold text-ab-text-primary mb-3">{course.courseTitle}</h3>
-								<div className="space-y-2">
-									<div className="flex justify-between text-sm">
+								<h3 className="font-semibold text-ab-text-primary mb-3 text-2xl">
+									{course.courseTitle}
+								</h3>
+								<div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
+									{/* Total Marks */}
+									<div className="flex justify-between col-span-1">
+										<span className="text-ab-text-secondary">Total Marks</span>
+										<span className="font-medium text-ab-text-primary">
+											{course.totalGainedMarks} / {course.totalPossibleMarks}
+										</span>
+									</div>
+
+									{/* Percentage */}
+									<div className="flex justify-between col-span-1">
+										<span className="text-ab-text-secondary">Percentage</span>
+										<span className="font-medium text-ab-text-primary">{course.percentage}%</span>
+									</div>
+
+									{/* Average Marks */}
+									<div className="flex justify-between col-span-1">
+										<span className="text-ab-text-secondary">Average Marks</span>
+										<span className="font-medium text-ab-text-primary">{course.averageMarks}</span>
+									</div>
+
+									{/* Tests Attempted */}
+									<div className="flex justify-between col-span-1">
 										<span className="text-ab-text-secondary">Tests Attempted</span>
 										<span className="font-medium text-ab-text-primary">{course.totalTests}</span>
-									</div>
-									<div className="flex justify-between text-sm">
-										<span className="text-ab-text-secondary">Average Score</span>
-										<span className="font-medium text-ab-text-primary">{course.averageScore}%</span>
 									</div>
 								</div>
 							</div>
