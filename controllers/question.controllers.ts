@@ -495,7 +495,7 @@ export const uploadBulkQuestion = asyncHandler('BulkUploadQuestions', async (req
 	const parsed = bulkUploadSchema.safeParse(body);
 
 	if (!parsed.success) {
-		throw new ApiError(400, parsed.error.errors[0].message);
+		throw new ApiError(400, parsed.error.issues[0]?.message ?? 'Invalid input');
 	}
 
 	const { testId, questions } = parsed.data;

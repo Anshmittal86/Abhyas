@@ -72,15 +72,15 @@ export default function StudentResultPage() {
 					</div>
 				</div>
 				<div className="bg-surface border border-default rounded-xl p-4">
-					<div className="text-sm text-ab-text-secondary">Best score</div>
+					<div className="text-sm text-ab-text-secondary">Best Marks</div>
 					<div className="text-2xl font-semibold text-ab-text-primary">
-						{latest?.bestScore ?? 0}%
+						{latest?.bestMarks ?? 0} / {data?.test.totalMarks}
 					</div>
 				</div>
 				<div className="bg-surface border border-default rounded-xl p-4">
-					<div className="text-sm text-ab-text-secondary">Average score</div>
+					<div className="text-sm text-ab-text-secondary">Average Marks</div>
 					<div className="text-2xl font-semibold text-ab-text-primary">
-						{latest?.averageScore ?? 0}%
+						{latest?.averageMarks ?? 0}
 					</div>
 				</div>
 				<div className="bg-surface border border-default rounded-xl p-4">

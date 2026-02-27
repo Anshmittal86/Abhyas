@@ -116,11 +116,17 @@ export const logoutUser = asyncHandler('LogoutUser', async (request) => {
 	const tokenRecord = await validateRefreshToken(refreshToken);
 
 	// Extra safety check: ensure token belongs to requesting user
-	if (userRole === tokenRecord.role && userId === String(tokenRecord[`${userRole}Id`])) {
+	let ownerId: string | null = null;
+
+	if (tokenRecord.role === 'admin') {
+		ownerId = tokenRecord.adminId;
+	} else if (tokenRecord.role === 'student') {
+		ownerId = tokenRecord.studentId;
+	}
+
+	if (userRole === tokenRecord.role && userId === ownerId) {
 		await prisma.refreshToken.delete({
-			where: {
-				id: tokenRecord.id
-			}
+			where: { id: tokenRecord.id }
 		});
 	} else {
 		throw new ApiError(403, 'Unauthorized logout request');

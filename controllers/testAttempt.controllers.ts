@@ -71,7 +71,11 @@ export async function finalizeAttempt(params: {
 	}
 
 	const maxQuestions = questions.length;
+	const totalMarks = questions.reduce((sum, q) => sum + (q.marks ?? 1), 0);
+
 	const score = maxQuestions > 0 ? Math.round((correctCount / maxQuestions) * 100) : 0;
+	const gainedMarks = totalMarks > 0 ? Math.round((score / 100) * totalMarks) : 0;
+	const accuracy = maxQuestions > 0 ? Math.round((correctCount / maxQuestions) * 100) : 0;
 
 	// Optimized persistence
 	await prisma.$transaction(async (tx) => {
@@ -107,8 +111,11 @@ export async function finalizeAttempt(params: {
 		attemptId: attempt.id,
 		testId: attempt.testId,
 		score,
+		totalMarks,
+		gainedMarks,
 		maxQuestions,
-		correctAnswers: correctCount
+		correctAnswers: correctCount,
+		accuracy
 	};
 }
 
@@ -279,8 +286,11 @@ export const submitTestAttempt = asyncHandlerWithContext(
 					attemptId: result.attemptId,
 					testId: result.testId,
 					score: result.score,
+					totalMarks: result.totalMarks,
+					gainedMarks: result.gainedMarks,
 					maxQuestions: result.maxQuestions,
-					correctAnswers: result.correctAnswers
+					correctAnswers: result.correctAnswers,
+					accuracy: result.accuracy
 				},
 				'Test submitted successfully'
 			),
